@@ -1,8 +1,10 @@
 [package]
 name = "wasm-opt"
-version = "0.1.0"
+version = "0.0.0"
+description = "wasm-opt bindings"
+license = "MIT / Apache-2.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.58"
-wasm-opt-sys = { path = "../wasm-opt-sys" }
+wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.0" }

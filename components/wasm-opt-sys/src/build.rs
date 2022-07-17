@@ -3,6 +3,10 @@
 use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
+    Ok(())
+}
+
+fn main_() -> anyhow::Result<()> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = Path::new(&manifest_dir);
     let binaryen_dir = manifest_dir.join("binaryen");
