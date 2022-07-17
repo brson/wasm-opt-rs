@@ -1,0 +1,3 @@
+[submodule "components/wasm-opt-sys/binaryen"]
+	path = components/wasm-opt-sys/binaryen
+	url = https://github.com/WebAssembly/binaryen.git
