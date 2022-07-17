@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 build = "src/build.rs"
 
+[dependencies]
+anyhow = "1.0.58"
+libc = "0.2.126"
+
 [build-dependencies]
 anyhow = "1.0.58"
 cc = "1.0.73"
