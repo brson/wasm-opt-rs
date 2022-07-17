@@ -1,4 +1,4 @@
-/*mod c {
+mod c {
     use libc::{c_int, c_char};
 
     #[link(name = "wasm-opt-cc")]
@@ -12,4 +12,4 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
         c::wasm_opt_main(0, std::ptr::null());
     }
     Ok(())
-}*/
+}
