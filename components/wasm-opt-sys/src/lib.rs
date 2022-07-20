@@ -1,5 +1,5 @@
 mod c {
-    use libc::{c_int, c_char};
+    use libc::{c_char, c_int};
 
     #[link(name = "wasm-opt-cc")]
     extern "C" {
