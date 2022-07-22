@@ -65,7 +65,9 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
 fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
     let wasm_dir = src_dir.join("wasm");
     let wasm_files = [
+        "wasm-debug.cpp",
         "literal.cpp",
+        "parsing.cpp",
         "wasm-binary.cpp",
         "wasm-interpreter.cpp",
         "wasm-io.cpp",
@@ -78,13 +80,48 @@ fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
     let wasm_files = wasm_files.iter().map(|f| wasm_dir.join(f));
 
     let support_dir = src_dir.join("support");
-    let support_files = ["bits.cpp"];
+    let support_files = [
+        "bits.cpp",
+        "colors.cpp",
+//        "command-line.cpp",
+        "file.cpp",
+        "safe_integer.cpp",
+        "threads.cpp",
+    ];
     let support_files = support_files.iter().map(|f| support_dir.join(f));
+
+    let ir_dir = src_dir.join("ir");
+    let ir_files = [
+        "eh-utils.cpp",
+        "intrinsics.cpp",
+        "module-utils.cpp",
+        "ReFinalize.cpp",
+        "stack-utils.cpp",
+        "table-utils.cpp",
+        "type-updating.cpp",
+    ];
+    let ir_files = ir_files.iter().map(|f| ir_dir.join(f));
+
+    let passes_dir = src_dir.join("passes");
+    let passes_files = [
+        "pass.cpp",
+        "Vacuum.cpp",
+    ];
+    let passes_files = passes_files.iter().map(|f| passes_dir.join(f));
+
+    let fuzzing_dir = src_dir.join("tools/fuzzing");
+    let fuzzing_files = [
+        "fuzzing.cpp",
+    ];
+    let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
     let src_files: Vec<_> = None
         .into_iter()
         .chain(wasm_files)
         .chain(support_files)
+        .chain(ir_files)
+        .chain(passes_files)
+        .chain(fuzzing_files)
         .collect();
 
     src_files
