@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
 
     let src_dir = binaryen_dir.join("src");
 
-    let src_files = get_src_files(&src_dir);
+    let src_files = get_src_files(&src_dir)?;
 
     let tools_dir = src_dir.join("tools");
     let wasm_opt_src = tools_dir.join("wasm-opt.cpp");
@@ -62,7 +62,7 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
     Ok(output_wasm_opt_file)
 }
 
-fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
+fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let wasm_dir = src_dir.join("wasm");
     let wasm_files = [
         "wasm-debug.cpp",
@@ -83,7 +83,7 @@ fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
     let support_files = [
         "bits.cpp",
         "colors.cpp",
-//        "command-line.cpp",
+        //        "command-line.cpp",
         "file.cpp",
         "safe_integer.cpp",
         "threads.cpp",
@@ -103,16 +103,10 @@ fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
     let ir_files = ir_files.iter().map(|f| ir_dir.join(f));
 
     let passes_dir = src_dir.join("passes");
-    let passes_files = [
-        "pass.cpp",
-        "Vacuum.cpp",
-    ];
-    let passes_files = passes_files.iter().map(|f| passes_dir.join(f));
+    let passes_files = get_files_from_dir(&passes_dir)?;
 
     let fuzzing_dir = src_dir.join("tools/fuzzing");
-    let fuzzing_files = [
-        "fuzzing.cpp",
-    ];
+    let fuzzing_files = ["fuzzing.cpp", "random.cpp"];
     let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
     let src_files: Vec<_> = None
@@ -124,5 +118,14 @@ fn get_src_files(src_dir: &Path) -> Vec<PathBuf> {
         .chain(fuzzing_files)
         .collect();
 
-    src_files
+    Ok(src_files)
+}
+
+fn get_files_from_dir(src_dir: &Path) -> anyhow::Result<impl Iterator<Item = PathBuf> + '_> {
+    let files = fs::read_dir(src_dir)?
+        .map(|f| f.expect("error reading dir"))
+        .filter(|f| f.file_name().into_string().expect("UTF8").ends_with(".cpp"))
+        .map(|f| src_dir.join(f.path()));
+
+    Ok(files)
 }
