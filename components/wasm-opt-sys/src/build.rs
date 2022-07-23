@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -17,6 +18,8 @@ fn main() -> anyhow::Result<()> {
     let wasm_opt_src = tools_dir.join("wasm-opt.cpp");
     let wasm_opt_src = get_converted_wasm_opt_cpp(&wasm_opt_src)?;
 
+    let wasm_intrinsics_src = get_converted_wasm_intrinsics_cpp(&src_dir)?;
+
     let flags = ["-Wno-unused-parameter", "-std=c++17"];
 
     let mut builder = cc::Build::new();
@@ -29,6 +32,7 @@ fn main() -> anyhow::Result<()> {
         .include(tools_dir)
         .files(src_files)
         .file(wasm_opt_src)
+        .file(wasm_intrinsics_src)
         .compile("wasm-opt-cc");
 
     Ok(())
@@ -163,4 +167,84 @@ fn disambiguate_file(input_file: &Path, new_file_name: &str) -> anyhow::Result<P
     fs::copy(input_file, &output_file)?;
 
     Ok(output_file)
+}
+
+/// Pre-process the WasmIntrinsics.cpp.in file and return a path to the processed file.
+///
+/// This file needs to be injected with the contents of wasm-intrinsics.wat,
+/// replacing `@WASM_INTRINSICS_SIZE@` with the size of the wat + 1,
+/// and `@WASM_INTRINSICS_EMBED@` with the hex-encoded contents of the wat,
+/// appended with `0x00`.
+///
+/// The extra byte is presumably a null terminator.
+fn get_converted_wasm_intrinsics_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
+    let src_passes_dir = src_dir.join("passes");
+
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+
+    let wasm_intrinsics_cpp_in_file = src_passes_dir.join("WasmIntrinsics.cpp.in");
+    let wasm_intrinsics_cpp_out_file = output_dir.join("WasmIntrinsics.cpp");
+
+    let (
+        wasm_intrinsics_wat_hex,
+        wasm_intrinsics_wat_bytes
+    ) = load_wasm_intrinsics_wat(&src_passes_dir)?;
+
+    configure_file(
+        &wasm_intrinsics_cpp_in_file,
+        &wasm_intrinsics_cpp_out_file,
+        &[
+            ("WASM_INTRINSICS_SIZE", format!("{}", wasm_intrinsics_wat_bytes)),
+            ("WASM_INTRINSICS_EMBED", wasm_intrinsics_wat_hex),
+        ]
+    )?;
+
+    Ok(wasm_intrinsics_cpp_out_file)
+}
+
+fn load_wasm_intrinsics_wat(passes_dir: &Path) -> anyhow::Result<(String, usize)> {
+    let wasm_intrinsics_wat = passes_dir.join("wasm-intrinsics.wat");
+    let mut wat_contents = std::fs::read_to_string(&wasm_intrinsics_wat)?;
+
+    let mut buffer = String::with_capacity(
+        wat_contents.len() * 5 /* 0xNN, */ + 4 /* null */
+    );
+
+    for byte in wat_contents.bytes() {
+        write!(buffer, "0x{:02x},", byte);
+    }
+    write!(buffer, "0x00");
+
+    Ok((buffer, wat_contents.len() + 1))
+}
+
+/// A rough implementation of CMake's `configure_file` directive.
+///
+/// Consume `src_file` and output `dst_file`.
+///
+/// `replacements` is a list of key-value pairs from variable name
+/// to a textual substitute for that variable.
+///
+/// Any variables in the source file, surrounded by `@`, e.g.
+/// `@WASM_INTRINSICS_SIZE@`, will be replaced with the specified value. The
+/// variable as specified in the `replacements` list does not include the `@`
+/// symbols.
+///
+/// re: <https://cmake.org/cmake/help/latest/command/configure_file.html>
+fn configure_file(
+    src_file: &Path,
+    dst_file: &Path,
+    replacements: &[(&str, String)],
+) -> anyhow::Result<()> {
+    let mut src = std::fs::read_to_string(src_file)?;
+
+    for (var, txt) in replacements {
+        let var = format!("@{}@", var);
+        src = src.replace(&var, txt);
+    }
+
+    std::fs::write(dst_file, src)?;
+
+    Ok(())
 }
