@@ -78,6 +78,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "wasm-validator.cpp",
         "wasm.cpp",
         "wat-lexer.cpp",
+        "wat-parser.cpp",
     ];
     let wasm_files = wasm_files.iter().map(|f| wasm_dir.join(f));
 
@@ -86,9 +87,11 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "bits.cpp",
         "colors.cpp",
         //        "command-line.cpp",
+        "debug.cpp",
         "file.cpp",
         "safe_integer.cpp",
         "threads.cpp",
+        "utilities.cpp",
     ];
     let support_files = support_files.iter().map(|f| support_dir.join(f));
 
@@ -96,6 +99,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let ir_files = [
         "eh-utils.cpp",
         "ExpressionManipulator.cpp",
+        "ExpressionAnalyzer.cpp",
         "intrinsics.cpp",
         "localgraph.cpp",
         "lubs.cpp",
