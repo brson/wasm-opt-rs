@@ -132,9 +132,8 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let cfg_files = ["Relooper.cpp"];
     let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
 
-
     let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
-    
+
     let src_files: Vec<_> = None
         .into_iter()
         .chain(wasm_files)
@@ -186,18 +185,19 @@ fn get_converted_wasm_intrinsics_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> 
     let wasm_intrinsics_cpp_in_file = src_passes_dir.join("WasmIntrinsics.cpp.in");
     let wasm_intrinsics_cpp_out_file = output_dir.join("WasmIntrinsics.cpp");
 
-    let (
-        wasm_intrinsics_wat_hex,
-        wasm_intrinsics_wat_bytes
-    ) = load_wasm_intrinsics_wat(&src_passes_dir)?;
+    let (wasm_intrinsics_wat_hex, wasm_intrinsics_wat_bytes) =
+        load_wasm_intrinsics_wat(&src_passes_dir)?;
 
     configure_file(
         &wasm_intrinsics_cpp_in_file,
         &wasm_intrinsics_cpp_out_file,
         &[
-            ("WASM_INTRINSICS_SIZE", format!("{}", wasm_intrinsics_wat_bytes)),
+            (
+                "WASM_INTRINSICS_SIZE",
+                format!("{}", wasm_intrinsics_wat_bytes),
+            ),
             ("WASM_INTRINSICS_EMBED", wasm_intrinsics_wat_hex),
-        ]
+        ],
     )?;
 
     Ok(wasm_intrinsics_cpp_out_file)
@@ -207,9 +207,7 @@ fn load_wasm_intrinsics_wat(passes_dir: &Path) -> anyhow::Result<(String, usize)
     let wasm_intrinsics_wat = passes_dir.join("wasm-intrinsics.wat");
     let mut wat_contents = std::fs::read_to_string(&wasm_intrinsics_wat)?;
 
-    let mut buffer = String::with_capacity(
-        wat_contents.len() * 5 /* 0xNN, */ + 4 /* null */
-    );
+    let mut buffer = String::with_capacity(wat_contents.len() * 5 /* 0xNN, */ + 4 /* null */);
 
     for byte in wat_contents.bytes() {
         write!(buffer, "0x{:02x},", byte);
