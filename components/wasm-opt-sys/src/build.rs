@@ -100,7 +100,6 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "eh-utils.cpp",
         "ExpressionManipulator.cpp",
         "ExpressionAnalyzer.cpp",
-        "intrinsics.cpp",
         "localgraph.cpp",
         "lubs.cpp",
         "memory-utils.cpp",
@@ -129,6 +128,9 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let cfg_files = ["Relooper.cpp"];
     let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
 
+
+    let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
+    
     let src_files: Vec<_> = None
         .into_iter()
         .chain(wasm_files)
@@ -138,6 +140,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         .chain(fuzzing_files)
         .chain(asmjs_files)
         .chain(cfg_files)
+        .chain(Some(file_intrinsics).into_iter())
         .collect();
 
     Ok(src_files)
@@ -150,4 +153,14 @@ fn get_files_from_dir(src_dir: &Path) -> anyhow::Result<impl Iterator<Item = Pat
         .map(|f| src_dir.join(f.path()));
 
     Ok(files)
+}
+
+fn disambiguate_file(input_file: &Path, new_file_name: &str) -> anyhow::Result<PathBuf> {
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+    let output_file = output_dir.join(new_file_name);
+
+    fs::copy(input_file, &output_file)?;
+
+    Ok(output_file)
 }
