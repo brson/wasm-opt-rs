@@ -6,12 +6,14 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 fn main() -> anyhow::Result<()> {
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = Path::new(&manifest_dir);
     let binaryen_dir = manifest_dir.join("binaryen");
 
     let src_dir = binaryen_dir.join("src");
-
     let src_files = get_src_files(&src_dir)?;
 
     let tools_dir = src_dir.join("tools");
@@ -19,6 +21,8 @@ fn main() -> anyhow::Result<()> {
     let wasm_opt_src = get_converted_wasm_opt_cpp(&wasm_opt_src)?;
 
     let wasm_intrinsics_src = get_converted_wasm_intrinsics_cpp(&src_dir)?;
+
+    create_config_header()?;
 
     let flags = ["-Wno-unused-parameter", "-std=c++17"];
 
@@ -30,6 +34,7 @@ fn main() -> anyhow::Result<()> {
         .cpp(true)
         .include(src_dir)
         .include(tools_dir)
+        .include(output_dir)
         .files(src_files)
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src)
@@ -90,7 +95,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let support_files = [
         "bits.cpp",
         "colors.cpp",
-        //        "command-line.cpp",
+        "command-line.cpp",
         "debug.cpp",
         "file.cpp",
         "safe_integer.cpp",
@@ -125,7 +130,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
     let asmjs_dir = src_dir.join("asmjs");
-    let asmjs_files = ["shared-constants.cpp"];
+    let asmjs_files = ["asm_v_wasm.cpp", "shared-constants.cpp"];
     let asmjs_files = asmjs_files.iter().map(|f| asmjs_dir.join(f));
 
     let cfg_dir = src_dir.join("cfg");
@@ -243,6 +248,16 @@ fn configure_file(
     }
 
     std::fs::write(dst_file, src)?;
+
+    Ok(())
+}
+
+fn create_config_header() -> anyhow::Result<()> {
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+
+    let output_file = output_dir.join("config.h");
+    fs::write(&output_file, "#define PROJECT_VERSION \"TODO\"")?;
 
     Ok(())
 }
