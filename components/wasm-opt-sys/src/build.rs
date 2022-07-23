@@ -65,17 +65,19 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
 fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let wasm_dir = src_dir.join("wasm");
     let wasm_files = [
-        "wasm-debug.cpp",
         "literal.cpp",
         "parsing.cpp",
         "wasm-binary.cpp",
+        "wasm-debug.cpp",
+        "wasm-emscripten.cpp",
         "wasm-interpreter.cpp",
         "wasm-io.cpp",
-        "wasm-s-parser.cpp",
         "wasm-stack.cpp",
+        "wasm-s-parser.cpp",
         "wasm-type.cpp",
         "wasm-validator.cpp",
         "wasm.cpp",
+        "wat-lexer.cpp",
     ];
     let wasm_files = wasm_files.iter().map(|f| wasm_dir.join(f));
 
@@ -93,8 +95,14 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let ir_dir = src_dir.join("ir");
     let ir_files = [
         "eh-utils.cpp",
+        "ExpressionManipulator.cpp",
         "intrinsics.cpp",
+        "localgraph.cpp",
+        "lubs.cpp",
+        "memory-utils.cpp",
         "module-utils.cpp",
+        "names.cpp",
+        "properties.cpp",
         "ReFinalize.cpp",
         "stack-utils.cpp",
         "table-utils.cpp",
@@ -109,6 +117,14 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let fuzzing_files = ["fuzzing.cpp", "random.cpp"];
     let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
+    let asmjs_dir = src_dir.join("asmjs");
+    let asmjs_files = ["shared-constants.cpp"];
+    let asmjs_files = asmjs_files.iter().map(|f| asmjs_dir.join(f));
+
+    let cfg_dir = src_dir.join("cfg");
+    let cfg_files = ["Relooper.cpp"];
+    let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
+
     let src_files: Vec<_> = None
         .into_iter()
         .chain(wasm_files)
@@ -116,6 +132,8 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         .chain(ir_files)
         .chain(passes_files)
         .chain(fuzzing_files)
+        .chain(asmjs_files)
+        .chain(cfg_files)
         .collect();
 
     Ok(src_files)
