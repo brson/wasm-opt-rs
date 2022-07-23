@@ -12,4 +12,4 @@ libc = "0.2.126"
 
 [build-dependencies]
 anyhow = "1.0.58"
-cc = "1.0.73"
+cc = { version = "1.0.73", features = ["parallel"] }
