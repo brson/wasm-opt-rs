@@ -109,7 +109,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "eh-utils.cpp",
         "ExpressionManipulator.cpp",
         "ExpressionAnalyzer.cpp",
-        "localgraph.cpp",
+        "LocalGraph.cpp",
         "lubs.cpp",
         "memory-utils.cpp",
         "module-utils.cpp",

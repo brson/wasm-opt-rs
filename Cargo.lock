@@ -37,6 +37,7 @@ name = "wasm-opt"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "libc",
  "wasm-opt-sys",
 ]
 
@@ -46,5 +47,4 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "cc",
- "libc",
 ]

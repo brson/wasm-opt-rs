@@ -6,10 +6,6 @@ license = "MIT / Apache-2.0"
 edition = "2021"
 build = "src/build.rs"
 
-[dependencies]
-anyhow = "1.0.58"
-libc = "0.2.126"
-
 [build-dependencies]
 anyhow = "1.0.58"
 cc = { version = "1.0.73", features = ["parallel"] }
