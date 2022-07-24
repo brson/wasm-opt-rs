@@ -1,11 +1,12 @@
 fn main() -> anyhow::Result<()> {
+    wasm_opt_sys::init();
+
     wasm_opt_main()
 }
 
 mod c {
     use libc::{c_char, c_int};
 
-    #[link(name = "wasm-opt-cc")]
     extern "C" {
         pub fn wasm_opt_main(argc: c_int, argv: *const *const c_char) -> c_int;
     }
