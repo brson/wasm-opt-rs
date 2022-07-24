@@ -13,5 +13,4 @@
 ///
 /// We have the external definitions living in the "wrong" crate to avoid the
 /// huge rebuild times during development this crate currently suffers from.
-pub fn init() {
-}
+pub fn init() {}

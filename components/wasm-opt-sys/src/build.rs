@@ -41,8 +41,7 @@ fn main() -> anyhow::Result<()> {
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
 
-    builder
-        .compile("wasm-opt-cc");
+    builder.compile("wasm-opt-cc");
 
     Ok(())
 }

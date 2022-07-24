@@ -16,7 +16,10 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
     use libc::{c_char, c_int};
 
     let args: Vec<String> = std::env::args().collect();
-    let c_args: Result<Vec<std::ffi::CString>, _> = args.into_iter().map(|s| std::ffi::CString::new(s)).collect();
+    let c_args: Result<Vec<std::ffi::CString>, _> = args
+        .into_iter()
+        .map(|s| std::ffi::CString::new(s))
+        .collect();
     let c_args = c_args?;
     let c_ptrs: Vec<*const c_char> = c_args.iter().map(|s| s.as_ptr() as *const c_char).collect();
 
