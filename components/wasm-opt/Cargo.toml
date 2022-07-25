@@ -9,3 +9,4 @@ edition = "2021"
 anyhow = "1.0.58"
 libc = "0.2.126"
 wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.0" }
+wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.0.0" }
