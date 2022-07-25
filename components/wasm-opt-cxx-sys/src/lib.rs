@@ -1,3 +1,5 @@
+pub use cxx;
+
 #[cxx::bridge(namespace = "wasm")]
 pub mod ffi {
     unsafe extern "C++" {
