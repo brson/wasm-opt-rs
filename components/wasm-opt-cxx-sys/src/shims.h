@@ -28,6 +28,12 @@ namespace wasm {
   std::unique_ptr<ModuleWriter> newModuleWriter() {
     return std::make_unique<ModuleWriter>();
   }
+
+  void ModuleWriter_writeText(ModuleWriter& writer,
+                              Module& wasm,
+                              const std::string& filename) {
+    writer.writeText(wasm, std::string(filename));
+  }
 }
 
 #endif // wasmopt_shims_h

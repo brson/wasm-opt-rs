@@ -39,6 +39,19 @@ impl ModuleWriter {
     pub fn new() -> ModuleWriter {
         ModuleWriter(ffi::newModuleWriter())
     }
+
+    pub fn write_text(
+        &mut self,
+        wasm: &mut Module,
+        path: &Path
+    ) {
+        let_cxx_string!(path = path.to_str().expect("utf8"));
+        ffi::ModuleWriter_writeText(
+            self.0.as_mut().expect("non-null"),
+            wasm.0.as_mut().expect("non-null"),
+            &path,
+        );
+    }
 }
 
 
