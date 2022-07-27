@@ -22,6 +22,24 @@ namespace wasm {
                              Module& wasm) {
     reader.readText(std::string(filename), wasm);
   }
+
+  void ModuleReader_readBinary(ModuleReader& reader,
+                               const std::string& filename,
+                               Module& wasm,
+                               const std::string& sourceMapFilename) {
+    reader.readBinary(std::string(filename),
+                      wasm,
+                      std::string(sourceMapFilename));
+  }
+
+  void ModuleReader_read(ModuleReader& reader,
+                         const std::string& filename,
+                         Module& wasm,
+                         const std::string& sourceMapFilename) {
+    reader.readBinary(std::string(filename),
+                      wasm,
+                      std::string(sourceMapFilename));
+  }
 }
 
 namespace wasm {
@@ -33,6 +51,12 @@ namespace wasm {
                               Module& wasm,
                               const std::string& filename) {
     writer.writeText(wasm, std::string(filename));
+  }
+
+  void ModuleWriter_writeBinary(ModuleWriter& writer,
+                                Module& wasm,
+                                const std::string& filename) {
+    writer.writeBinary(wasm, std::string(filename));
   }
 }
 
