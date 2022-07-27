@@ -52,6 +52,12 @@ namespace wasm {
                               const std::string& filename) {
     writer.writeText(wasm, std::string(filename));
   }
+
+  void ModuleWriter_writeBinary(ModuleWriter& writer,
+                                Module& wasm,
+                                const std::string& filename) {
+    writer.writeBinary(wasm, std::string(filename));
+  }
 }
 
 #endif // wasmopt_shims_h

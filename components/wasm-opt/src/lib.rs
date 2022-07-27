@@ -36,11 +36,11 @@ impl ModuleReader {
         &mut self,
         path: &Path,
         wasm: &mut Module,
-        source_map_filename: Option<&Path>
+        source_map_filename: Option<&Path>,
     ) {
-        let source_map_filename = source_map_filename.map(|p| {
-            p.to_str().expect("utf8")
-        }).unwrap_or("");
+        let source_map_filename = source_map_filename
+            .map(|p| p.to_str().expect("utf8"))
+            .unwrap_or("");
         let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
         ffi::ModuleReader_readBinary(
@@ -51,15 +51,10 @@ impl ModuleReader {
         );
     }
 
-    pub fn read(
-        &mut self,
-        path: &Path,
-        wasm: &mut Module,
-        source_map_filename: Option<&Path>
-    ) {
-        let source_map_filename = source_map_filename.map(|p| {
-            p.to_str().expect("utf8")
-        }).unwrap_or("");
+    pub fn read(&mut self, path: &Path, wasm: &mut Module, source_map_filename: Option<&Path>) {
+        let source_map_filename = source_map_filename
+            .map(|p| p.to_str().expect("utf8"))
+            .unwrap_or("");
         let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
         ffi::ModuleReader_read(
@@ -81,6 +76,15 @@ impl ModuleWriter {
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) {
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleWriter_writeText(
+            self.0.as_mut().expect("non-null"),
+            wasm.0.as_mut().expect("non-null"),
+            &path,
+        );
+    }
+
+    pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) {
+        let_cxx_string!(path = path.to_str().expect("utf8"));
+        ffi::ModuleWriter_writeBinary(
             self.0.as_mut().expect("non-null"),
             wasm.0.as_mut().expect("non-null"),
             &path,
