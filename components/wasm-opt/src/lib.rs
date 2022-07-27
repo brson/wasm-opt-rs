@@ -1,33 +1,54 @@
 use wasm_opt_cxx_sys as wocxx;
 use wocxx::cxx;
+use wocxx::cxx::let_cxx_string;
+use wocxx::ffi;
 
-pub struct Module(cxx::UniquePtr<wocxx::ffi::Module>);
+use std::path::Path;
+
+pub struct Module(cxx::UniquePtr<ffi::Module>);
 
 impl Module {
     pub fn new() -> Module {
-        Module(wocxx::ffi::newModule())
+        Module(ffi::newModule())
     }
 }
 
-pub struct ModuleReader(cxx::UniquePtr<wocxx::ffi::ModuleReader>);
+pub struct ModuleReader(cxx::UniquePtr<ffi::ModuleReader>);
 
 impl ModuleReader {
     pub fn new() -> ModuleReader {
-        ModuleReader(wocxx::ffi::newModuleReader())
+        ModuleReader(ffi::newModuleReader())
+    }
+
+    // FIXME would rather take &self here but the C++ method is not const-correct
+    // FIXME handle exceptions
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) {
+        // FIXME need to support non-utf8 paths. Does this work on windows?
+        let_cxx_string!(path = path.to_str().expect("utf8"));
+        ffi::ModuleReader_readText(
+            self.0.as_mut().expect("non-null"),
+            &path,
+            wasm.0.as_mut().expect("non-null"),
+        );
     }
 }
 
-pub struct ModuleWriter(cxx::UniquePtr<wocxx::ffi::ModuleWriter>);
+pub struct ModuleWriter(cxx::UniquePtr<ffi::ModuleWriter>);
 
 impl ModuleWriter {
     pub fn new() -> ModuleWriter {
-        ModuleWriter(wocxx::ffi::newModuleWriter())
+        ModuleWriter(ffi::newModuleWriter())
+    }
+
+    pub fn write_text(&mut self, wasm: &mut Module, path: &Path) {
+        let_cxx_string!(path = path.to_str().expect("utf8"));
+        ffi::ModuleWriter_writeText(
+            self.0.as_mut().expect("non-null"),
+            wasm.0.as_mut().expect("non-null"),
+            &path,
+        );
     }
 }
-
-
-
-
 
 /// Hack to establish linage to wasm-opt-sys.
 ///

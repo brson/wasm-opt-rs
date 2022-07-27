@@ -16,6 +16,12 @@ pub mod ffi {
         type ModuleReader;
 
         fn newModuleReader() -> UniquePtr<ModuleReader>;
+
+        fn ModuleReader_readText(
+            reader: Pin<&mut ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        );
     }
 
     unsafe extern "C++" {
@@ -24,6 +30,14 @@ pub mod ffi {
         type ModuleWriter;
 
         fn newModuleWriter() -> UniquePtr<ModuleWriter>;
+
+        fn setBinary(self: Pin<&mut ModuleWriter>, binary: bool);
+
+        fn ModuleWriter_writeText(
+            writer: Pin<&mut ModuleWriter>,
+            wasm: Pin<&mut Module>,
+            filename: &CxxString,
+        );
     }
 }
 
