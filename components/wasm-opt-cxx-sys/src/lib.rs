@@ -16,6 +16,12 @@ pub mod ffi {
         type ModuleReader;
 
         fn newModuleReader() -> UniquePtr<ModuleReader>;
+
+        fn ModuleReader_readText(
+            reader: Pin<&mut ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        );
     }
 
     unsafe extern "C++" {

@@ -9,11 +9,22 @@ namespace wasm {
   std::unique_ptr<Module> newModule() {
     return std::make_unique<Module>();
   }
+}
 
+namespace wasm {
   std::unique_ptr<ModuleReader> newModuleReader() {
     return std::make_unique<ModuleReader>();
   }
 
+  // Wrapper to handle by-val string.
+  void ModuleReader_readText(ModuleReader& reader,
+                             const std::string& filename,
+                             Module& wasm) {
+    reader.readText(std::string(filename), wasm);
+  }
+}
+
+namespace wasm {
   std::unique_ptr<ModuleWriter> newModuleWriter() {
     return std::make_unique<ModuleWriter>();
   }
