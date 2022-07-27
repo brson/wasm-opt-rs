@@ -5,9 +5,25 @@ pub mod ffi {
     unsafe extern "C++" {
         include!("shims.h");
 
+        type Module;
+
+        fn newModule() -> UniquePtr<Module>;
+    }
+
+    unsafe extern "C++" {
+        include!("shims.h");
+
         type ModuleReader;
 
         fn newModuleReader() -> UniquePtr<ModuleReader>;
+    }
+
+    unsafe extern "C++" {
+        include!("shims.h");
+
+        type ModuleWriter;
+
+        fn newModuleWriter() -> UniquePtr<ModuleWriter>;
     }
 }
 
