@@ -22,6 +22,20 @@ pub mod ffi {
             filename: &CxxString,
             wasm: Pin<&mut Module>,
         );
+
+        fn ModuleReader_readBinary(
+            reader: Pin<&mut ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString
+        );
+
+        fn ModuleReader_read(
+            reader: Pin<&mut ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString
+        );
     }
 
     unsafe extern "C++" {
