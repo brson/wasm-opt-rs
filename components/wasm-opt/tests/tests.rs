@@ -40,7 +40,7 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     reader.read_binary(&path, &mut m, None)?;
 
     let mut writer = ModuleWriter::new();
-    let new_file = temp_dir.path().join("hellow_world_by_module_writer.wasm");
+    let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
     let mut another_m = Module::new();
