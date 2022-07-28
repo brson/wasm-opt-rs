@@ -21,7 +21,6 @@ impl ModuleReader {
     }
 
     // FIXME would rather take &self here but the C++ method is not const-correct
-    // FIXME handle exceptions
     pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
         let_cxx_string!(path = path.to_str().expect("utf8"));
