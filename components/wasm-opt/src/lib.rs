@@ -2,6 +2,7 @@ use wasm_opt_cxx_sys as wocxx;
 use wocxx::cxx;
 use wocxx::cxx::let_cxx_string;
 use wocxx::ffi;
+use wocxx::ffi_colors;
 
 use std::path::Path;
 
@@ -78,6 +79,8 @@ impl ModuleWriter {
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
+        ffi_colors::setEnabled(false);
+
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleWriter_writeText(
             self.0.as_mut().expect("non-null"),

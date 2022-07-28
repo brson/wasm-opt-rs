@@ -3,6 +3,7 @@
 
 #include "../../wasm-opt-sys/binaryen/src/pass.h"
 #include "../../wasm-opt-sys/binaryen/src/wasm-io.h"
+#include "../../wasm-opt-sys/binaryen/src/support/colors.h"
 
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr

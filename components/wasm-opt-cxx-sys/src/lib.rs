@@ -1,5 +1,14 @@
 pub use cxx;
 
+#[cxx::bridge(namespace = "Colors")]
+pub mod ffi_colors {
+    unsafe extern "C++" {
+        include!("shims.h");
+
+        fn setEnabled(enabled: bool);
+    }
+}
+
 #[cxx::bridge(namespace = "wasm")]
 pub mod ffi {
     unsafe extern "C++" {
