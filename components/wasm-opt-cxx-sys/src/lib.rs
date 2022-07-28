@@ -45,8 +45,6 @@ pub mod ffi {
 
         fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
-        fn setBinary(self: Pin<&mut ModuleWriter>, binary: bool);
-
         fn ModuleWriter_writeText(
             writer: Pin<&mut ModuleWriter>,
             wasm: Pin<&mut Module>,
