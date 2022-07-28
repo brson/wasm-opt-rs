@@ -19,7 +19,7 @@ fn module_reader_binary_works() -> anyhow::Result<()> {
     
     let mut m = Module::new();
     let mut reader = ModuleReader::new();
-    reader.read_binary(&path, &mut m, None);
+    reader.read_binary(&path, &mut m, None)?;
 
     // todo
 
