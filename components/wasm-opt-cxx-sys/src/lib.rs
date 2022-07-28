@@ -57,6 +57,16 @@ pub mod ffi {
             filename: &CxxString,
         ) -> Result<()>;
     }
+
+    unsafe extern "C++" {
+        type PassRunner<'wasm>;
+
+        // todo: are these lifetimes enough to
+        // keep `wasm` from being aliased later?
+        fn newPassRunner<'wasm>(
+            wasm: Pin<&'wasm mut Module>,
+        ) -> UniquePtr<PassRunner<'wasm>>;
+    }
 }
 
 /// Hack to establish linage to wasm-opt-sys.

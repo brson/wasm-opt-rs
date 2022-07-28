@@ -1,6 +1,7 @@
 #ifndef wasmopt_shims_h
 #define wasmopt_shims_h
 
+#include "../../wasm-opt-sys/binaryen/src/pass.h"
 #include "../../wasm-opt-sys/binaryen/src/wasm-io.h"
 
 #include <stdexcept> // runtime_error
@@ -82,6 +83,12 @@ namespace wasm {
                                 Module& wasm,
                                 const std::string& filename) {
     writer.writeBinary(wasm, std::string(filename));
+  }
+}
+
+namespace wasm {
+  std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
+    return std::make_unique<PassRunner>(&wasm);
   }
 }
 
