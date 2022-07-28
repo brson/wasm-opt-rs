@@ -63,9 +63,7 @@ pub mod ffi {
 
         // todo: are these lifetimes enough to
         // keep `wasm` from being aliased later?
-        fn newPassRunner<'wasm>(
-            wasm: Pin<&'wasm mut Module>,
-        ) -> UniquePtr<PassRunner<'wasm>>;
+        fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
     }
 }
 

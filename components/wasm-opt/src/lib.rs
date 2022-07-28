@@ -98,7 +98,6 @@ impl ModuleWriter {
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<ffi::PassRunner<'wasm>>);
 
-
 /// Hack to establish linage to wasm-opt-sys.
 ///
 /// See docs for wasm_opt_sys::init.
