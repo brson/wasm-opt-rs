@@ -9,6 +9,7 @@ static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
 
 #[test]
+#[ignore] // fixme
 fn read_write_text_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wat");
