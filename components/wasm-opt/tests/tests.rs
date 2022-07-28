@@ -22,7 +22,24 @@ fn read_write_text_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_text(&path, &mut m)?;
 
-    // todo
+    let mut writer = ModuleWriter::new();
+    let new_file = temp_dir.path().join("hello_world_by_module_writer.wat");
+    writer.write_text(&mut m, &new_file)?;
+
+    let mut another_m = Module::new();
+    let mut another_reader = ModuleReader::new();
+    another_reader.read_text(&new_file, &mut another_m)?;
+
+    let mut another_writer = ModuleWriter::new();
+    let another_new_file = temp_dir
+        .path()
+        .join("hello_world_by_another_module_writer.wat");
+    another_writer.write_text(&mut another_m, &another_new_file)?;
+
+    let new_file_reader = fs::read(&new_file)?;
+    let another_new_file_reader = fs::read(&another_new_file)?;
+
+    assert_eq!(new_file_reader, another_new_file_reader);
 
     Ok(())
 }
@@ -57,5 +74,6 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     let another_new_file_reader = fs::read(&another_new_file)?;
 
     assert_eq!(new_file_reader, another_new_file_reader);
+
     Ok(())
 }
