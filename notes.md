@@ -98,3 +98,9 @@ Of course the use of `RefCell` makes `ModuleReader` surprisingly
 non-`Sync`.
 To fix _that_ we could wrap the `RefCell` in a `Mutex`,
 imposing another atomic flag check that should always succeed.
+
+
+## `ParseException` doesn't implement `std::exception`
+
+`cxx` can translate exceptions to Rust as long as they implement
+`std::exception`, but `ParseException` does not.
