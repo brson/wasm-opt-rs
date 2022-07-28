@@ -101,6 +101,18 @@ impl ModuleWriter {
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<ffi::PassRunner<'wasm>>);
 
+impl<'wasm> PassRunner<'wasm> {
+    pub fn new(wasm: &'wasm mut Module) -> PassRunner<'wasm> {
+        let wasm = wasm.0.as_mut().expect("non-null");
+        PassRunner(ffi::newPassRunner(wasm))
+    }
+
+    pub fn add_default_optimization_passes(&mut self) {
+        let this = self.0.as_mut().expect("non-null");
+        this.addDefaultOptimizationPasses();
+    }
+}
+
 /// Hack to establish linage to wasm-opt-sys.
 ///
 /// See docs for wasm_opt_sys::init.
