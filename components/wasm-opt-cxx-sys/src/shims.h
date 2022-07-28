@@ -3,7 +3,20 @@
 
 #include "../../wasm-opt-sys/binaryen/src/wasm-io.h"
 
+#include <stdexcept> // runtime_error
 #include <memory> // unique_ptr
+
+namespace wasm {
+  std::runtime_error parse_exception_to_runtime_error(const ParseException& e) {
+    if (e.line == -1ul) {
+      return std::runtime_error(e.text);
+    } else {
+      std::ostringstream buf;
+      buf << "At " << e.line << ", " << e.col << ": " << e.text;
+      return std::runtime_error(buf.str());
+    }
+  }
+}
 
 namespace wasm {
   std::unique_ptr<Module> newModule() {
@@ -20,25 +33,37 @@ namespace wasm {
   void ModuleReader_readText(ModuleReader& reader,
                              const std::string& filename,
                              Module& wasm) {
-    reader.readText(std::string(filename), wasm);
+    try {
+      reader.readText(std::string(filename), wasm);
+    } catch (const ParseException &e) {
+      throw parse_exception_to_runtime_error(e);
+    }
   }
 
   void ModuleReader_readBinary(ModuleReader& reader,
                                const std::string& filename,
                                Module& wasm,
                                const std::string& sourceMapFilename) {
-    reader.readBinary(std::string(filename),
-                      wasm,
-                      std::string(sourceMapFilename));
+    try {
+      reader.readBinary(std::string(filename),
+                        wasm,
+                        std::string(sourceMapFilename));
+    } catch (const ParseException &e) {
+      throw parse_exception_to_runtime_error(e);
+    }
   }
 
   void ModuleReader_read(ModuleReader& reader,
                          const std::string& filename,
                          Module& wasm,
                          const std::string& sourceMapFilename) {
-    reader.readBinary(std::string(filename),
-                      wasm,
-                      std::string(sourceMapFilename));
+    try {
+      reader.readBinary(std::string(filename),
+                        wasm,
+                        std::string(sourceMapFilename));
+    } catch (const ParseException &e) {
+      throw parse_exception_to_runtime_error(e);
+    }
   }
 }
 
