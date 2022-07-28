@@ -22,14 +22,14 @@ impl ModuleReader {
 
     // FIXME would rather take &self here but the C++ method is not const-correct
     // FIXME handle exceptions
-    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) {
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleReader_readText(
             self.0.as_mut().expect("non-null"),
             &path,
             wasm.0.as_mut().expect("non-null"),
-        );
+        )
     }
 
     pub fn read_binary(
@@ -37,7 +37,7 @@ impl ModuleReader {
         path: &Path,
         wasm: &mut Module,
         source_map_filename: Option<&Path>,
-    ) {
+    ) -> Result<(), cxx::Exception> {
         let source_map_filename = source_map_filename
             .map(|p| p.to_str().expect("utf8"))
             .unwrap_or("");
@@ -48,10 +48,10 @@ impl ModuleReader {
             &path,
             wasm.0.as_mut().expect("non-null"),
             &source_map_filename,
-        );
+        )
     }
 
-    pub fn read(&mut self, path: &Path, wasm: &mut Module, source_map_filename: Option<&Path>) {
+    pub fn read(&mut self, path: &Path, wasm: &mut Module, source_map_filename: Option<&Path>) -> Result<(), cxx::Exception> {
         let source_map_filename = source_map_filename
             .map(|p| p.to_str().expect("utf8"))
             .unwrap_or("");
@@ -62,7 +62,7 @@ impl ModuleReader {
             &path,
             wasm.0.as_mut().expect("non-null"),
             &source_map_filename,
-        );
+        )
     }
 }
 
@@ -73,22 +73,22 @@ impl ModuleWriter {
         ModuleWriter(ffi::newModuleWriter())
     }
 
-    pub fn write_text(&mut self, wasm: &mut Module, path: &Path) {
+    pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleWriter_writeText(
             self.0.as_mut().expect("non-null"),
             wasm.0.as_mut().expect("non-null"),
             &path,
-        );
+        )
     }
 
-    pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) {
+    pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleWriter_writeBinary(
             self.0.as_mut().expect("non-null"),
             wasm.0.as_mut().expect("non-null"),
             &path,
-        );
+        )
     }
 }
 

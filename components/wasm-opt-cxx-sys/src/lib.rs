@@ -21,21 +21,21 @@ pub mod ffi {
             reader: Pin<&mut ModuleReader>,
             filename: &CxxString,
             wasm: Pin<&mut Module>,
-        );
+        ) -> Result<()>;
 
         fn ModuleReader_readBinary(
             reader: Pin<&mut ModuleReader>,
             filename: &CxxString,
             wasm: Pin<&mut Module>,
             sourceMapFilename: &CxxString,
-        );
+        ) -> Result<()>;
 
         fn ModuleReader_read(
             reader: Pin<&mut ModuleReader>,
             filename: &CxxString,
             wasm: Pin<&mut Module>,
             sourceMapFilename: &CxxString,
-        );
+        ) -> Result<()>;
     }
 
     unsafe extern "C++" {
@@ -45,19 +45,17 @@ pub mod ffi {
 
         fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
-        fn setBinary(self: Pin<&mut ModuleWriter>, binary: bool);
-
         fn ModuleWriter_writeText(
             writer: Pin<&mut ModuleWriter>,
             wasm: Pin<&mut Module>,
             filename: &CxxString,
-        );
+        ) -> Result<()>;
 
         fn ModuleWriter_writeBinary(
             writer: Pin<&mut ModuleWriter>,
             wasm: Pin<&mut Module>,
             filename: &CxxString,
-        );
+        ) -> Result<()>;
     }
 }
 
