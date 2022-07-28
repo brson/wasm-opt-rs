@@ -47,12 +47,14 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     let mut another_reader = ModuleReader::new();
     another_reader.read_binary(&new_file, &mut another_m, None)?;
     let mut another_writer = ModuleWriter::new();
-    let another_new_file = temp_dir.path().join("hello_world_by_another_module_writer.wasm");
+    let another_new_file = temp_dir
+        .path()
+        .join("hello_world_by_another_module_writer.wasm");
     another_writer.write_binary(&mut another_m, &another_new_file)?;
 
     let new_file_reader = fs::read(&new_file)?;
     let another_new_file_reader = fs::read(&another_new_file)?;
-    
+
     assert_eq!(new_file_reader, another_new_file_reader);
     Ok(())
 }

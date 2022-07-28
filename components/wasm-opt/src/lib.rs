@@ -51,7 +51,12 @@ impl ModuleReader {
         )
     }
 
-    pub fn read(&mut self, path: &Path, wasm: &mut Module, source_map_filename: Option<&Path>) -> Result<(), cxx::Exception> {
+    pub fn read(
+        &mut self,
+        path: &Path,
+        wasm: &mut Module,
+        source_map_filename: Option<&Path>,
+    ) -> Result<(), cxx::Exception> {
         let source_map_filename = source_map_filename
             .map(|p| p.to_str().expect("utf8"))
             .unwrap_or("");
