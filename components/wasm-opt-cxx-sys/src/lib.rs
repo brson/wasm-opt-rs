@@ -77,6 +77,8 @@ pub mod ffi {
         fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
 
         fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
+
+        fn run(self: Pin<&mut Self>);
     }
 }
 

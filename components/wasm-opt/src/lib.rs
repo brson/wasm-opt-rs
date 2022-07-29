@@ -111,6 +111,11 @@ impl<'wasm> PassRunner<'wasm> {
         let this = self.0.as_mut().expect("non-null");
         this.addDefaultOptimizationPasses();
     }
+
+    pub fn run(&mut self) {
+        let this = self.0.as_mut().expect("non-null");
+        this.run();    
+    }
 }
 
 /// Hack to establish linage to wasm-opt-sys.
