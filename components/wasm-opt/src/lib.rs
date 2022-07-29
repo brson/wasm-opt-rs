@@ -114,7 +114,7 @@ impl<'wasm> PassRunner<'wasm> {
 
     pub fn run(&mut self) {
         let this = self.0.as_mut().expect("non-null");
-        this.run();    
+        this.run();
     }
 }
 
