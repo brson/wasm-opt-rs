@@ -24,12 +24,20 @@ fn main() -> anyhow::Result<()> {
 
     create_config_header()?;
 
-    let flags = ["-Wno-unused-parameter", "-std=c++17"];
-
     let mut builder = cc::Build::new();
 
-    for flag in flags {
-        builder.flag(flag);
+    {
+        let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
+
+        let flags: &[_] = if target_env != "msvc" {
+            &["-std=c++17", "-Wno-unused-parameter"]
+        } else {
+            &["/std:c++17"]
+        };
+
+        for flag in flags {
+            builder.flag(flag);
+        }
     }
 
     builder

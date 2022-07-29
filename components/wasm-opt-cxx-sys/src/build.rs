@@ -1,9 +1,23 @@
 fn main() -> anyhow::Result<()> {
-    cxx_build::bridge("src/lib.rs")
+    let mut builder = cxx_build::bridge("src/lib.rs");
+
+    {
+        let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
+
+        let flags: &[_] = if target_env != "msvc" {
+            &["-std=c++17", "-Wno-unused-parameter"]
+        } else {
+            &["/std:c++17"]
+        };
+
+        for flag in flags {
+            builder.flag(flag);
+        }
+    }
+
+    builder
         .include("src")
         .include("../wasm-opt-sys/binaryen/src")
-        .flag("-std=c++17")
-        .flag("-Wno-unused-parameter")
         .compile("wasm-opt-cxx");
 
     Ok(())
