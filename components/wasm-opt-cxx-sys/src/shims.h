@@ -106,6 +106,8 @@ namespace wasm_shims {
 }
 
 namespace wasm {
+  typedef wasm_shims::PassOptions PassOptionsShim;
+
   std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
     return std::make_unique<PassRunner>(&wasm);
   }
