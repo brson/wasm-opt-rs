@@ -82,6 +82,21 @@ pub mod ffi {
             fn run(self: Pin<&mut Self>);
         }
     }
+
+    #[cxx::bridge(namespace = "wasm_shims")]
+    pub mod wasm_shims {
+        unsafe extern "C++" {
+            include!("shims.h");
+
+            type PassOptions;
+
+            fn newPassOptions() -> UniquePtr<PassOptions>;
+
+            fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
+
+            fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
+        }
+    }
 }
 
 /// Hack to establish linage to wasm-opt-sys.

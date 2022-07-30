@@ -87,9 +87,31 @@ namespace wasm {
   }
 }
 
+namespace wasm_shims {
+  struct PassOptions {
+    wasm::PassOptions inner;
+
+    void setOptimizeLevel(int32_t level) {
+      inner.optimizeLevel = level;
+    }
+
+    void setShrinkLevel(int32_t level) {
+      inner.shrinkLevel = level;
+    }
+  };
+
+  std::unique_ptr<PassOptions> newPassOptions() {
+    return std::make_unique<PassOptions>();
+  }
+}
+
 namespace wasm {
   std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
     return std::make_unique<PassRunner>(&wasm);
+  }
+
+  std::unique_ptr<PassRunner> newPassRunnerWithOptions(Module& wasm, std::unique_ptr<wasm_shims::PassOptions> options) {
+    return std::make_unique<PassRunner>(&wasm, options->inner);
   }
 }
 
