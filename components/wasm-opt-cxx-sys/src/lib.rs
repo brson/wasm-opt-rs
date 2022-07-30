@@ -1,84 +1,86 @@
 pub use cxx;
 
-#[cxx::bridge(namespace = "Colors")]
-pub mod ffi_colors {
-    unsafe extern "C++" {
-        include!("shims.h");
-
-        fn setEnabled(enabled: bool);
-    }
-}
-
-#[cxx::bridge(namespace = "wasm")]
 pub mod ffi {
-    unsafe extern "C++" {
-        include!("shims.h");
+    #[cxx::bridge(namespace = "Colors")]
+    pub mod colors {
+        unsafe extern "C++" {
+            include!("shims.h");
 
-        type Module;
-
-        fn newModule() -> UniquePtr<Module>;
+            fn setEnabled(enabled: bool);
+        }
     }
 
-    unsafe extern "C++" {
-        include!("shims.h");
+    #[cxx::bridge(namespace = "wasm")]
+    pub mod wasm {
+        unsafe extern "C++" {
+            include!("shims.h");
 
-        type ModuleReader;
+            type Module;
 
-        fn newModuleReader() -> UniquePtr<ModuleReader>;
+            fn newModule() -> UniquePtr<Module>;
+        }
 
-        fn ModuleReader_readText(
-            reader: Pin<&mut ModuleReader>,
-            filename: &CxxString,
-            wasm: Pin<&mut Module>,
-        ) -> Result<()>;
+        unsafe extern "C++" {
+            include!("shims.h");
 
-        fn ModuleReader_readBinary(
-            reader: Pin<&mut ModuleReader>,
-            filename: &CxxString,
-            wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
-        ) -> Result<()>;
+            type ModuleReader;
 
-        fn ModuleReader_read(
-            reader: Pin<&mut ModuleReader>,
-            filename: &CxxString,
-            wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
-        ) -> Result<()>;
-    }
+            fn newModuleReader() -> UniquePtr<ModuleReader>;
 
-    unsafe extern "C++" {
-        include!("shims.h");
+            fn ModuleReader_readText(
+                reader: Pin<&mut ModuleReader>,
+                filename: &CxxString,
+                wasm: Pin<&mut Module>,
+            ) -> Result<()>;
 
-        type ModuleWriter;
+            fn ModuleReader_readBinary(
+                reader: Pin<&mut ModuleReader>,
+                filename: &CxxString,
+                wasm: Pin<&mut Module>,
+                sourceMapFilename: &CxxString,
+            ) -> Result<()>;
 
-        fn newModuleWriter() -> UniquePtr<ModuleWriter>;
+            fn ModuleReader_read(
+                reader: Pin<&mut ModuleReader>,
+                filename: &CxxString,
+                wasm: Pin<&mut Module>,
+                sourceMapFilename: &CxxString,
+            ) -> Result<()>;
+        }
 
-        fn ModuleWriter_writeText(
-            writer: Pin<&mut ModuleWriter>,
-            wasm: Pin<&mut Module>,
-            filename: &CxxString,
-        ) -> Result<()>;
+        unsafe extern "C++" {
+            include!("shims.h");
 
-        fn ModuleWriter_writeBinary(
-            writer: Pin<&mut ModuleWriter>,
-            wasm: Pin<&mut Module>,
-            filename: &CxxString,
-        ) -> Result<()>;
-    }
+            type ModuleWriter;
 
-    unsafe extern "C++" {
-        include!("shims.h");
+            fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
-        type PassRunner<'wasm>;
+            fn ModuleWriter_writeText(
+                writer: Pin<&mut ModuleWriter>,
+                wasm: Pin<&mut Module>,
+                filename: &CxxString,
+            ) -> Result<()>;
 
-        // todo: are these lifetimes enough to
-        // keep `wasm` from being aliased later?
-        fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
+            fn ModuleWriter_writeBinary(
+                writer: Pin<&mut ModuleWriter>,
+                wasm: Pin<&mut Module>,
+                filename: &CxxString,
+            ) -> Result<()>;
+        }
 
-        fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
+        unsafe extern "C++" {
+            include!("shims.h");
 
-        fn run(self: Pin<&mut Self>);
+            type PassRunner<'wasm>;
+
+            // todo: are these lifetimes enough to
+            // keep `wasm` from being aliased later?
+            fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
+
+            fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
+
+            fn run(self: Pin<&mut Self>);
+        }
     }
 }
 
