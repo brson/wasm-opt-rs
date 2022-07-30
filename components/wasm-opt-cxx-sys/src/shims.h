@@ -8,8 +8,8 @@
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr
 
-namespace wasm {
-  std::runtime_error parse_exception_to_runtime_error(const ParseException& e) {
+namespace wasm_shims {
+  std::runtime_error parse_exception_to_runtime_error(const wasm::ParseException& e) {
     if (e.line == -1ul) {
       return std::runtime_error(e.text);
     } else {
@@ -20,13 +20,17 @@ namespace wasm {
   }
 }
 
-namespace wasm {
+namespace wasm_shims {
+  typedef wasm::Module Module;
+
   std::unique_ptr<Module> newModule() {
     return std::make_unique<Module>();
   }
 }
 
-namespace wasm {
+namespace wasm_shims {
+  typedef wasm::ModuleReader ModuleReader;
+
   std::unique_ptr<ModuleReader> newModuleReader() {
     return std::make_unique<ModuleReader>();
   }
@@ -37,7 +41,7 @@ namespace wasm {
                              Module& wasm) {
     try {
       reader.readText(std::string(filename), wasm);
-    } catch (const ParseException &e) {
+    } catch (const wasm::ParseException &e) {
       throw parse_exception_to_runtime_error(e);
     }
   }
@@ -50,7 +54,7 @@ namespace wasm {
       reader.readBinary(std::string(filename),
                         wasm,
                         std::string(sourceMapFilename));
-    } catch (const ParseException &e) {
+    } catch (const wasm::ParseException &e) {
       throw parse_exception_to_runtime_error(e);
     }
   }
@@ -63,13 +67,15 @@ namespace wasm {
       reader.readBinary(std::string(filename),
                         wasm,
                         std::string(sourceMapFilename));
-    } catch (const ParseException &e) {
+    } catch (const wasm::ParseException &e) {
       throw parse_exception_to_runtime_error(e);
     }
   }
 }
 
-namespace wasm {
+namespace wasm_shims {
+  typedef wasm::ModuleWriter ModuleWriter;
+
   std::unique_ptr<ModuleWriter> newModuleWriter() {
     return std::make_unique<ModuleWriter>();
   }
@@ -105,8 +111,8 @@ namespace wasm_shims {
   }
 }
 
-namespace wasm {
-  typedef wasm_shims::PassOptions PassOptionsShim;
+namespace wasm_shims {
+  typedef wasm::PassRunner PassRunner;
 
   std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
     return std::make_unique<PassRunner>(&wasm);

@@ -11,21 +11,6 @@ pub mod ffi {
     }
 
     #[cxx::bridge(namespace = "wasm_shims")]
-    pub mod wasm_shims {
-        unsafe extern "C++" {
-            include!("shims.h");
-
-            type PassOptions;
-
-            fn newPassOptions() -> UniquePtr<PassOptions>;
-
-            fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
-
-            fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
-        }
-    }
-
-    #[cxx::bridge(namespace = "wasm")]
     pub mod wasm {
         unsafe extern "C++" {
             include!("shims.h");
@@ -86,7 +71,17 @@ pub mod ffi {
         unsafe extern "C++" {
             include!("shims.h");
 
-            type PassOptionsShim;
+            type PassOptions;
+
+            fn newPassOptions() -> UniquePtr<PassOptions>;
+
+            fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
+
+            fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
+        }
+
+        unsafe extern "C++" {
+            include!("shims.h");
 
             type PassRunner<'wasm>;
 
@@ -94,12 +89,12 @@ pub mod ffi {
 
             fn newPassRunnerWithOptions<'wasm>(
                 wasm: Pin<&'wasm mut Module>,
-                options: UniquePtr<PassOptionsShim>,
+                options: UniquePtr<PassOptions>,
             ) -> UniquePtr<PassRunner<'wasm>>;
 
-            fn addDefaultOptimizationPasses(self: Pin<&mut PassRunner>);
+            fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 
-            fn run(self: Pin<&mut PassRunner>);
+            fn run(self: Pin<&mut Self>);
         }
     }
 }

@@ -98,11 +98,11 @@ impl ModuleWriter {
     }
 }
 
-pub struct PassOptions(cxx::UniquePtr<ffi::wasm_shims::PassOptions>);
+pub struct PassOptions(cxx::UniquePtr<ffi::wasm::PassOptions>);
 
 impl PassOptions {
     pub fn new() -> PassOptions {
-        PassOptions(ffi::wasm_shims::newPassOptions())
+        PassOptions(ffi::wasm::newPassOptions())
     }
 
     pub fn set_optimize_level(&mut self, level: i32) {
@@ -125,12 +125,11 @@ impl<'wasm> PassRunner<'wasm> {
     }
 
     pub fn new_with_options(
-        _wasm: &'wasm mut Module,
-        _options: PassOptions,
+        wasm: &'wasm mut Module,
+        options: PassOptions,
     ) -> PassRunner<'wasm> {
-        todo!();
-        //let wasm = wasm.0.as_mut().expect("non-null");
-        //PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
+        let wasm = wasm.0.as_mut().expect("non-null");
+        PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
     }
 
     pub fn add_default_optimization_passes(&mut self) {
