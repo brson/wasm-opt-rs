@@ -124,10 +124,7 @@ impl<'wasm> PassRunner<'wasm> {
         PassRunner(ffi::wasm::newPassRunner(wasm))
     }
 
-    pub fn new_with_options(
-        wasm: &'wasm mut Module,
-        options: PassOptions,
-    ) -> PassRunner<'wasm> {
+    pub fn new_with_options(wasm: &'wasm mut Module, options: PassOptions) -> PassRunner<'wasm> {
         let wasm = wasm.0.as_mut().expect("non-null");
         PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
     }

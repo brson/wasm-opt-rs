@@ -93,7 +93,7 @@ fn pass_runner_works() -> anyhow::Result<()> {
     let mut writer = ModuleWriter::new();
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
-    
+
     // Module with optimization
     let mut another_m = Module::new();
     let mut another_reader = ModuleReader::new();
