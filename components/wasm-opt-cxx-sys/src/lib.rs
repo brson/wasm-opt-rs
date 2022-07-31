@@ -75,9 +75,27 @@ pub mod ffi {
 
             fn newPassOptions() -> UniquePtr<PassOptions>;
 
+            fn setDebug(self: Pin<&mut Self>, debug: bool);
+
+            fn setValidate(self: Pin<&mut Self>, validate: bool);
+
+            fn setValidateGlobally(self: Pin<&mut Self>, validate: bool);
+
             fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
 
             fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
+
+            fn setIgnoreImplicitTraps(self: Pin<&mut Self>, ignoreTraps: bool);
+
+            fn setTrapsNeverHappen(self: Pin<&mut Self>, ignoreTraps: bool);
+
+            fn setLowMemoryUnused(self: Pin<&mut Self>, memoryUnused: bool);
+
+            fn setFastMath(self: Pin<&mut Self>, fastMath: bool);
+
+            fn setZeroFilledMemory(self: Pin<&mut Self>, zeroFilledMemory: bool);
+
+            fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
         }
 
         unsafe extern "C++" {

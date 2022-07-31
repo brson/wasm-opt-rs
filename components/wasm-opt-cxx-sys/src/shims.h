@@ -97,12 +97,48 @@ namespace wasm_shims {
   struct PassOptions {
     wasm::PassOptions inner;
 
+    void setDebug(bool debug) {
+      inner.debug = debug;
+    }
+
+    void setValidate(bool validate) {
+      inner.validate = validate;
+    }
+
+    void setValidateGlobally(bool validate) {
+      inner.validateGlobally = validate;
+    }
+
     void setOptimizeLevel(int32_t level) {
       inner.optimizeLevel = level;
     }
 
     void setShrinkLevel(int32_t level) {
       inner.shrinkLevel = level;
+    }
+
+    void setIgnoreImplicitTraps(bool ignoreTraps) {
+      inner.ignoreImplicitTraps = ignoreTraps;
+    }
+
+    void setTrapsNeverHappen(bool ignoreTraps) {
+      inner.trapsNeverHappen = ignoreTraps;
+    }
+
+    void setLowMemoryUnused(bool memoryUnused) {
+      inner.lowMemoryUnused = memoryUnused;
+    }
+
+    void setFastMath(bool fastMath) {
+      inner.fastMath = fastMath;
+    }
+
+    void setZeroFilledMemory(bool zeroFilledMemory) {
+      inner.zeroFilledMemory = zeroFilledMemory;
+    }
+
+    void setDebugInfo(bool debugInfo) {
+      inner.debugInfo = debugInfo;
     }
   };
 

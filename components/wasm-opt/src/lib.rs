@@ -105,6 +105,21 @@ impl PassOptions {
         PassOptions(ffi::wasm::newPassOptions())
     }
 
+    pub fn set_debug(&mut self, debug: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setDebug(debug);
+    }
+
+    pub fn set_validate(&mut self, validate: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setValidate(validate);
+    }
+
+    pub fn set_validate_globally(&mut self, validate: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setValidateGlobally(validate);
+    }
+
     pub fn set_optimize_level(&mut self, level: i32) {
         let this = self.0.as_mut().expect("non-null");
         this.setOptimizeLevel(level);
@@ -113,6 +128,36 @@ impl PassOptions {
     pub fn set_shrink_level(&mut self, level: i32) {
         let this = self.0.as_mut().expect("non-null");
         this.setShrinkLevel(level);
+    }
+
+    pub fn set_ignore_implicit_traps(&mut self, ignore_traps: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setIgnoreImplicitTraps(ignore_traps);
+    }
+
+    pub fn set_traps_never_happen(&mut self, ignore_traps: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setTrapsNeverHappen(ignore_traps);
+    }
+
+    pub fn set_low_memory_unused(&mut self, memory_unused: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setLowMemoryUnused(memory_unused);
+    }
+
+    pub fn set_fast_math(&mut self, fast_math: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setFastMath(fast_math);
+    }
+
+    pub fn set_zero_filled_memory(&mut self, zero_filled_memory: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setZeroFilledMemory(zero_filled_memory);
+    }
+
+    pub fn set_debug_info(&mut self, debug_info: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setDebugInfo(debug_info);
     }
 }
 
