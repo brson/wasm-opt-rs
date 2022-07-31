@@ -71,6 +71,24 @@ pub mod ffi {
         unsafe extern "C++" {
             include!("shims.h");
 
+            type InliningOptions;
+
+            fn newInliningOptions() -> UniquePtr<InliningOptions>;
+
+            fn setAlwaysInlineMaxSize(self: Pin<&mut Self>, size: u32);
+
+            fn setOneCallerInlineMaxSize(self: Pin<&mut Self>, size: u32);
+
+            fn setFlexibleInlineMaxSize(self: Pin<&mut Self>, size: u32);
+
+            fn setAllowFunctionsWithLoops(self: Pin<&mut Self>, allow: bool);
+
+            fn setPartialInliningIfs(self: Pin<&mut Self>, number: u32);
+        }
+
+        unsafe extern "C++" {
+            include!("shims.h");
+
             type PassOptions;
 
             fn newPassOptions() -> UniquePtr<PassOptions>;
@@ -84,6 +102,8 @@ pub mod ffi {
             fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
 
             fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
+
+            fn setInliningOptions(self: Pin<&mut Self>, inlining: UniquePtr<InliningOptions>);
 
             fn setIgnoreImplicitTraps(self: Pin<&mut Self>, ignoreTraps: bool);
 

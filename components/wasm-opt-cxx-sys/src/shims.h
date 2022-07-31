@@ -94,6 +94,36 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
+  struct InliningOptions {
+    wasm::InliningOptions inner;
+
+    void setAlwaysInlineMaxSize(uint32_t size) {
+      inner.alwaysInlineMaxSize = size;
+    }
+
+    void setOneCallerInlineMaxSize(uint32_t size) {
+      inner.oneCallerInlineMaxSize = size;
+    }
+
+    void setFlexibleInlineMaxSize(uint32_t size) {
+      inner.flexibleInlineMaxSize = size;
+    }
+
+    void setAllowFunctionsWithLoops(bool allow) {
+      inner.allowFunctionsWithLoops = allow;
+    }
+
+    void setPartialInliningIfs(uint32_t number) {
+      inner.partialInliningIfs = number;
+    }
+  };
+    
+  std::unique_ptr<InliningOptions> newInliningOptions() {
+    return std::make_unique<InliningOptions>();
+  }
+}
+
+namespace wasm_shims {
   struct PassOptions {
     wasm::PassOptions inner;
 
@@ -117,6 +147,10 @@ namespace wasm_shims {
       inner.shrinkLevel = level;
     }
 
+    void setInliningOptions(std::unique_ptr<wasm_shims::InliningOptions> inlining) {
+      inner.inlining = inlining->inner;
+    }
+    
     void setIgnoreImplicitTraps(bool ignoreTraps) {
       inner.ignoreImplicitTraps = ignoreTraps;
     }

@@ -98,6 +98,39 @@ impl ModuleWriter {
     }
 }
 
+pub struct InliningOptions(cxx::UniquePtr<ffi::wasm::InliningOptions>);
+
+impl InliningOptions {
+    pub fn new() -> InliningOptions {
+        InliningOptions(ffi::wasm::newInliningOptions())
+    }
+
+    pub fn set_always_inline_max_size(&mut self, size: u32) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setAlwaysInlineMaxSize(size);
+    }
+
+    pub fn set_one_caller_inline_max_size(&mut self, size: u32) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setOneCallerInlineMaxSize(size);
+    }
+
+    pub fn set_flexible_inline_max_size(&mut self, size: u32) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setFlexibleInlineMaxSize(size);
+    }
+
+    pub fn set_allow_functions_with_loops(&mut self, allow: bool) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setAllowFunctionsWithLoops(allow);
+    }
+
+    pub fn set_partial_inlining_ifs(&mut self, number: u32) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setPartialInliningIfs(number);
+    }
+}
+
 pub struct PassOptions(cxx::UniquePtr<ffi::wasm::PassOptions>);
 
 impl PassOptions {
@@ -128,6 +161,11 @@ impl PassOptions {
     pub fn set_shrink_level(&mut self, level: i32) {
         let this = self.0.as_mut().expect("non-null");
         this.setShrinkLevel(level);
+    }
+
+    pub fn set_inlining_options(&mut self, inlining: cxx::UniquePtr<ffi::wasm::InliningOptions>) {
+        let this = self.0.as_mut().expect("non-null");
+        this.setInliningOptions(inlining);
     }
 
     pub fn set_ignore_implicit_traps(&mut self, ignore_traps: bool) {
