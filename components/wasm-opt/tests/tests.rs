@@ -136,32 +136,81 @@ fn pass_options_works() -> anyhow::Result<()> {
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
-    // Module with optimization
-    let mut another_m = Module::new();
-    let mut another_reader = ModuleReader::new();
-    another_reader.read_binary(&new_file, &mut another_m, None)?;
+    // Module with optimization: default
+    let mut m_0 = Module::new();
+    let mut reader_0 = ModuleReader::new();
+    reader_0.read_binary(&new_file, &mut m_0, None)?;
 
     let mut pass_options = PassOptions::new();
-    pass_options.set_optimize_level(5);
-    pass_options.set_shrink_level(2_000_000_000);
+    pass_options.set_optimize_level(2);
+    pass_options.set_shrink_level(1);
 
-    let mut pass_runner = PassRunner::new_with_options(&mut another_m, pass_options);
+    let mut pass_runner = PassRunner::new_with_options(&mut m_0, pass_options);
     pass_runner.add_default_optimization_passes();
     pass_runner.run();
     drop(pass_runner);
 
-    let mut another_writer = ModuleWriter::new();
-    let another_new_file = temp_dir
-        .path()
-        .join("hello_world_by_another_module_writer.wasm");
-    another_writer.write_binary(&mut another_m, &another_new_file)?;
+    let mut writer_0 = ModuleWriter::new();
+    let file_0 = temp_dir.path().join("hello_world_by_module_writer_0.wasm");
+    writer_0.write_binary(&mut m_0, &file_0)?;
 
     let new_file_reader = fs::read(&new_file)?;
-    let another_new_file_reader = fs::read(&another_new_file)?;
+    let file_reader_0 = fs::read(&file_0)?;
 
-    println!("size 1: {}", new_file_reader.len());
-    println!("size 2: {}", another_new_file_reader.len());
-    assert!(new_file_reader.len() > another_new_file_reader.len());
+    println!("new_file: {}", new_file_reader.len());
+    println!("file_0: {}", file_reader_0.len());
+
+    assert!(new_file_reader.len() > file_reader_0.len());
+
+    // Module with optimization: more optimized settings
+    let mut m_1 = Module::new();
+    let mut reader_1 = ModuleReader::new();
+    reader_1.read_binary(&new_file, &mut m_1, None)?;
+
+    let mut pass_options = PassOptions::new();
+    pass_options.set_optimize_level(5);
+    pass_options.set_shrink_level(5);
+
+    let mut pass_runner = PassRunner::new_with_options(&mut m_1, pass_options);
+    pass_runner.add_default_optimization_passes();
+    pass_runner.run();
+    drop(pass_runner);
+
+    let mut writer_1 = ModuleWriter::new();
+    let file_1 = temp_dir.path().join("hello_world_by_module_writer_1.wasm");
+    writer_1.write_binary(&mut m_1, &file_1)?;
+
+    let file_reader_1 = fs::read(&file_1)?;
+    println!("file_1: {}", file_reader_1.len());
+
+    assert!(file_reader_0.len() > file_reader_1.len());
+
+    // Module with optimization: ridiculous settings
+    let mut m_2 = Module::new();
+    let mut reader_2 = ModuleReader::new();
+    reader_2.read_binary(&new_file, &mut m_2, None)?;
+
+    let mut pass_options = PassOptions::new();
+
+    // doesn't compile:
+    // `pass_options.set_optimize_level(5_000_000_000);`
+    // error: literal out of range for `i32`
+    pass_options.set_optimize_level(2_000_000_000);
+    pass_options.set_shrink_level(2_000_000_000);
+
+    let mut pass_runner = PassRunner::new_with_options(&mut m_2, pass_options);
+    pass_runner.add_default_optimization_passes();
+    pass_runner.run();
+    drop(pass_runner);
+
+    let mut writer_2 = ModuleWriter::new();
+    let file_2 = temp_dir.path().join("hello_world_by_module_writer_2.wasm");
+    writer_2.write_binary(&mut m_2, &file_2)?;
+
+    let file_reader_2 = fs::read(&file_2)?;
+    println!("file_2: {}", file_reader_2.len());
+
+    assert!(file_reader_1.len() >= file_reader_2.len());
 
     Ok(())
 }
