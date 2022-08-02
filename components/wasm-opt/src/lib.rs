@@ -168,11 +168,6 @@ impl PassOptions {
         this.setInliningOptions(inlining.0);
     }
 
-    pub fn set_ignore_implicit_traps(&mut self, ignore_traps: bool) {
-        let this = self.0.as_mut().expect("non-null");
-        this.setIgnoreImplicitTraps(ignore_traps);
-    }
-
     pub fn set_traps_never_happen(&mut self, ignore_traps: bool) {
         let this = self.0.as_mut().expect("non-null");
         this.setTrapsNeverHappen(ignore_traps);

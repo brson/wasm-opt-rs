@@ -105,8 +105,6 @@ pub mod ffi {
 
             fn setInliningOptions(self: Pin<&mut Self>, inlining: UniquePtr<InliningOptions>);
 
-            fn setIgnoreImplicitTraps(self: Pin<&mut Self>, ignoreTraps: bool);
-
             fn setTrapsNeverHappen(self: Pin<&mut Self>, ignoreTraps: bool);
 
             fn setLowMemoryUnused(self: Pin<&mut Self>, memoryUnused: bool);

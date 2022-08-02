@@ -151,10 +151,6 @@ namespace wasm_shims {
       inner.inlining = inlining->inner;
     }
     
-    void setIgnoreImplicitTraps(bool ignoreTraps) {
-      inner.ignoreImplicitTraps = ignoreTraps;
-    }
-
     void setTrapsNeverHappen(bool ignoreTraps) {
       inner.trapsNeverHappen = ignoreTraps;
     }
