@@ -163,9 +163,9 @@ impl PassOptions {
         this.setShrinkLevel(level);
     }
 
-    pub fn set_inlining_options(&mut self, inlining: cxx::UniquePtr<ffi::wasm::InliningOptions>) {
+    pub fn set_inlining_options(&mut self, inlining: InliningOptions) {
         let this = self.0.as_mut().expect("non-null");
-        this.setInliningOptions(inlining);
+        this.setInliningOptions(inlining.0);
     }
 
     pub fn set_ignore_implicit_traps(&mut self, ignore_traps: bool) {
