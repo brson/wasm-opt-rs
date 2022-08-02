@@ -192,9 +192,6 @@ fn pass_options_works() -> anyhow::Result<()> {
 
     let mut pass_options = PassOptions::new();
 
-    // doesn't compile:
-    // `pass_options.set_optimize_level(5_000_000_000);`
-    // error: literal out of range for `i32`
     pass_options.set_optimize_level(2_000_000_000);
     pass_options.set_shrink_level(2_000_000_000);
 
