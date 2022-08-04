@@ -1,6 +1,6 @@
 pub mod base;
 
-/// Hack to establish linage to wasm-opt-sys.
+/// Hack to establish linkage to wasm-opt-sys.
 ///
 /// See docs for wasm_opt_sys::init.
 ///
