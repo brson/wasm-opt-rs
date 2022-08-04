@@ -82,6 +82,10 @@ impl ModuleWriter {
         ModuleWriter(ffi::wasm::newModuleWriter())
     }
 
+    pub fn set_debug_info(&mut self, debug: bool) {
+        ffi::wasm::ModuleWriter_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
+    }
+    
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 

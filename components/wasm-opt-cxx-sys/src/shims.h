@@ -80,6 +80,10 @@ namespace wasm_shims {
     return std::make_unique<ModuleWriter>();
   }
 
+  void ModuleWriter_setDebugInfo(ModuleWriter& writer, bool debug) {
+    writer.setDebugInfo(debug);
+  }
+  
   void ModuleWriter_writeText(ModuleWriter& writer,
                               Module& wasm,
                               const std::string& filename) {

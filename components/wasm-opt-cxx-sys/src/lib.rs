@@ -55,6 +55,8 @@ pub mod ffi {
 
             fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
+            fn ModuleWriter_setDebugInfo(writer: Pin<&mut ModuleWriter>, debug: bool);
+            
             fn ModuleWriter_writeText(
                 writer: Pin<&mut ModuleWriter>,
                 wasm: Pin<&mut Module>,
