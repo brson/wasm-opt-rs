@@ -1,6 +1,6 @@
 mod api;
-mod builder;
 pub mod base;
+mod builder;
 mod passes;
 mod run;
 
