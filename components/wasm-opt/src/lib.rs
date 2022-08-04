@@ -1,4 +1,9 @@
+mod api;
 pub mod base;
+mod passes;
+mod run;
+
+pub use api::*;
 
 /// Hack to establish linkage to wasm-opt-sys.
 ///
