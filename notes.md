@@ -117,3 +117,29 @@ imposing another atomic flag check that should always succeed.
 
 `cxx` can translate exceptions to Rust as long as they implement
 `std::exception`, but `ParseException` does not.
+
+
+## A Rusty API
+
+While creating the bindings we soon realized that the binaryen API
+was not quite suitable for presenting to Rust users directly.
+The API is good, but doesn't translate directly to ideomatic Rust,
+particularly with all its methods being mutable,
+and requiring a fair bit of boilerplate to set up the way `wasm-opt` does.
+
+We decided to put the direct bindings,
+which could still be usable if somebody wanted low level access,
+in a `base` module,
+and add a builder-style API on top.
+
+With the builder, one sets up all the configuration declaratively,
+then runs a single `run` method that performs the work of reading
+the module, setting up the `PassRunner`, running the passes,
+and writing the module back to disk.
+
+Configuring the builder is like passing the command line arguments
+to `wasm-opt`, and the `run` method contains essentially the same
+logic as the `wasm-opt` binary. The details of how to drive the
+binaryen APIs are hidden.
+
+todo example
