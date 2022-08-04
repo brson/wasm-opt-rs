@@ -1,4 +1,5 @@
 mod api;
+mod builder;
 pub mod base;
 mod passes;
 mod run;
