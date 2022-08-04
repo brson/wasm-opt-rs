@@ -35,6 +35,10 @@ namespace wasm_shims {
     return std::make_unique<ModuleReader>();
   }
 
+  void ModuleReader_setDebugInfo(ModuleReader& reader, bool debug) {
+    reader.setDebugInfo(debug);
+  }
+
   // Wrapper to handle by-val string.
   void ModuleReader_readText(ModuleReader& reader,
                              const std::string& filename,

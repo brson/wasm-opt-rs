@@ -27,6 +27,8 @@ pub mod ffi {
 
             fn newModuleReader() -> UniquePtr<ModuleReader>;
 
+            fn ModuleReader_setDebugInfo(reader: Pin<&mut ModuleReader>, debug: bool);
+
             fn ModuleReader_readText(
                 reader: Pin<&mut ModuleReader>,
                 filename: &CxxString,
@@ -56,7 +58,7 @@ pub mod ffi {
             fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
             fn ModuleWriter_setDebugInfo(writer: Pin<&mut ModuleWriter>, debug: bool);
-            
+
             fn ModuleWriter_writeText(
                 writer: Pin<&mut ModuleWriter>,
                 wasm: Pin<&mut Module>,

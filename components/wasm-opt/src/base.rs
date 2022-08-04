@@ -25,6 +25,10 @@ impl ModuleReader {
         ModuleReader(ffi::wasm::newModuleReader())
     }
 
+    pub fn set_debug_info(&mut self, debug: bool) {
+        ffi::wasm::ModuleReader_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
+    }
+
     // FIXME would rather take &self here but the C++ method is not const-correct
     pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
@@ -85,7 +89,7 @@ impl ModuleWriter {
     pub fn set_debug_info(&mut self, debug: bool) {
         ffi::wasm::ModuleWriter_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
     }
-    
+
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 
