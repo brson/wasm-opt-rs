@@ -7,6 +7,7 @@ use tempfile::Builder;
 
 static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
+static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
 
 #[test]
 fn read_write_text_works() -> anyhow::Result<()> {
@@ -73,6 +74,39 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     let another_new_file_reader = fs::read(&another_new_file)?;
 
     assert_eq!(new_file_reader, another_new_file_reader);
+
+    Ok(())
+}
+
+#[test]
+fn module_read_garbage_error_works() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let path = temp_dir.path().join("hello_world_bad.wat");
+
+    let temp_file = File::create(&path)?;
+    let mut buf_writer = BufWriter::new(&temp_file);
+    buf_writer.write_all(GARBAGE_FILE)?;
+
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
+
+    let res = reader.read_text(&path, &mut m);
+    match res {
+        Ok(()) => {}
+        Err(_) => println!("Module read_text failed"),
+    }
+
+    let res = reader.read_binary(&path, &mut m, None);
+    match res {
+        Ok(()) => {}
+        Err(_) => println!("Module read_binary failed"),
+    }
+
+    let res = reader.read(&path, &mut m, None);
+    match res {
+        Ok(()) => {}
+        Err(_) => println!("Module read failed"),
+    }
 
     Ok(())
 }
