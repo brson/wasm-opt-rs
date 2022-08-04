@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use std::path::Path;
 use crate::api::OptimizationOptions;
+use std::path::Path;
 
 impl OptimizationOptions {
     pub fn run(

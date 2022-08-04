@@ -1,7 +1,6 @@
 /// A binaryen optimization pass.
 #[derive(Clone, Debug)]
-pub enum Pass {
-}
+pub enum Pass {}
 
 impl Pass {
     /// Returns the name of the pass.

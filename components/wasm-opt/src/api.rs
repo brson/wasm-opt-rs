@@ -1,5 +1,4 @@
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct OptimizationOptions {
     pub reader: ReaderOptions,
     pub writer: WriterOptions,
@@ -8,30 +7,24 @@ pub struct OptimizationOptions {
     pub passes: Passes,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct ReaderOptions {
     pub file_type: FileType,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct WriterOptions {
     pub file_type: FileType,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum FileType {
     Wasm,
     Wat,
     Any,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct InliningOptions {
     pub always_inline_max_size: u32,
     pub one_caller_inline_max_size: u32,
@@ -40,8 +33,7 @@ pub struct InliningOptions {
     pub partial_inlining_ifs: u32,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct PassOptions {
     pub debug: bool,
     pub validate: bool,
@@ -55,8 +47,7 @@ pub struct PassOptions {
     pub debug_info: bool,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum OptimizeLevel {
     Level0 = 0,
     Level1 = 1,
@@ -65,8 +56,7 @@ pub enum OptimizeLevel {
     Level4 = 4,
 }
 
-#[derive(Copy)]
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum ShrinkLevel {
     Level0 = 0,
     Level1 = 1,
