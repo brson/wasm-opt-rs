@@ -1,4 +1,4 @@
-use wasm_opt::*;
+use wasm_opt::base::*;
 
 use std::fs::{self, File};
 use std::io::BufWriter;
