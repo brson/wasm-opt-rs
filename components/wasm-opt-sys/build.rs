@@ -13,6 +13,10 @@ fn main() -> anyhow::Result<()> {
     let manifest_dir = Path::new(&manifest_dir);
     let binaryen_dir = manifest_dir.join("binaryen");
 
+    if !binaryen_dir.is_dir() {
+        anyhow::bail!("binaryen doesn't exist");
+    }
+
     let src_dir = binaryen_dir.join("src");
     let src_files = get_src_files(&src_dir)?;
 
