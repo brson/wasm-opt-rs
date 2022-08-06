@@ -4,6 +4,7 @@ use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() -> anyhow::Result<()> {
     let output_dir = std::env::var("OUT_DIR")?;
@@ -272,7 +273,35 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
 
     let output_file = output_dir.join("config.h");
-    fs::write(&output_file, "#define PROJECT_VERSION \"TODO\"")?;
+
+    let version = get_project_version()?;
+
+    fs::write(
+        &output_file,
+        format!("#define PROJECT_VERSION \"{}\"", version),
+    )?;
 
     Ok(())
+}
+
+fn get_project_version() -> anyhow::Result<String> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let binaryen_dir = manifest_dir.join("binaryen");
+
+    let cmd_output = Command::new("git")
+        .arg("-C")
+        .arg(binaryen_dir.as_os_str())
+        .arg("describe")
+        .arg("--tags")
+        .arg("--match")
+        .arg("version_*")
+        .output();
+
+    let output = match cmd_output {
+        Ok(cmd_output) => String::from_utf8(cmd_output.stdout)?.trim().to_string(),
+        Err(_) => String::from(""),
+    };
+
+    Ok(output)
 }
