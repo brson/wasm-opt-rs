@@ -111,6 +111,38 @@ impl ModuleWriter {
     }
 }
 
+pub mod pass_registry {
+    use wasm_opt_cxx_sys as wocxx;
+    use wocxx::cxx::let_cxx_string;
+    use wocxx::ffi;
+
+    pub fn get_registered_names() -> Vec<String> {
+        let names = ffi::wasm::getRegisteredNames();
+
+        let name_vec: Vec<String> = names
+            .iter()
+            .map(|name| name.to_string_lossy().into_owned())
+            .collect();
+
+        name_vec
+    }
+
+    pub fn get_pass_description(name: &str) -> String {
+        let_cxx_string!(name = name);
+
+        let description = ffi::wasm::getPassDescription(&name);
+        let description = description.as_ref().expect("non-null");
+
+        description.to_str().expect("utf8").to_string()
+    }
+
+    pub fn is_pass_hidden(name: &str) -> bool {
+        let_cxx_string!(name = name);
+
+        ffi::wasm::isPassHidden(&name)
+    }
+}
+
 pub struct InliningOptions(cxx::UniquePtr<ffi::wasm::InliningOptions>);
 
 impl InliningOptions {

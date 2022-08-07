@@ -75,6 +75,14 @@ pub mod ffi {
         unsafe extern "C++" {
             include!("shims.h");
 
+            fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
+            fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
+            fn isPassHidden(name: &CxxString) -> bool;
+        }
+
+        unsafe extern "C++" {
+            include!("shims.h");
+
             type InliningOptions;
 
             fn newInliningOptions() -> UniquePtr<InliningOptions>;

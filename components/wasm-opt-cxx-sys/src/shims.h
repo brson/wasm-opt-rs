@@ -102,6 +102,23 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
+  std::unique_ptr<std::vector<std::string>> getRegisteredNames() {
+    auto r = wasm::PassRegistry::get();
+    return std::make_unique<std::vector<std::string>>(r->getRegisteredNames());
+  }
+
+  std::unique_ptr<std::string> getPassDescription(const std::string& name) {
+    auto r = wasm::PassRegistry::get();
+    return std::make_unique<std::string>(r->getPassDescription(std::string(name)));
+  }
+
+  bool isPassHidden(const std::string& name) {
+    auto r = wasm::PassRegistry::get();
+    return r->isPassHidden(std::string(name));
+  }
+}
+
+namespace wasm_shims {
   struct InliningOptions {
     wasm::InliningOptions inner;
 
