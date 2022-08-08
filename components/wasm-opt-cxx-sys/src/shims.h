@@ -203,14 +203,31 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
-  typedef wasm::PassRunner PassRunner;
+  struct PassRunner {
+    wasm::PassRunner inner;
+
+    PassRunner(Module* wasm) : inner(wasm::PassRunner(wasm)) {}
+    PassRunner(Module* wasm, PassOptions options) : inner(wasm::PassRunner(wasm, options.inner)) {}
+
+    void add(const std::string& passName) {
+      inner.add(std::string(passName));
+    }
+
+    void addDefaultOptimizationPasses() {
+      inner.addDefaultOptimizationPasses();
+    }
+
+    void run() {
+      inner.run();
+    }
+  };
 
   std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
     return std::make_unique<PassRunner>(&wasm);
   }
 
   std::unique_ptr<PassRunner> newPassRunnerWithOptions(Module& wasm, std::unique_ptr<wasm_shims::PassOptions> options) {
-    return std::make_unique<PassRunner>(&wasm, options->inner);
+    return std::make_unique<PassRunner>(&wasm, *options);
   }
 }
 

@@ -76,7 +76,9 @@ pub mod ffi {
             include!("shims.h");
 
             fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
+
             fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
+
             fn isPassHidden(name: &CxxString) -> bool;
         }
 
@@ -139,6 +141,8 @@ pub mod ffi {
                 wasm: Pin<&'wasm mut Module>,
                 options: UniquePtr<PassOptions>,
             ) -> UniquePtr<PassRunner<'wasm>>;
+
+            fn add(self: Pin<&mut Self>, pass_name: &CxxString);
 
             fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 

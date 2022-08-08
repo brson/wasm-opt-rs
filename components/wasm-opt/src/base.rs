@@ -252,6 +252,13 @@ impl<'wasm> PassRunner<'wasm> {
         PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
     }
 
+    pub fn add(&mut self, pass_name: &str) {
+        let_cxx_string!(pass_name = pass_name);
+
+        let this = self.0.as_mut().expect("non-null");
+        this.add(&pass_name);
+    }
+
     pub fn add_default_optimization_passes(&mut self) {
         let this = self.0.as_mut().expect("non-null");
         this.addDefaultOptimizationPasses();
