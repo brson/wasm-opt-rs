@@ -119,6 +119,7 @@ fn pass_runner_works() -> anyhow::Result<()> {
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
     buf_writer.write_all(WASM_FILE)?;
+
     // Module without optimization
     let mut m = Module::new();
     let mut reader = ModuleReader::new();
@@ -242,6 +243,50 @@ fn pass_options_works() -> anyhow::Result<()> {
     println!("file_2: {}", file_reader_2.len());
 
     assert!(file_reader_1.len() >= file_reader_2.len());
+
+    Ok(())
+}
+
+#[test]
+fn pass_runner_add_works() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let path = temp_dir.path().join("hello_world.wasm");
+
+    let temp_file = File::create(&path)?;
+    let mut buf_writer = BufWriter::new(&temp_file);
+    buf_writer.write_all(WASM_FILE)?;
+
+    // Module without optimization
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
+    reader.read_binary(&path, &mut m, None)?;
+
+    let mut writer = ModuleWriter::new();
+    let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
+    writer.write_binary(&mut m, &new_file)?;
+
+    // Module with optimization
+    let mut another_m = Module::new();
+    let mut another_reader = ModuleReader::new();
+    another_reader.read_binary(&new_file, &mut another_m, None)?;
+
+    let mut pass_runner = PassRunner::new(&mut another_m);
+    pass_runner.add("dae-optimizing");
+    pass_runner.run();
+    drop(pass_runner);
+
+    let mut another_writer = ModuleWriter::new();
+    let another_new_file = temp_dir
+        .path()
+        .join("hello_world_by_another_module_writer.wasm");
+    another_writer.write_binary(&mut another_m, &another_new_file)?;
+
+    let new_file_reader = fs::read(&new_file)?;
+    let another_new_file_reader = fs::read(&another_new_file)?;
+
+    println!("file 1: {}", new_file_reader.len());
+    println!("file 1: {}", another_new_file_reader.len());
+    assert!(new_file_reader.len() > another_new_file_reader.len());
 
     Ok(())
 }
