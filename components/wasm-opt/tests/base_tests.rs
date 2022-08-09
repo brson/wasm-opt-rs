@@ -8,6 +8,7 @@ use tempfile::Builder;
 static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
 static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
+static MULTISIG_WASM: &[u8] = include_bytes!("ink_example_multisig.wasm");
 
 #[test]
 fn read_write_text_works() -> anyhow::Result<()> {
@@ -250,11 +251,11 @@ fn pass_options_works() -> anyhow::Result<()> {
 #[test]
 fn pass_runner_add_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
-    let path = temp_dir.path().join("hello_world.wasm");
+    let path = temp_dir.path().join("ink_example_multisig.wasm");
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
-    buf_writer.write_all(WASM_FILE)?;
+    buf_writer.write_all(MULTISIG_WASM)?;
 
     // Module without optimization
     let mut m = Module::new();
@@ -262,7 +263,9 @@ fn pass_runner_add_works() -> anyhow::Result<()> {
     reader.read_binary(&path, &mut m, None)?;
 
     let mut writer = ModuleWriter::new();
-    let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
+    let new_file = temp_dir
+        .path()
+        .join("ink_example_multisig_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
     // Module with optimization
@@ -271,21 +274,21 @@ fn pass_runner_add_works() -> anyhow::Result<()> {
     another_reader.read_binary(&new_file, &mut another_m, None)?;
 
     let mut pass_runner = PassRunner::new(&mut another_m);
-    pass_runner.add("dae-optimizing");
+    pass_runner.add("duplicate-function-elimination");
     pass_runner.run();
     drop(pass_runner);
 
     let mut another_writer = ModuleWriter::new();
     let another_new_file = temp_dir
         .path()
-        .join("hello_world_by_another_module_writer.wasm");
+        .join("ink_example_multisig_by_another_module_writer.wasm");
     another_writer.write_binary(&mut another_m, &another_new_file)?;
 
     let new_file_reader = fs::read(&new_file)?;
     let another_new_file_reader = fs::read(&another_new_file)?;
 
     println!("file 1: {}", new_file_reader.len());
-    println!("file 1: {}", another_new_file_reader.len());
+    println!("file 2: {}", another_new_file_reader.len());
     assert!(new_file_reader.len() > another_new_file_reader.len());
 
     Ok(())
