@@ -42,7 +42,7 @@ See the [API documentation][api].
 
 
 
-## Toolcahin requirements
+## Toolchain requirements
 
 Requires Rust 1.48+ and a C++ compiler with C++17 support.
 It does not require CMake or other C++ build tools.
