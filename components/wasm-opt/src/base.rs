@@ -128,7 +128,7 @@ pub mod pass_registry {
     }
 
     /// The `pass.cpp` method does assertion before searching:
-    /// ```
+    /// ```ignore
     /// assert(passInfos.find(name) != passInfos.end());
     /// ```
     /// The assertion will fail and the method call will be aborted if
@@ -143,7 +143,7 @@ pub mod pass_registry {
     }
 
     /// The `pass.cpp` method does assertion before searching:
-    /// ```
+    /// ```ignore
     /// assert(passInfos.find(name) != passInfos.end());
     /// ```
     /// The assertion will fail and the method call will be aborted if
