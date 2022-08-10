@@ -305,3 +305,12 @@ fn get_pass_description_valid_name_works() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn is_pass_hidden_works() -> anyhow::Result<()> {
+    let is_pass_hidden = pass_registry::is_pass_hidden("limit-segments");
+
+    assert_eq!(is_pass_hidden, false);
+
+    Ok(())
+}
