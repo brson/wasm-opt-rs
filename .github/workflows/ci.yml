@@ -16,30 +16,41 @@ jobs:
         os: [ubuntu-20.04, macos-11, windows-2019]
         rust: [nightly, beta, stable, 1.48.0]
         include:
-          - os: ubuntu-20.04
-            compiler: gcc-7
-          - os: ubuntu-20.04
-            compiler: clang-3.9
+          - compiler: gcc-7
+            os: ubuntu-20.04
+          - compiler: clang-7
+            os: ubuntu-20.04            
 
-    name: ${{matrix.os || format('Rust {0}', matrix.rust)}}
     runs-on: ${{ matrix.os }}
 
     steps:
       - if: matrix.compiler == 'gcc-7'
+        name: Install gcc
         run: |
           sudo apt-get update
           sudo apt-get install gcc-7 g++-7
           gcc --version
           g++ --version
-      - if: matrix.compiler == 'clang-3.9'
+      - if: matrix.compiler == 'clang-7'
+        name: Install clang
         run: |
           sudo apt-get update
-          sudo apt-get install clang-3.9
+          sudo apt-get install clang-7
           clang --version
-
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
       - uses: actions/checkout@v3
       - name: Checkout submodule
-          run: git submodule update --init --recursive
+        run: git submodule update --init --recursive
       - run: cargo build --verbose
       - run: cargo test --verbose
+
+  fmt:
+    name: Cargo fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout submodule
+        run: git submodule update --init --recursive
       - run: cargo fmt
