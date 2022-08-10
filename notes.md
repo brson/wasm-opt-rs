@@ -21,7 +21,7 @@ todo
 To install `wasm-opt` using cargo:
 
 ```
-cargo install wasm-opt
+cargo install wasm-opt --locked
 ```
 
 Youll end up with a `wasm-opt` binary in `$CARGO_HOME/bin`,

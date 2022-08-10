@@ -1,5 +1,7 @@
 [workspace]
-resolver = "2"
 members = [
   "components/*",
+]
+exclude = [
+  "components/hello-world", # not compatible with Rust 1.48
 ]

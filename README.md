@@ -25,7 +25,7 @@ This project provides a Rust crate that builds `wasm-opt` and:
 ## Installing the binary
 
 ```
-cargo install wasm-opt
+cargo install wasm-opt --locked
 ```
 
 It should behave exactly the same as `wasm-opt` installed from other sources.
@@ -44,7 +44,7 @@ See the [API documentation][api].
 
 ## Toolcahin requirements
 
-Requires Rust TODO and a C++ compiler with C++17 support.
+Requires Rust 1.48+ and a C++ compiler with C++17 support.
 It does not require CMake or other C++ build tools.
 
 These are the earliest C++ compiler versions known to work:
