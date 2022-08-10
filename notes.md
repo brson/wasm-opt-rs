@@ -243,6 +243,8 @@ todo example
 
 ## Obstacle: C++17
 
+## Obstacle: MSRV
+
 ## Obstacle: The `cc` crate and rebuild times
 
 ## Obstacle: GitHub actions and ARM workers
