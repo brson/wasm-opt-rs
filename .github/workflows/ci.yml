@@ -21,7 +21,7 @@ jobs:
           - os: ubuntu-20.04
             compiler: clang-3.9
 
-    name: ${{matrix.os || format('Rust {0}', matrix.rust)}}
+    name: ${{ matrix.os || format('Rust {0}', matrix.rust) }}
     runs-on: ${{ matrix.os }}
 
     steps:
