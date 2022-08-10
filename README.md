@@ -56,6 +56,18 @@ These are the earliest C++ compiler versions known to work:
 
 
 
+## Building from source
+
+```
+git clone https://github.com/brson/wasm-opt-rs
+cd wasm-opt-rs
+git submodule update --init --recursive
+cargo build && cargo test
+```
+
+
+
+
 ## Versioning
 
 TODO
