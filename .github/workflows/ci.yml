@@ -10,38 +10,36 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  Build-on-ubuntu:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: Checkout submodule
-      run: git submodule update --init --recursive
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run fmt
-      run: cargo fmt
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-11, windows-2019]
+        rust: [nightly, beta, stable, 1.48.0]
+        include:
+          - os: ubuntu-20.04
+            compiler: gcc-7
+          - os: ubuntu-20.04
+            compiler: clang-3.9
 
-  Build-on-macos:
-    runs-on: macos-11
+    name: ${{matrix.os || format('Rust {0}', matrix.rust)}}
+    runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Checkout submodule
-      run: git submodule update --init --recursive
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-      
-  Build-on-windows:
-    runs-on: windows-2019
-    steps:
-    - uses: actions/checkout@v3
-    - name: Checkout submodule
-      run: git submodule update --init --recursive
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-  
+      - if: matrix.compiler == 'gcc-7'
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-7 g++-7
+          gcc --version
+          g++ --version
+      - if: matrix.compiler == 'clang-3.9'
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang-3.9
+          clang --version
+
+      - uses: actions/checkout@v3
+      - name: Checkout submodule
+          run: git submodule update --init --recursive
+      - run: cargo build --verbose
+      - run: cargo test --verbose
+      - run: cargo fmt
