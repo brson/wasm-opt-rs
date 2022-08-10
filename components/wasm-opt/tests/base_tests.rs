@@ -287,9 +287,21 @@ fn pass_runner_add_works() -> anyhow::Result<()> {
     let new_file_reader = fs::read(&new_file)?;
     let another_new_file_reader = fs::read(&another_new_file)?;
 
-    println!("file 1: {}", new_file_reader.len());
-    println!("file 2: {}", another_new_file_reader.len());
+    println!("file_1: {}", new_file_reader.len());
+    println!("file_2: {}", another_new_file_reader.len());
     assert!(new_file_reader.len() > another_new_file_reader.len());
+
+    Ok(())
+}
+
+#[test]
+fn get_pass_description_valid_name_works() -> anyhow::Result<()> {
+    let pass_description = pass_registry::get_pass_description("limit-segments");
+
+    assert_eq!(
+        pass_description,
+        "attempt to merge segments to fit within web limits"
+    );
 
     Ok(())
 }

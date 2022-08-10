@@ -127,6 +127,12 @@ pub mod pass_registry {
         name_vec
     }
 
+    /// The `pass.cpp` method does assertion before searching:
+    /// ```
+    /// assert(passInfos.find(name) != passInfos.end());
+    /// ```
+    /// The assertion will fail and the method call will be aborted if
+    /// received invalid `name`
     pub fn get_pass_description(name: &str) -> String {
         let_cxx_string!(name = name);
 
@@ -136,6 +142,12 @@ pub mod pass_registry {
         description.to_str().expect("utf8").to_string()
     }
 
+    /// The `pass.cpp` method does assertion before searching:
+    /// ```
+    /// assert(passInfos.find(name) != passInfos.end());
+    /// ```
+    /// The assertion will fail and the method call will be aborted if
+    /// received invalid `name`
     pub fn is_pass_hidden(name: &str) -> bool {
         let_cxx_string!(name = name);
 
