@@ -1,7 +1,7 @@
 # Creating `wasm-opt` Rust bindings with `cxx`
 
 I have recently created a [`wasm-opt`] crate for Rust.
-`wasm-opt` is a component of the [`binaryen`] toolkit,
+`wasm-opt` is a component of the [`binaryen`] toolkit
 that optimizes [WebAssembly] modules,
 and perhaps more importantly,
 it _shrinks_ WebAssembly modules.
@@ -21,7 +21,7 @@ To install `wasm-opt` using cargo:
 cargo install wasm-opt
 ```
 
-Youll end up with a `wasm-opt` binary in `$CARGO_HOME/.bin`,
+Youll end up with a `wasm-opt` binary in `$CARGO_HOME/bin`,
 and it should work exactly the same as the `wasm-opt` you install from any other source.
 
 If you run into any problems,
