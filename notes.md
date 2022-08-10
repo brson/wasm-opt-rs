@@ -175,10 +175,21 @@ To fix _that_ we could wrap the `RefCell` in a `Mutex`,
 imposing another atomic flag check that should always succeed.
 
 
+
+
 ## `ParseException` doesn't implement `std::exception`
 
 `cxx` can translate exceptions to Rust as long as they implement
 `std::exception`, but `ParseException` does not.
+
+## Some binaryen APIs make assertions about how they are called
+
+These abort if they are triggered.
+
+PassRegistry::getPassDescription
+
+todo
+
 
 
 ## A Rusty API
