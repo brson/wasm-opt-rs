@@ -174,7 +174,7 @@ fn get_files_from_dir(src_dir: &Path) -> anyhow::Result<impl Iterator<Item = Pat
     let files = fs::read_dir(src_dir)?
         .map(|f| f.expect("error reading dir"))
         .filter(|f| f.file_name().into_string().expect("UTF8").ends_with(".cpp"))
-        .map(|f| src_dir.join(f.path()));
+        .map(move |f| src_dir.join(f.path()));
 
     Ok(files)
 }
