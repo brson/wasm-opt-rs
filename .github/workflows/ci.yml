@@ -47,3 +47,11 @@ jobs:
       - run: cargo build --verbose
       - run: cargo test --verbose
       - run: cargo fmt
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@clippy
+      - run: cargo clippy --workspace --tests -- -Dclippy::all
