@@ -1,10 +1,13 @@
 # Creating `wasm-opt` Rust bindings with `cxx`
 
 I have recently created a [`wasm-opt`] crate for Rust.
-`wasm-opt` is a component of the [`binaryen`] toolkit
+`wasm-opt` is a component of the [Binaryen] toolkit
 that optimizes [WebAssembly] modules,
 and perhaps more importantly,
 it _shrinks_ WebAssembly modules.
+
+[Binaryen]: https://github.com/WebAssembly/binaryen
+[WebAssembly]: https://webassembly.org/
 
 `wasm-opt` is such a singularly important tool for wasm development that it is a
 dependency of (I think) every wasm-targetting toolchain I have ever used (though

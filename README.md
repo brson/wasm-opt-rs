@@ -5,11 +5,11 @@
 [<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-wasm--opt-66c2a5?style=for-the-badge&labelColor=555555&logo=docs.rs" height="20">](https://docs.rs/wasm-opt)
 [<img alt="build status" src="https://img.shields.io/github/workflow/status/brson/wasm-opt-rs/CI/master?style=for-the-badge" height="20">](https://github.com/brson/wasm-opt-rs/actions?query=branch%3Amaster)
 
-`wasm-opt` is a component of the [`binaryen`] toolkit
+`wasm-opt` is a component of the [Binaryen] toolkit
 that optimizes [WebAssembly] modules. It is written
 in C++.
 
-[`binaryen`]: https://github.com/WebAssembly/binaryen
+[Binaryen]: https://github.com/WebAssembly/binaryen
 [WebAssembly]: https://webassembly.org/
 
 This project provides a Rust crate that builds `wasm-opt` and:
