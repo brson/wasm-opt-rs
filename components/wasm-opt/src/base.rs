@@ -92,9 +92,20 @@ impl ModuleWriter {
 
     pub fn set_source_map_filename(&mut self, source_map_filename: &str) {
         let_cxx_string!(source_map_filename = source_map_filename);
-        ffi::wasm::ModuleWriter_setSourceMapFilename(self.0.as_mut().expect("non-null"), &source_map_filename)
+        ffi::wasm::ModuleWriter_setSourceMapFilename(
+            self.0.as_mut().expect("non-null"),
+            &source_map_filename,
+        )
     }
-    
+
+    pub fn set_source_map_url(&mut self, source_map_url: &str) {
+        let_cxx_string!(source_map_url = source_map_url);
+        ffi::wasm::ModuleWriter_setSourceMapFilename(
+            self.0.as_mut().expect("non-null"),
+            &source_map_url,
+        )
+    }
+
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 

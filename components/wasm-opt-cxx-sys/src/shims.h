@@ -91,6 +91,10 @@ namespace wasm_shims {
   void ModuleWriter_setSourceMapFilename(ModuleWriter& writer, const std::string& source_map_filename) {
     writer.setSourceMapFilename(source_map_filename);
   }
+
+  void ModuleWriter_setSourceMapUrl(ModuleWriter& writer, const std::string& source_map_url) {
+    writer.setSourceMapUrl(source_map_url);
+  }
   
   void ModuleWriter_writeText(ModuleWriter& writer,
                               Module& wasm,
