@@ -29,6 +29,8 @@ pub mod ffi {
 
             fn ModuleReader_setDebugInfo(reader: Pin<&mut ModuleReader>, debug: bool);
 
+            fn ModuleReader_setDwarf(reader: Pin<&mut ModuleReader>, dwarf: bool);
+
             fn ModuleReader_readText(
                 reader: Pin<&mut ModuleReader>,
                 filename: &CxxString,

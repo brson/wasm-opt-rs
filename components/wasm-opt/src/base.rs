@@ -29,6 +29,10 @@ impl ModuleReader {
         ffi::wasm::ModuleReader_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
     }
 
+    pub fn set_dwarf(&mut self, dwarf: bool) {
+        ffi::wasm::ModuleReader_setDwarf(self.0.as_mut().expect("non-null"), dwarf)
+    }
+
     // FIXME would rather take &self here but the C++ method is not const-correct
     pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?

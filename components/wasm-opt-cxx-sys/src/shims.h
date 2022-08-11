@@ -39,6 +39,10 @@ namespace wasm_shims {
     reader.setDebugInfo(debug);
   }
 
+  void ModuleReader_setDwarf(ModuleReader& reader, bool dwarf) {
+    reader.setDWARF(dwarf);
+  }
+
   // Wrapper to handle by-val string.
   void ModuleReader_readText(ModuleReader& reader,
                              const std::string& filename,
