@@ -59,6 +59,8 @@ pub mod ffi {
 
             fn ModuleWriter_setDebugInfo(writer: Pin<&mut ModuleWriter>, debug: bool);
 
+            fn ModuleWriter_setSourceMapFilename(writer: Pin<&mut ModuleWriter>, source_map_filename: &CxxString);
+            
             fn ModuleWriter_writeText(
                 writer: Pin<&mut ModuleWriter>,
                 wasm: Pin<&mut Module>,

@@ -90,6 +90,11 @@ impl ModuleWriter {
         ffi::wasm::ModuleWriter_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
     }
 
+    pub fn set_source_map_filename(&mut self, source_map_filename: &str) {
+        let_cxx_string!(source_map_filename = source_map_filename);
+        ffi::wasm::ModuleWriter_setSourceMapFilename(self.0.as_mut().expect("non-null"), &source_map_filename)
+    }
+    
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 
