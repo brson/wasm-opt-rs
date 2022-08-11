@@ -13,30 +13,47 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-11, windows-2019]
+        os: [macos-11, windows-2019]
         rust: [nightly, beta, stable, 1.48.0]
         include:
-          - compiler: gcc-7
-            os: ubuntu-20.04
-          - compiler: clang-7
-            os: ubuntu-20.04            
+          - os: ubuntu-20.04
+            compiler: gcc-7
+            rust: stable
+          - os: ubuntu-20.04
+            compiler: clang-7
+            rust: stable
+          - os: ubuntu-18.04
+            compiler: clang-3.9
+            rust: stable
+          - os: ubuntu-18.04
+            compiler: clang-3.9
+            rust: 1.48.0
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - if: matrix.compiler == 'gcc-7'
-        name: Install gcc
+      - if: matrix.os == 'ubuntu-18.04'
+        name: Install clang-3.9
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang-3.9
+          clang --version
+
+      - if: ${{ matrix.compiler == 'clang-7' && matrix.os == 'ubuntu-20.04' }}
+        name: Install clang-7
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang-7
+          clang --version
+          
+      - if: ${{ matrix.compiler == 'gcc-7' && matrix.os == 'ubuntu-20.04' }}
+        name: Install gcc-7
         run: |
           sudo apt-get update
           sudo apt-get install gcc-7 g++-7
           gcc --version
           g++ --version
-      - if: matrix.compiler == 'clang-7'
-        name: Install clang
-        run: |
-          sudo apt-get update
-          sudo apt-get install clang-7
-          clang --version
+          
       - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
