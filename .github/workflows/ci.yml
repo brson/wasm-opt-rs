@@ -10,8 +10,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  test:
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-20.04, macos-11, windows-2019]
         rust: [nightly, beta, stable, 1.48.0]
@@ -23,25 +24,13 @@ jobs:
             os: ubuntu-20.04
             compiler: clang-3.9
 
-    name: ${{ matrix.os || format('Rust {0}', matrix.rust) }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - if: matrix.name == 'gcc-7'
-        run: |
-          sudo apt-get update
-          sudo apt-get install gcc-7 g++-7
-          gcc --version
-          g++ --version
-      - if: matrix.name == 'clang-3.9'
-        run: |
-          sudo apt-get update
-          sudo apt-get install clang-3.9
-          clang --version
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@v1
         with:
-          toolchain: ${{matrix.rust}}
+          toolchain: ${{ matrix.rust }}
       - name: Checkout submodule
           run: git submodule update --init --recursive
       - run: cargo build --verbose
