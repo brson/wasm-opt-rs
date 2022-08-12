@@ -80,34 +80,34 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
-  typedef wasm::ModuleWriter ModuleWriter;
+  struct ModuleWriter {
+    wasm::ModuleWriter inner;
 
+    void setDebugInfo(bool debug) {
+      inner.setDebugInfo(debug);
+    }
+
+    void setSourceMapFilename(const std::string& source_map_filename) {
+      inner.setSourceMapFilename(source_map_filename);
+    }
+
+    void setSourceMapUrl(const std::string& source_map_url) {
+      inner.setSourceMapUrl(source_map_url);
+    }
+  
+    void writeText(Module& wasm,
+                   const std::string& filename) {
+      inner.writeText(wasm, std::string(filename));
+    }
+
+    void writeBinary(Module& wasm,
+                     const std::string& filename) {
+      inner.writeBinary(wasm, std::string(filename));
+    }
+  };
+    
   std::unique_ptr<ModuleWriter> newModuleWriter() {
     return std::make_unique<ModuleWriter>();
-  }
-
-  void ModuleWriter_setDebugInfo(ModuleWriter& writer, bool debug) {
-    writer.setDebugInfo(debug);
-  }
-
-  void ModuleWriter_setSourceMapFilename(ModuleWriter& writer, const std::string& source_map_filename) {
-    writer.setSourceMapFilename(source_map_filename);
-  }
-
-  void ModuleWriter_setSourceMapUrl(ModuleWriter& writer, const std::string& source_map_url) {
-    writer.setSourceMapUrl(source_map_url);
-  }
-  
-  void ModuleWriter_writeText(ModuleWriter& writer,
-                              Module& wasm,
-                              const std::string& filename) {
-    writer.writeText(wasm, std::string(filename));
-  }
-
-  void ModuleWriter_writeBinary(ModuleWriter& writer,
-                                Module& wasm,
-                                const std::string& filename) {
-    writer.writeBinary(wasm, std::string(filename));
   }
 }
 

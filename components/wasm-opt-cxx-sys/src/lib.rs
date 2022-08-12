@@ -59,26 +59,20 @@ pub mod ffi {
 
             fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
-            fn ModuleWriter_setDebugInfo(writer: Pin<&mut ModuleWriter>, debug: bool);
+            fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-            fn ModuleWriter_setSourceMapFilename(
-                writer: Pin<&mut ModuleWriter>,
-                source_map_filename: &CxxString,
-            );
+            fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: &CxxString);
 
-            fn ModuleWriter_setSourceMapUrl(
-                writer: Pin<&mut ModuleWriter>,
-                source_map_url: &CxxString,
-            );
+            fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: &CxxString);
 
-            fn ModuleWriter_writeText(
-                writer: Pin<&mut ModuleWriter>,
+            fn writeText(
+                self: Pin<&mut Self>,
                 wasm: Pin<&mut Module>,
                 filename: &CxxString,
             ) -> Result<()>;
 
-            fn ModuleWriter_writeBinary(
-                writer: Pin<&mut ModuleWriter>,
+            fn writeBinary(
+                self: Pin<&mut Self>,
                 wasm: Pin<&mut Module>,
                 filename: &CxxString,
             ) -> Result<()>;

@@ -87,43 +87,38 @@ impl ModuleWriter {
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
-        ffi::wasm::ModuleWriter_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
+        let this = self.0.as_mut().expect("non-null");
+        this.setDebugInfo(debug);
     }
 
     pub fn set_source_map_filename(&mut self, source_map_filename: &str) {
         let_cxx_string!(source_map_filename = source_map_filename);
-        ffi::wasm::ModuleWriter_setSourceMapFilename(
-            self.0.as_mut().expect("non-null"),
-            &source_map_filename,
-        )
+
+        let this = self.0.as_mut().expect("non-null");
+        this.setSourceMapFilename(&source_map_filename);
     }
 
     pub fn set_source_map_url(&mut self, source_map_url: &str) {
         let_cxx_string!(source_map_url = source_map_url);
-        ffi::wasm::ModuleWriter_setSourceMapFilename(
-            self.0.as_mut().expect("non-null"),
-            &source_map_url,
-        )
+
+        let this = self.0.as_mut().expect("non-null");
+        this.setSourceMapFilename(&source_map_url);
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &[u8]) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 
         let_cxx_string!(path = path);
-        ffi::wasm::ModuleWriter_writeText(
-            self.0.as_mut().expect("non-null"),
-            wasm.0.as_mut().expect("non-null"),
-            &path,
-        )
+
+        let this = self.0.as_mut().expect("non-null");
+        this.writeText(wasm.0.as_mut().expect("non-null"), &path)
     }
 
     pub fn write_binary(&mut self, wasm: &mut Module, path: &[u8]) -> Result<(), cxx::Exception> {
         let_cxx_string!(path = path);
-        ffi::wasm::ModuleWriter_writeBinary(
-            self.0.as_mut().expect("non-null"),
-            wasm.0.as_mut().expect("non-null"),
-            &path,
-        )
+
+        let this = self.0.as_mut().expect("non-null");
+        this.writeBinary(wasm.0.as_mut().expect("non-null"), &path)
     }
 }
 
