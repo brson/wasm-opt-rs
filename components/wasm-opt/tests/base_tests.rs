@@ -9,7 +9,7 @@ use std::ffi::OsStr;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 #[cfg(windows)]
-use std::os::windows::prelude::*;
+use std::os::windows::ffi::OsStrExt;
 
 static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
