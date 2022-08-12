@@ -159,6 +159,8 @@ pub mod ffi {
             fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 
             fn run(self: Pin<&mut Self>);
+
+            fn passRemovesDebugInfo(name: &CxxString) -> bool;
         }
     }
 }

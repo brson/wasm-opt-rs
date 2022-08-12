@@ -300,4 +300,10 @@ impl<'wasm> PassRunner<'wasm> {
         let this = self.0.as_mut().expect("non-null");
         this.run();
     }
+
+    pub fn pass_removes_debug_info(name: &str) -> bool {
+        let_cxx_string!(name = name);
+
+        ffi::wasm::passRemovesDebugInfo(&name)
+    }
 }

@@ -241,6 +241,10 @@ namespace wasm_shims {
   std::unique_ptr<PassRunner> newPassRunnerWithOptions(Module& wasm, std::unique_ptr<wasm_shims::PassOptions> options) {
     return std::make_unique<PassRunner>(&wasm, *options);
   }
+
+  bool passRemovesDebugInfo(const std::string& name) {
+    return wasm::PassRunner::passRemovesDebugInfo(std::string(name));
+  }
 }
 
 #endif // wasmopt_shims_h
