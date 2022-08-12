@@ -29,55 +29,53 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
-  typedef wasm::ModuleReader ModuleReader;
+  struct ModuleReader {
+    wasm::ModuleReader inner;
+
+    void setDebugInfo(bool debug) {
+      inner.setDebugInfo(debug);
+    }
+
+    void setDwarf(bool dwarf) {
+      inner.setDWARF(dwarf);
+    }
+
+    // Wrapper to handle by-val string.
+    void readText(const std::string& filename, Module& wasm) {
+      try {
+        inner.readText(std::string(filename), wasm);
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      }
+    }
+
+    void readBinary(const std::string& filename,
+                                 Module& wasm,
+                                 const std::string& sourceMapFilename) {
+      try {
+        inner.readBinary(std::string(filename),
+                          wasm,
+                          std::string(sourceMapFilename));
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      }
+    }
+
+    void read(const std::string& filename,
+              Module& wasm,
+              const std::string& sourceMapFilename) {
+      try {
+        inner.readBinary(std::string(filename),
+                          wasm,
+                          std::string(sourceMapFilename));
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      }
+    }
+  };
 
   std::unique_ptr<ModuleReader> newModuleReader() {
     return std::make_unique<ModuleReader>();
-  }
-
-  void ModuleReader_setDebugInfo(ModuleReader& reader, bool debug) {
-    reader.setDebugInfo(debug);
-  }
-
-  void ModuleReader_setDwarf(ModuleReader& reader, bool dwarf) {
-    reader.setDWARF(dwarf);
-  }
-
-  // Wrapper to handle by-val string.
-  void ModuleReader_readText(ModuleReader& reader,
-                             const std::string& filename,
-                             Module& wasm) {
-    try {
-      reader.readText(std::string(filename), wasm);
-    } catch (const wasm::ParseException &e) {
-      throw parse_exception_to_runtime_error(e);
-    }
-  }
-
-  void ModuleReader_readBinary(ModuleReader& reader,
-                               const std::string& filename,
-                               Module& wasm,
-                               const std::string& sourceMapFilename) {
-    try {
-      reader.readBinary(std::string(filename),
-                        wasm,
-                        std::string(sourceMapFilename));
-    } catch (const wasm::ParseException &e) {
-      throw parse_exception_to_runtime_error(e);
-    }
-  }
-
-  void ModuleReader_read(ModuleReader& reader,
-                         const std::string& filename,
-                         Module& wasm,
-                         const std::string& sourceMapFilename) {
-    try {
-      reader.readBinary(std::string(filename),
-                        wasm,
-                        std::string(sourceMapFilename));
-    } catch (const wasm::ParseException &e) {
-      throw parse_exception_to_runtime_error(e);
-    }
   }
 }
 

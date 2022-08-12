@@ -24,22 +24,22 @@ impl ModuleReader {
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
-        ffi::wasm::ModuleReader_setDebugInfo(self.0.as_mut().expect("non-null"), debug)
+        let this = self.0.as_mut().expect("non-null");
+        this.setDebugInfo(debug);
     }
 
     pub fn set_dwarf(&mut self, dwarf: bool) {
-        ffi::wasm::ModuleReader_setDwarf(self.0.as_mut().expect("non-null"), dwarf)
+        let this = self.0.as_mut().expect("non-null");
+        this.setDwarf(dwarf);
     }
 
     // FIXME would rather take &self here but the C++ method is not const-correct
     pub fn read_text(&mut self, path: &[u8], wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
         let_cxx_string!(path = path);
-        ffi::wasm::ModuleReader_readText(
-            self.0.as_mut().expect("non-null"),
-            &path,
-            wasm.0.as_mut().expect("non-null"),
-        )
+        let this = self.0.as_mut().expect("non-null");
+
+        this.readText(&path, wasm.0.as_mut().expect("non-null"))
     }
 
     pub fn read_binary(
@@ -51,8 +51,9 @@ impl ModuleReader {
         let source_map_filename = source_map_filename.unwrap_or(b"");
         let_cxx_string!(path = path);
         let_cxx_string!(source_map_filename = source_map_filename);
-        ffi::wasm::ModuleReader_readBinary(
-            self.0.as_mut().expect("non-null"),
+
+        let this = self.0.as_mut().expect("non-null");
+        this.readBinary(
             &path,
             wasm.0.as_mut().expect("non-null"),
             &source_map_filename,
@@ -68,8 +69,9 @@ impl ModuleReader {
         let source_map_filename = source_map_filename.unwrap_or(b"");
         let_cxx_string!(path = path);
         let_cxx_string!(source_map_filename = source_map_filename);
-        ffi::wasm::ModuleReader_read(
-            self.0.as_mut().expect("non-null"),
+
+        let this = self.0.as_mut().expect("non-null");
+        this.read(
             &path,
             wasm.0.as_mut().expect("non-null"),
             &source_map_filename,

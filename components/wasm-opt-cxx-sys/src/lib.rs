@@ -27,25 +27,25 @@ pub mod ffi {
 
             fn newModuleReader() -> UniquePtr<ModuleReader>;
 
-            fn ModuleReader_setDebugInfo(reader: Pin<&mut ModuleReader>, debug: bool);
+            fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-            fn ModuleReader_setDwarf(reader: Pin<&mut ModuleReader>, dwarf: bool);
+            fn setDwarf(self: Pin<&mut Self>, dwarf: bool);
 
-            fn ModuleReader_readText(
-                reader: Pin<&mut ModuleReader>,
+            fn readText(
+                self: Pin<&mut Self>,
                 filename: &CxxString,
                 wasm: Pin<&mut Module>,
             ) -> Result<()>;
 
-            fn ModuleReader_readBinary(
-                reader: Pin<&mut ModuleReader>,
+            fn readBinary(
+                self: Pin<&mut Self>,
                 filename: &CxxString,
                 wasm: Pin<&mut Module>,
                 sourceMapFilename: &CxxString,
             ) -> Result<()>;
 
-            fn ModuleReader_read(
-                reader: Pin<&mut ModuleReader>,
+            fn read(
+                self: Pin<&mut Self>,
                 filename: &CxxString,
                 wasm: Pin<&mut Module>,
                 sourceMapFilename: &CxxString,
