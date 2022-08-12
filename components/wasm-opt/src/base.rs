@@ -10,6 +10,11 @@ use wocxx::ffi;
 
 use std::path::Path;
 
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
+
 pub struct Module(cxx::UniquePtr<ffi::wasm::Module>);
 
 impl Module {
@@ -38,9 +43,10 @@ impl ModuleReader {
     // FIXME would rather take &self here but the C++ method is not const-correct
     pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
-        let_cxx_string!(path = path.to_str().expect("utf8"));
-        let this = self.0.as_mut().expect("non-null");
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
 
+        let this = self.0.as_mut().expect("non-null");
         this.readText(&path, wasm.0.as_mut().expect("non-null"))
     }
 
@@ -50,10 +56,12 @@ impl ModuleReader {
         wasm: &mut Module,
         source_map_filename: Option<&Path>,
     ) -> Result<(), cxx::Exception> {
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
+
         let source_map_filename = source_map_filename
             .map(|p| p.to_str().expect("utf8"))
             .unwrap_or("");
-        let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.as_mut().expect("non-null");
@@ -70,10 +78,12 @@ impl ModuleReader {
         wasm: &mut Module,
         source_map_filename: Option<&Path>,
     ) -> Result<(), cxx::Exception> {
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
+
         let source_map_filename = source_map_filename
             .map(|p| p.to_str().expect("utf8"))
             .unwrap_or("");
-        let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.as_mut().expect("non-null");
@@ -114,14 +124,16 @@ impl ModuleWriter {
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 
-        let_cxx_string!(path = path.to_str().expect("utf8"));
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
 
         let this = self.0.as_mut().expect("non-null");
         this.writeText(wasm.0.as_mut().expect("non-null"), &path)
     }
 
     pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
-        let_cxx_string!(path = path.to_str().expect("utf8"));
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
 
         let this = self.0.as_mut().expect("non-null");
         this.writeBinary(wasm.0.as_mut().expect("non-null"), &path)
@@ -303,4 +315,14 @@ impl<'wasm> PassRunner<'wasm> {
 
         ffi::wasm::passRemovesDebugInfo(&name)
     }
+}
+
+fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
+    #[cfg(unix)]
+    let path = path.as_os_str().as_bytes();
+
+    #[cfg(windows)]
+    let path = path.as_os_str().to_str().expect("utf8").as_bytes();
+
+    Ok(path)
 }
