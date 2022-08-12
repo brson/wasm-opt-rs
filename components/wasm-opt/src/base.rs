@@ -8,6 +8,8 @@ use wocxx::cxx;
 use wocxx::cxx::let_cxx_string;
 use wocxx::ffi;
 
+use std::path::Path;
+
 pub struct Module(cxx::UniquePtr<ffi::wasm::Module>);
 
 impl Module {
@@ -34,9 +36,9 @@ impl ModuleReader {
     }
 
     // FIXME would rather take &self here but the C++ method is not const-correct
-    pub fn read_text(&mut self, path: &[u8], wasm: &mut Module) -> Result<(), cxx::Exception> {
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
-        let_cxx_string!(path = path);
+        let_cxx_string!(path = path.to_str().expect("utf8"));
         let this = self.0.as_mut().expect("non-null");
 
         this.readText(&path, wasm.0.as_mut().expect("non-null"))
@@ -44,12 +46,14 @@ impl ModuleReader {
 
     pub fn read_binary(
         &mut self,
-        path: &[u8],
+        path: &Path,
         wasm: &mut Module,
-        source_map_filename: Option<&[u8]>,
+        source_map_filename: Option<&Path>,
     ) -> Result<(), cxx::Exception> {
-        let source_map_filename = source_map_filename.unwrap_or(b"");
-        let_cxx_string!(path = path);
+        let source_map_filename = source_map_filename
+            .map(|p| p.to_str().expect("utf8"))
+            .unwrap_or("");
+        let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.as_mut().expect("non-null");
@@ -62,12 +66,14 @@ impl ModuleReader {
 
     pub fn read(
         &mut self,
-        path: &[u8],
+        path: &Path,
         wasm: &mut Module,
-        source_map_filename: Option<&[u8]>,
+        source_map_filename: Option<&Path>,
     ) -> Result<(), cxx::Exception> {
-        let source_map_filename = source_map_filename.unwrap_or(b"");
-        let_cxx_string!(path = path);
+        let source_map_filename = source_map_filename
+            .map(|p| p.to_str().expect("utf8"))
+            .unwrap_or("");
+        let_cxx_string!(path = path.to_str().expect("utf8"));
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.as_mut().expect("non-null");
@@ -105,17 +111,17 @@ impl ModuleWriter {
         this.setSourceMapFilename(&source_map_url);
     }
 
-    pub fn write_text(&mut self, wasm: &mut Module, path: &[u8]) -> Result<(), cxx::Exception> {
+    pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         ffi::colors::setEnabled(false);
 
-        let_cxx_string!(path = path);
+        let_cxx_string!(path = path.to_str().expect("utf8"));
 
         let this = self.0.as_mut().expect("non-null");
         this.writeText(wasm.0.as_mut().expect("non-null"), &path)
     }
 
-    pub fn write_binary(&mut self, wasm: &mut Module, path: &[u8]) -> Result<(), cxx::Exception> {
-        let_cxx_string!(path = path);
+    pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
+        let_cxx_string!(path = path.to_str().expect("utf8"));
 
         let this = self.0.as_mut().expect("non-null");
         this.writeBinary(wasm.0.as_mut().expect("non-null"), &path)
