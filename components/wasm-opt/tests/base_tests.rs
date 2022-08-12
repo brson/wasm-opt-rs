@@ -3,8 +3,13 @@ use wasm_opt::base::*;
 use std::fs::{self, File};
 use std::io::BufWriter;
 use std::io::Write;
-use std::os::unix::ffi::OsStrExt;
 use tempfile::Builder;
+
+use std::ffi::OsStr;
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
+#[cfg(windows)]
+use std::os::windows::prelude::*;
 
 static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
