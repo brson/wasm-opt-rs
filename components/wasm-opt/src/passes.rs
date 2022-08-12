@@ -73,6 +73,26 @@ pub enum Pass {
     TypeRefining,
     /// Replace GC allocations with locals.
     Heap2Local,
+    /// Inline __original_main into main.
+    InlineMain,
+    /// Inline functions (you probably want inlining-optimizing).
+    Inlining,
+    /// Inline functions and optimizes where we inlined.
+    InliningOptimizing,
+    /// Lower away binaryen intrinsics.
+    IntrinsicLowering,
+    /// Legalizes i64 types on the import/export boundary.
+    LegalizeJsInterface,
+    /// Legalizes i64 types on the import/export boundary in a minimal manner, only on things only JS will call.
+    LegalizeJsInterfaceMinimally,
+    /// Common subexpression elimination inside basic blocks.
+    LocalCse,
+    /// Apply more specific subtypes to locals where possible.
+    LocalSubtyping,
+    /// Instrument the build with logging of where execution goes.
+    LogExecution,
+    /// Lower all uses of i64s to use i32s instead.
+    I64ToI32Lowering,
 }
 
 impl Pass {
@@ -115,6 +135,16 @@ impl Pass {
             Gsi => "gsi",
             TypeRefining => "type-refining",
             Heap2Local => "heap-2-local",
+            InlineMain => "inline-main",
+            Inlining => "inlining",
+            InliningOptimizing => "inlining-optimizing",
+            IntrinsicLowering => "intrinsic-lowering",
+            LegalizeJsInterface => "legalize-js-interface",
+            LegalizeJsInterfaceMinimally => "legalize-js-interface-minimally",
+            LocalCse => "local-cse",
+            LocalSubtyping => "local-subtyping",
+            LogExecution => "log-execution",
+            I64ToI32Lowering => "i64-to-i32-lowering",
         }
     }
 
