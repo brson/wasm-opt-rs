@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+use regex::Regex;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -27,7 +28,8 @@ fn main() -> anyhow::Result<()> {
 
     let wasm_intrinsics_src = get_converted_wasm_intrinsics_cpp(&src_dir)?;
 
-    create_config_header()?;
+    let config_dir = manifest_dir.join("src");
+    create_config_header(&config_dir)?;
 
     let mut builder = cc::Build::new();
 
@@ -48,6 +50,7 @@ fn main() -> anyhow::Result<()> {
     builder
         .cpp(true)
         .include(src_dir)
+        .include(config_dir)
         .include(tools_dir)
         .include(output_dir)
         .files(src_files)
@@ -268,26 +271,29 @@ fn configure_file(
     Ok(())
 }
 
-fn create_config_header() -> anyhow::Result<()> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let config_file = manifest_dir.join("config.h");
+fn create_config_header(path: &Path) -> anyhow::Result<()> {
+    let config_file = path.join("config.h");
 
-    let version = get_project_version();
-    match version {
-        Ok(version) => {
-            fs::write(
-                &config_file,
-                format!("#define PROJECT_VERSION \"{}\"", version),
-            )?;
+    let cmake_version = get_project_version_from_cmake()?;
+    let mut config_text = format!("#define PROJECT_VERSION \"{}\"", cmake_version);
+
+    let git_version = get_project_version_from_git();
+    match git_version {
+        Ok(git_version) => {
+            config_text = format!(
+                "#define PROJECT_VERSION \"{} ({})\"",
+                cmake_version, git_version
+            );
         }
         Err(_) => {}
     }
 
+    fs::write(&config_file, config_text)?;
+
     Ok(())
 }
 
-fn get_project_version() -> anyhow::Result<String> {
+fn get_project_version_from_git() -> anyhow::Result<String> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = Path::new(&manifest_dir);
     let binaryen_dir = manifest_dir.join("binaryen");
@@ -305,4 +311,26 @@ fn get_project_version() -> anyhow::Result<String> {
     let output = String::from_utf8(output.stdout)?.trim().to_string();
 
     Ok(output)
+}
+
+fn get_project_version_from_cmake() -> anyhow::Result<String> {
+    let re = Regex::new(r".*?binaryen LANGUAGES C CXX VERSION \d+.*?").unwrap();
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let cmake_file = manifest_dir.join("binaryen/CMakeLists.txt");
+
+    let file = File::open(cmake_file)?;
+
+    let version_info: Vec<String> = BufReader::new(file)
+        .lines()
+        .map(|line| line.unwrap())
+        .filter(|line| re.is_match(line.as_ref()))
+        .collect();
+
+    let re = Regex::new(r"\d+").unwrap();
+    let cap = re.captures(&version_info[0]).expect("version from cmake");
+    let version = &cap[0];
+
+    Ok(version.to_string())
 }
