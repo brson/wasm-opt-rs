@@ -269,17 +269,20 @@ fn configure_file(
 }
 
 fn create_config_header() -> anyhow::Result<()> {
-    let output_dir = std::env::var("OUT_DIR")?;
-    let output_dir = Path::new(&output_dir);
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let config_file = manifest_dir.join("config.h");
 
-    let output_file = output_dir.join("config.h");
-
-    let version = get_project_version()?;
-
-    fs::write(
-        &output_file,
-        format!("#define PROJECT_VERSION \"{}\"", version),
-    )?;
+    let version = get_project_version();
+    match version {
+        Ok(version) => {
+            fs::write(
+                &config_file,
+                format!("#define PROJECT_VERSION \"{}\"", version),
+            )?;
+        }
+        Err(_) => {}
+    }
 
     Ok(())
 }
@@ -289,7 +292,7 @@ fn get_project_version() -> anyhow::Result<String> {
     let manifest_dir = Path::new(&manifest_dir);
     let binaryen_dir = manifest_dir.join("binaryen");
 
-    let cmd_output = Command::new("git")
+    let output = Command::new("git")
         .arg("-C")
         .arg(binaryen_dir.as_os_str())
         .arg("describe")
@@ -298,10 +301,8 @@ fn get_project_version() -> anyhow::Result<String> {
         .arg("version_*")
         .output();
 
-    let output = match cmd_output {
-        Ok(cmd_output) => String::from_utf8(cmd_output.stdout)?.trim().to_string(),
-        Err(_) => String::from(""),
-    };
+    let output = output?;
+    let output = String::from_utf8(output.stdout)?.trim().to_string();
 
     Ok(output)
 }
