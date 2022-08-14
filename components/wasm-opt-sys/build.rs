@@ -28,8 +28,7 @@ fn main() -> anyhow::Result<()> {
 
     let wasm_intrinsics_src = get_converted_wasm_intrinsics_cpp(&src_dir)?;
 
-    let config_dir = manifest_dir.join("src");
-    create_config_header(&config_dir)?;
+    create_config_header()?;
 
     let mut builder = cc::Build::new();
 
@@ -50,7 +49,6 @@ fn main() -> anyhow::Result<()> {
     builder
         .cpp(true)
         .include(src_dir)
-        .include(config_dir)
         .include(tools_dir)
         .include(output_dir)
         .files(src_files)
@@ -271,8 +269,10 @@ fn configure_file(
     Ok(())
 }
 
-fn create_config_header(path: &Path) -> anyhow::Result<()> {
-    let config_file = path.join("config.h");
+fn create_config_header() -> anyhow::Result<()> {
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+    let config_file = output_dir.join("config.h");
 
     let cmake_version = get_project_version_from_cmake()?;
     let mut config_text = format!("#define PROJECT_VERSION \"{}\"", cmake_version);
@@ -329,7 +329,7 @@ fn get_project_version_from_cmake() -> anyhow::Result<String> {
         .collect();
 
     let re = Regex::new(r"\d+").unwrap();
-    let cap = re.captures(&version_info[0]).expect("version from cmake");
+    let cap = re.captures(&version_info[0]).expect("cmake version");
     let version = &cap[0];
 
     Ok(version.to_string())
