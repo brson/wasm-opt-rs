@@ -108,13 +108,13 @@ impl Default for PassOptions {
 
 impl Default for OptimizeLevel {
     fn default() -> OptimizeLevel {
-        OptimizeLevel::Level0
+        OptimizeLevel::Level2
     }
 }
 
 impl Default for ShrinkLevel {
     fn default() -> ShrinkLevel {
-        ShrinkLevel::Level0
+        ShrinkLevel::Level1
     }
 }
 
