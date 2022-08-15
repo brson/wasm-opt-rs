@@ -4,6 +4,7 @@
 #include "../../wasm-opt-sys/binaryen/src/pass.h"
 #include "../../wasm-opt-sys/binaryen/src/wasm-io.h"
 #include "../../wasm-opt-sys/binaryen/src/support/colors.h"
+#include "../../wasm-opt-sys/binaryen/src/wasm-validator.h"
 
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr
@@ -18,6 +19,15 @@ namespace wasm_shims {
       return std::runtime_error(buf.str());
     }
   }
+}
+
+namespace wasm_shims {
+  bool validateWasm(wasm::Module& wasm) {
+    wasm::WasmValidator v;
+
+    return v.validate(wasm);
+  }
+  
 }
 
 namespace wasm_shims {

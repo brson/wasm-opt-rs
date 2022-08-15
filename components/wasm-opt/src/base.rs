@@ -317,6 +317,10 @@ impl<'wasm> PassRunner<'wasm> {
     }
 }
 
+pub fn validate_wasm(wasm: &mut Module) -> bool {
+    ffi::wasm::validateWasm(wasm.0.pin_mut())
+}
+
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();

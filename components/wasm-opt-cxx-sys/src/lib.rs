@@ -15,6 +15,12 @@ pub mod ffi {
         unsafe extern "C++" {
             include!("shims.h");
 
+            fn validateWasm(wasm: Pin<&mut Module>) -> bool;
+        }
+
+        unsafe extern "C++" {
+            include!("shims.h");
+
             type Module;
 
             fn newModule() -> UniquePtr<Module>;

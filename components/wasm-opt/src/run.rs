@@ -2,7 +2,7 @@
 
 use crate::api::*;
 use crate::base::{
-    InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
+    validate_wasm, InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
     PassOptions as BasePassOptions, PassRunner,
 };
 use std::path::Path;
@@ -29,6 +29,10 @@ impl OptimizationOptions {
             FileType::Wat => reader.read_binary(infile.as_ref(), &mut m, infile_sourcemap)?,
             FileType::Any => reader.read(infile.as_ref(), &mut m, infile_sourcemap)?,
         };
+
+        if self.passopts.validate {
+            validate_wasm(&mut m);
+        }
 
         let mut opts = BasePassOptions::new();
         opts.set_debug(self.passopts.debug);
