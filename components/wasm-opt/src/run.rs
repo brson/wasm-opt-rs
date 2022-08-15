@@ -18,7 +18,9 @@ impl OptimizationOptions {
         let mut m = Module::new();
         let mut reader = ModuleReader::new();
 
-        // todo reader.setDWARF()
+        let set_drawf =
+            self.passopts.debug_info && !will_remove_debug_info(&self.passes.more_passes);
+        reader.set_dwarf(set_drawf);
 
         let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
 
@@ -73,4 +75,10 @@ impl OptimizationOptions {
 
         Ok(())
     }
+}
+
+fn will_remove_debug_info(passes: &Vec<Pass>) -> bool {
+    passes
+        .iter()
+        .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
 }
