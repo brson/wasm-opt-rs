@@ -93,6 +93,156 @@ pub enum Pass {
     LogExecution,
     /// Lower all uses of i64s to use i32s instead.
     I64ToI32Lowering,
+    /// Instrument the build with code to intercept all loads and stores.
+    InstrumentLocals,
+    /// Instrument the build with code to intercept all loads and stores.
+    InstrumentMemory,
+    /// Loop invariant code motion.
+    Licm,
+    /// Attempt to merge segments to fit within web limits.
+    LimitSegments,
+    /// Lower loads and stores to a 64-bit memory to instead use a 32-bit one.
+    Memory64Lowering,
+    /// Packs memory into separate segments, skipping zeros.
+    MemoryPacking,
+    /// Merges blocks to their parents.
+    MergeBlocks,
+    /// Merges similar functions when benefical.
+    MergeSimilarFunctions,
+    /// Merges locals when beneficial.
+    MergeLocals,
+    /// Reports metrics.
+    Metrics,
+    /// Minifies import names (only those, and not export names), and emits a mapping to the minified ones.
+    MinifyImports,
+    /// Minifies both import and export names, and emits a mapping to the minified ones.
+    MinifyImportsAndExports,
+    /// Minifies both import and export names, and emits a mapping to the minified ones, and minifies the modules as well.
+    MinifyImportsAndExportsAndModules,
+    /// Apply the assumption that asyncify imports always unwind, and we never rewind.
+    ModAsyncifyAlwaysAndOnlyUnwind,
+    /// Apply the assumption that asyncify never unwinds.
+    ModAsyncifyNeverUnwind,
+    /// Name list.
+    Nm,
+    /// (Re)name all heap types.
+    NameTypes,
+    /// Reduces calls to code that only runs once.
+    OnceReduction,
+    /// Optimizes added constants into load/store offsets.
+    OptimizeAddedConstants,
+    /// Optimizes added constants into load/store offsets, propagating them across locals too.
+    OptimizeAddedConstantsPropagate,
+    /// Optimizes instruction combinations.
+    OptimizeInstructions,
+    /// Optimize Stack IR.
+    OptimizeStackIr,
+    /// Pick load signs based on their uses.
+    PickLoadSigns,
+    /// Tranform Binaryen IR into Poppy IR.
+    Poppify,
+    /// Miscellaneous optimizations for Emscripten-generated code.
+    PostEmscripten,
+    /// Early optimize of the instruction combinations for js.
+    OptimizeForJs,
+    /// Computes compile-time evaluatable expressions.
+    Precompute,
+    /// Computes compile-time evaluatable expressions and propagates.
+    PrecomputePropagate,
+    /// Print in s-expression format.
+    Print,
+    /// Print in minified s-expression format.
+    PrintMinified,
+    /// Print options for enabled features.
+    PrintFeatures,
+    /// Print in full s-expression format.
+    PrintFull,
+    /// Print call graph.
+    PrintCallGraph,
+    /// Print a map of function indexes to names.
+    PrintFunctionMap,
+    /// (Alias for print-function-map).
+    Symbolmap,
+    /// Print out Stack IR (useful for internal debugging).
+    PrintStackIr,
+    /// Removes operations incompatible with js.
+    RemoveNonJsOps,
+    /// Removes imports and replaces them with nops.
+    RemoveImports,
+    /// Removes memory segments.
+    RemoveMemory,
+    /// Removes breaks from locations that are not needed.
+    RemoveUnusedBrs,
+    /// Removes unused module elements.
+    RemoveUnusedModuleElements,
+    /// Removes unused module elements that are not functions.
+    RemoveUnusedNonfunctionModuleElements,
+    /// Removes names from locations that are never branched to.
+    RemoveUnusedNames,
+    /// Sorts functions by access frequency.
+    ReorderFunctions,
+    /// Sorts locals by access frequency.
+    RecorderLocals,
+    /// Re-optimize control flow using the relooper algorithm.
+    Rereloop,
+    /// Remove redundant local.sets.
+    Rse,
+    /// Write the module to binary, then read it.
+    Roundtrip,
+    /// Instrument loads and stores to check for invalid behavior.
+    SafeHeap,
+    /// Sets specified globals to specified values.
+    SetGlobals,
+    /// Remove params from function signature types where possible.
+    SignaturePruning,
+    /// Apply more specific subtypes to signature types where possible.
+    SignatureRefining,
+    /// Miscellaneous globals-related optimizations.
+    SimplifyGlobals,
+    /// Miscellaneous globals-related optimizations, and optimizes where we replaced global.gets with constants.
+    SimplifyGlobalsOptimizing,
+    /// Miscellaneous locals-related optimizations.
+    SimplifyLocals,
+    /// Miscellaneous locals-related optimizations (no nesting at all; preserves flatness).
+    SimplifyLocalsNonesting,
+    /// Miscellaneous locals-related optimizations (no tees).
+    SimplifyLocalsNotee,
+    /// Miscellaneous locals-related optimizations (no structure).
+    SimplifyLocalsNostructure,
+    /// Miscellaneous locals-related optimizations (no tees or structure).
+    SimplifyLocalsNoteeNostructure,
+    /// Emit Souper IR in text form.
+    Souperify,
+    /// Emit Souper IR in text form (single-use nodes only).
+    SouperifySingleUse,
+    /// Spill pointers to the C stack (useful for Boehm-style GC).
+    SpillPointers,
+    /// Stub out unsupported JS operations.
+    StubUnsupportedJs,
+    /// Ssa-ify variables so that they have a single assignment.
+    Ssa,
+    /// Ssa-ify variables so that they have a single assignment, ignoring merges.
+    SsaNomerge,
+    /// Deprecated; same as strip-debug.
+    Strip,
+    /// Enforce limits on llvm's __stack_pointer global.
+    StackCheck,
+    /// Strip debug info (including the names section).
+    StripDebug,
+    /// Strip dwarf debug info.
+    StripDwarf,
+    /// Strip the wasm producers section.
+    StripProducers,
+    /// Strip the wasm target features section.
+    StripTargetFeatuers,
+    /// Replace trapping operations with clamping semantics.
+    TrapModeClamp,
+    /// Replace trapping operations with js semantics.
+    TrapModeJs,
+    /// Removes local.tees, replacing them with sets and gets.
+    Untee,
+    /// Removes obviously unneeded code.
+    Vacuum,
 }
 
 impl Pass {
@@ -145,6 +295,81 @@ impl Pass {
             LocalSubtyping => "local-subtyping",
             LogExecution => "log-execution",
             I64ToI32Lowering => "i64-to-i32-lowering",
+            InstrumentLocals => "instrument-locals",
+            InstrumentMemory => "instrument-memory",
+            Licm => "licm",
+            LimitSegments => "limit-segments",
+            Memory64Lowering => "memory64-lowering",
+            MemoryPacking => "memory-packing",
+            MergeBlocks => "merge-blocks",
+            MergeSimilarFunctions => "merge-similar-functions",
+            MergeLocals => "merge-locals",
+            Metrics => "metrics",
+            MinifyImports => "minify-imports",
+            MinifyImportsAndExports => "minify-imports-and-exports",
+            MinifyImportsAndExportsAndModules => "minify-imports-and-exports-and-modules",
+            ModAsyncifyAlwaysAndOnlyUnwind => "mod-asyncify-always-and-only-unwind",
+            ModAsyncifyNeverUnwind => "mod-asyncify-never-unwind",
+            Nm => "nm",
+            NameTypes => "name-types",
+            OnceReduction => "once-reduction",
+            OptimizeAddedConstants => "optimize-added-constants",
+            OptimizeAddedConstantsPropagate => "optimize-added-constants-propagate",
+            OptimizeInstructions => "optimize-instructions",
+            OptimizeStackIr => "optimize-stack-ir",
+            PickLoadSigns => "pick-load-signs",
+            Poppify => "poppify",
+            PostEmscripten => "post-emscripten",
+            OptimizeForJs => "optimize-for-js",
+            Precompute => "precompute",
+            PrecomputePropagate => "precompute-propagate",
+            Print => "print",
+            PrintMinified => "print-minified",
+            PrintFeatures => "print-features",
+            PrintFull => "print-full",
+            PrintCallGraph => "print-call-graph",
+            PrintFunctionMap => "print-function-map",
+            Symbolmap => "symbolmap",
+            PrintStackIr => "print-stack-ir",
+            RemoveNonJsOps => "remove-non-js-ops",
+            RemoveImports => "remove-imports",
+            RemoveMemory => "remove-memory",
+            RemoveUnusedBrs => "remove-unused-brs",
+            RemoveUnusedModuleElements => "remove-unused-module-elements",
+            RemoveUnusedNonfunctionModuleElements => "remove-unused-nonfunction-module-elements",
+            RemoveUnusedNames => "remove-unused-names",
+            ReorderFunctions => "reorder-functions",
+            RecorderLocals => "reorder-locals",
+            Rereloop => "rereloop",
+            Rse => "rse",
+            Roundtrip => "roundtrip",
+            SafeHeap => "safe-heap",
+            SetGlobals => "set-globals",
+            SignaturePruning => "signature-pruning",
+            SignatureRefining => "signature-refining",
+            SimplifyGlobals => "simplify-globals",
+            SimplifyGlobalsOptimizing => "simplify-globals-optimizing",
+            SimplifyLocals => "simplify-locals",
+            SimplifyLocalsNonesting => "simplify-locals-nonesting",
+            SimplifyLocalsNotee => "simplify-locals-notee",
+            SimplifyLocalsNostructure => "simplify-locals-nostructure",
+            SimplifyLocalsNoteeNostructure => "simplify-locals-notee-nostructure",
+            Souperify => "souperify",
+            SouperifySingleUse => "souperify-single-use",
+            SpillPointers => "spill-pointers",
+            StubUnsupportedJs => "stub-unsupported-js",
+            Ssa => "ssa",
+            SsaNomerge => "ssa-nomerge",
+            Strip => "strip",
+            StackCheck => "stack-check",
+            StripDebug => "strip-debug",
+            StripDwarf => "strip-dwarf",
+            StripProducers => "strip-producers",
+            StripTargetFeatuers => "strip-target-features",
+            TrapModeClamp => "trap-mode-clamp",
+            TrapModeJs => "trap-mode-js",
+            Untee => "untee",
+            Vacuum => "vacuum",
         }
     }
 
