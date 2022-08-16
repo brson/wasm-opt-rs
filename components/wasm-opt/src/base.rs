@@ -31,12 +31,12 @@ impl ModuleReader {
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setDebugInfo(debug);
     }
 
     pub fn set_dwarf(&mut self, dwarf: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setDwarf(dwarf);
     }
 
@@ -46,8 +46,8 @@ impl ModuleReader {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let this = self.0.as_mut().expect("non-null");
-        this.readText(&path, wasm.0.as_mut().expect("non-null"))
+        let this = self.0.pin_mut();
+        this.readText(&path, wasm.0.pin_mut())
     }
 
     pub fn read_binary(
@@ -64,10 +64,10 @@ impl ModuleReader {
             .unwrap_or("");
         let_cxx_string!(source_map_filename = source_map_filename);
 
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.readBinary(
             &path,
-            wasm.0.as_mut().expect("non-null"),
+            wasm.0.pin_mut(),
             &source_map_filename,
         )
     }
@@ -86,10 +86,10 @@ impl ModuleReader {
             .unwrap_or("");
         let_cxx_string!(source_map_filename = source_map_filename);
 
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.read(
             &path,
-            wasm.0.as_mut().expect("non-null"),
+            wasm.0.pin_mut(),
             &source_map_filename,
         )
     }
@@ -103,21 +103,21 @@ impl ModuleWriter {
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setDebugInfo(debug);
     }
 
     pub fn set_source_map_filename(&mut self, source_map_filename: &str) {
         let_cxx_string!(source_map_filename = source_map_filename);
 
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setSourceMapFilename(&source_map_filename);
     }
 
     pub fn set_source_map_url(&mut self, source_map_url: &str) {
         let_cxx_string!(source_map_url = source_map_url);
 
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setSourceMapFilename(&source_map_url);
     }
 
@@ -127,16 +127,16 @@ impl ModuleWriter {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let this = self.0.as_mut().expect("non-null");
-        this.writeText(wasm.0.as_mut().expect("non-null"), &path)
+        let this = self.0.pin_mut();
+        this.writeText(wasm.0.pin_mut(), &path)
     }
 
     pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let this = self.0.as_mut().expect("non-null");
-        this.writeBinary(wasm.0.as_mut().expect("non-null"), &path)
+        let this = self.0.pin_mut();
+        this.writeBinary(wasm.0.pin_mut(), &path)
     }
 }
 
@@ -192,27 +192,27 @@ impl InliningOptions {
     }
 
     pub fn set_always_inline_max_size(&mut self, size: u32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setAlwaysInlineMaxSize(size);
     }
 
     pub fn set_one_caller_inline_max_size(&mut self, size: u32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setOneCallerInlineMaxSize(size);
     }
 
     pub fn set_flexible_inline_max_size(&mut self, size: u32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setFlexibleInlineMaxSize(size);
     }
 
     pub fn set_allow_functions_with_loops(&mut self, allow: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setAllowFunctionsWithLoops(allow);
     }
 
     pub fn set_partial_inlining_ifs(&mut self, number: u32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setPartialInliningIfs(number);
     }
 }
@@ -225,57 +225,57 @@ impl PassOptions {
     }
 
     pub fn set_debug(&mut self, debug: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setDebug(debug);
     }
 
     pub fn set_validate(&mut self, validate: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setValidate(validate);
     }
 
     pub fn set_validate_globally(&mut self, validate: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setValidateGlobally(validate);
     }
 
     pub fn set_optimize_level(&mut self, level: i32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setOptimizeLevel(level);
     }
 
     pub fn set_shrink_level(&mut self, level: i32) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setShrinkLevel(level);
     }
 
     pub fn set_inlining_options(&mut self, inlining: InliningOptions) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setInliningOptions(inlining.0);
     }
 
     pub fn set_traps_never_happen(&mut self, ignore_traps: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setTrapsNeverHappen(ignore_traps);
     }
 
     pub fn set_low_memory_unused(&mut self, memory_unused: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setLowMemoryUnused(memory_unused);
     }
 
     pub fn set_fast_math(&mut self, fast_math: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setFastMath(fast_math);
     }
 
     pub fn set_zero_filled_memory(&mut self, zero_filled_memory: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setZeroFilledMemory(zero_filled_memory);
     }
 
     pub fn set_debug_info(&mut self, debug_info: bool) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.setDebugInfo(debug_info);
     }
 }
@@ -284,29 +284,29 @@ pub struct PassRunner<'wasm>(cxx::UniquePtr<ffi::wasm::PassRunner<'wasm>>);
 
 impl<'wasm> PassRunner<'wasm> {
     pub fn new(wasm: &'wasm mut Module) -> PassRunner<'wasm> {
-        let wasm = wasm.0.as_mut().expect("non-null");
+        let wasm = wasm.0.pin_mut();
         PassRunner(ffi::wasm::newPassRunner(wasm))
     }
 
     pub fn new_with_options(wasm: &'wasm mut Module, options: PassOptions) -> PassRunner<'wasm> {
-        let wasm = wasm.0.as_mut().expect("non-null");
+        let wasm = wasm.0.pin_mut();
         PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
     }
 
     pub fn add(&mut self, pass_name: &str) {
         let_cxx_string!(pass_name = pass_name);
 
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.add(&pass_name);
     }
 
     pub fn add_default_optimization_passes(&mut self) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.addDefaultOptimizationPasses();
     }
 
     pub fn run(&mut self) {
-        let this = self.0.as_mut().expect("non-null");
+        let this = self.0.pin_mut();
         this.run();
     }
 

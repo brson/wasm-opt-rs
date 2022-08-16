@@ -153,9 +153,9 @@ impl ModuleReader {
         // FIXME need to support non-utf8 paths. Does this work on windows?
         let_cxx_string!(path = path.to_str().expect("utf8"));
         ffi::ModuleReader_readText(
-            self.0.as_mut().expect("non-null"),
+            self.0.pin_mut(),
             &path,
-            wasm.0.as_mut().expect("non-null"),
+            wasm.0.pin_mut(),
         );
     }
 }
