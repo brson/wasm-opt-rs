@@ -38,7 +38,7 @@
 //!
 //! ## Features not included in the library
 
-mod base;
+pub mod base;
 
 mod api;
 mod builder;
