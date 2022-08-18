@@ -1,3 +1,21 @@
+//! Direct bindings to `wasm-opt`.
+//!
+//! These are bindings to `wasm-opt`,
+//! as built by the [`wasm-opt-sys`] crate.
+//! The bindings are created by the [`cxx`] crate,
+//! and all go through a custom C++ shim layer
+//! that provides a `cxx`-compatible C++ API.
+//!
+//! Most users will not want to use this crate directly,
+//! but instead use the [`wasm-opt`] crate.
+//!
+//! [`wasm-opt-sys`]: https://docs.rs/wasm-opt-sys
+//! [`cxx`]: https://docs.rs/cxx
+//! [`wasm-opt`]: https://docs.rs/wasm-opt
+//!
+//! The version of `cxx` used by these bindings is
+//! reexported here.
+
 pub use cxx;
 
 pub mod ffi {
@@ -165,7 +183,7 @@ pub mod ffi {
     }
 }
 
-/// Hack to establish linage to wasm-opt-sys.
+/// Hack to establish linkage to wasm-opt-sys.
 ///
 /// See docs for wasm_opt_sys::init.
 ///
