@@ -12,7 +12,7 @@ static MULTISIG_WASM: &[u8] = include_bytes!("ink_example_multisig.wasm");
 
 #[test]
 fn read_write_from_unicode_works() -> anyhow::Result<()> {
-    let temp_dir = Builder::new().prefix("α℗$∞ℳ").tempdir()?;
+    let temp_dir = Builder::new().prefix("unicode-α℗$∞ℳ-").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
 
     let temp_file = File::create(&path)?;
