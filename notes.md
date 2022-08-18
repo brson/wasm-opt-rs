@@ -195,6 +195,47 @@ todo
 
 
 
+## Binaryen calls `exit` on failure to open a file
+
+While testing whether our handling of unicode paths works correctly on Windows (it doesn't)
+we discovered that Binaryen's internal file reading and writing
+routines call `exit` explicitly in several locations, as in:
+
+```c++
+  if (!infile.is_open()) {
+    std::cerr << "Failed opening '" << filename << "'" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+```
+
+This is a problem for our API that is insurmountable without modifying binaryen,
+so we're going to have to submit a patch upstream to propagate
+an exception instead.
+
+This is the first big obstacle we've run into,
+and it's going to take a number of hours to resolve.
+
+
+
+## Unicode paths don't work on Windows.
+
+We don't know why yet,
+but when we use paths with extended unicode characters
+Binaryen fails to open them on Windows.
+We are currently encoding those paths as UTF-8 before passing them to Binaryen.
+Perhaps UCS-16 is expected,
+or perhaps we need to pass different compiler flags
+to configure MSVC's standard library,
+or perhaps Binaryen is broken in this case.
+
+This is the second big obstacle we've run into.
+
+TODO
+
+
+
+
+
 ## A Rusty API
 
 While creating the bindings we soon realized that the binaryen API
