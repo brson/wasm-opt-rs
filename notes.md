@@ -215,6 +215,10 @@ This is a problem for our API that is insurmountable without modifying binaryen,
 so we're going to have to submit a patch upstream to propagate
 an exception instead.
 
+We [filed an issue against Binaryen][fileissue] asking if we could modify this behavior.
+
+[fileissue]: https://github.com/WebAssembly/binaryen/issues/4938
+
 This is the first big obstacle we've run into,
 and it's going to take a number of hours to resolve.
 
