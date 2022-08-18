@@ -16,7 +16,7 @@
 //!
 //! ## Installing the binary
 //!
-//! ```
+//! ```text
 //! cargo install wasm-opt --locked
 //! ```
 //!
