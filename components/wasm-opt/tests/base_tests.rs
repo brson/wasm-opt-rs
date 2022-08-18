@@ -11,6 +11,7 @@ static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
 static MULTISIG_WASM: &[u8] = include_bytes!("ink_example_multisig.wasm");
 
 #[test]
+#[ignore]
 fn read_write_from_unicode_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("unicode-α℗$∞ℳ-").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
