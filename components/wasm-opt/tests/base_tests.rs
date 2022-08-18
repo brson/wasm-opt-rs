@@ -351,3 +351,41 @@ fn is_pass_hidden_works() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+#[ignore]
+fn read_file_not_exists() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm-opt").tempdir()?;
+    let path = temp_dir.path().join("not-a-file.wasm");
+
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
+    let r = reader.read_binary(&path, &mut m, None);
+
+    assert!(r.is_err());
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn write_file_path_not_exists() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm-opt").tempdir()?;
+    let path = temp_dir.path().join("hello_world.wat");
+
+    let temp_file = File::create(&path)?;
+    let mut buf_writer = BufWriter::new(&temp_file);
+    buf_writer.write_all(WAT_FILE)?;
+
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
+    reader.read_text(&path, &mut m)?;
+
+    let mut writer = ModuleWriter::new();
+    let new_file = temp_dir.path().join("badpath").join("hello_world_by_module_writer.wat");
+    let r = writer.write_text(&mut m, &new_file);
+
+    assert!(r.is_err());
+
+    Ok(())
+}
