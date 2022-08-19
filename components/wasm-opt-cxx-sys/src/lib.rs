@@ -7,7 +7,7 @@
 //! that provides a `cxx`-compatible C++ API.
 //!
 //! Most users will not want to use this crate directly,
-//! but instead use the [`wasm-opt`] crate.
+//! but instead the [`wasm-opt`] crate.
 //!
 //! [`wasm-opt-sys`]: https://docs.rs/wasm-opt-sys
 //! [`cxx`]: https://docs.rs/cxx

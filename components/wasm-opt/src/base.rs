@@ -1,8 +1,3 @@
-//! The "base" API.
-//!
-//! This API hides the [`cxx`] types,
-//! but otherwise sticks closely to the binaryen API.
-
 use wasm_opt_cxx_sys as wocxx;
 use wocxx::cxx;
 use wocxx::cxx::let_cxx_string;
