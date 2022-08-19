@@ -291,7 +291,7 @@ impl Default for ReaderOptions {
 
 impl Default for WriterOptions {
     fn default() -> WriterOptions {
-        ReaderOptions {
+        WriterOptions {
             file_type: FileType::Wasm,
         }
     }
