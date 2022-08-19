@@ -19,7 +19,7 @@
 /// the cpp code.
 ///
 /// This is only a problem because all of the external function
-/// definitions for wasm-opt live inside the `wasm-opt` crate,
+/// definitions for wasm-opt live inside the `wasm-opt-cxx-sys` crate,
 /// when they would normally live in this crate.
 ///
 /// We have the external definitions living in the "wrong" crate to avoid the
