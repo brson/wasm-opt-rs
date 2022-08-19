@@ -5,11 +5,6 @@ use std::io::BufWriter;
 use std::io::Write;
 use tempfile::Builder;
 
-use crate::pass_registry::get_pass_description;
-use enum_iterator::all;
-use std::collections::HashSet;
-use wasm_opt::Pass;
-
 static WAT_FILE: &[u8] = include_bytes!("hello_world.wat");
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
 static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
@@ -394,28 +389,6 @@ fn write_file_path_not_exists() -> anyhow::Result<()> {
     let r = writer.write_text(&mut m, &new_file);
 
     assert!(r.is_err());
-
-    Ok(())
-}
-
-#[test]
-fn all_passes_correct() -> anyhow::Result<()> {
-    let mut passes_via_base_rs = HashSet::<String>::new();
-    pass_registry::get_registered_names()
-        .iter()
-        .for_each(|name| {
-            passes_via_base_rs.insert(name.to_string());
-        });
-
-    let mut passes_via_enum = HashSet::<String>::new();
-
-    all::<Pass>().collect::<Vec<_>>().iter().for_each(|item| {
-        passes_via_enum.insert(item.name().to_string());
-    });
-
-    let mut difference = passes_via_base_rs.difference(&passes_via_enum);
-
-    assert_eq!(passes_via_base_rs, passes_via_enum);
 
     Ok(())
 }
