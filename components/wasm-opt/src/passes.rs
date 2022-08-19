@@ -1,11 +1,12 @@
 use crate::base::pass_registry;
+use enum_iterator::Sequence;
 
 /// A binaryen optimization pass.
 ///
 /// These have the same names as given on the command line to
 /// `wasm-opt`, but with Rust capitalization conventions.
 // Keep these in the same order as PassRegistry::registerPasses
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Sequence)]
 pub enum Pass {
     /// Lower unaligned loads and stores to smaller aligned ones.
     AlignmentLowering,
@@ -26,7 +27,7 @@ pub enum Pass {
     /// Fold code, merging duplicates.
     CodeFolding,
     /// Hoist repeated constants to a local.
-    CodeHoisting,
+    ConstHoisting,
     /// Propagate constant struct field values.
     Cfp,
     /// Removes unreachable code.
@@ -243,6 +244,8 @@ pub enum Pass {
     Untee,
     /// Removes obviously unneeded code.
     Vacuum,
+    /// Fixup nested pops within catches.
+    CatchPopFixup,
 }
 
 impl Pass {
@@ -256,12 +259,12 @@ impl Pass {
             Asyncify => "asyncify",
             AvoidReinterprets => "avoid-reinterprets",
             Dae => "dae",
-            DaeOptimizing => "dao-optimizing",
+            DaeOptimizing => "dae-optimizing",
             CoalesceLocals => "coalesce-locals",
             CoalesceLocalsLearning => "coalesce-locals-learning",
             CodePushing => "code-pushing",
             CodeFolding => "code-folding",
-            CodeHoisting => "code-hoisting",
+            ConstHoisting => "const-hoisting",
             Cfp => "cfp",
             Dce => "dce",
             Dealign => "dealign",
@@ -284,7 +287,7 @@ impl Pass {
             Gto => "gto",
             Gsi => "gsi",
             TypeRefining => "type-refining",
-            Heap2Local => "heap-2-local",
+            Heap2Local => "heap2local",
             InlineMain => "inline-main",
             Inlining => "inlining",
             InliningOptimizing => "inlining-optimizing",
@@ -370,6 +373,7 @@ impl Pass {
             TrapModeJs => "trap-mode-js",
             Untee => "untee",
             Vacuum => "vacuum",
+            CatchPopFixup => "catch-pop-fixup",
         }
     }
 
