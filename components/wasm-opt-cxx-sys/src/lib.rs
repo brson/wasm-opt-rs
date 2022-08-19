@@ -7,7 +7,7 @@
 //! that provides a `cxx`-compatible C++ API.
 //!
 //! Most users will not want to use this crate directly,
-//! but instead use the [`wasm-opt`] crate.
+//! but instead the [`wasm-opt`] crate.
 //!
 //! [`wasm-opt-sys`]: https://docs.rs/wasm-opt-sys
 //! [`cxx`]: https://docs.rs/cxx
@@ -185,9 +185,7 @@ pub mod ffi {
 
 /// Hack to establish linkage to wasm-opt-sys.
 ///
-/// See docs for wasm_opt_sys::init.
-///
-/// FIXME: reevaluate this later
+/// See docs for `wasm_opt_sys::init`.
 #[doc(hidden)]
 pub fn init() -> anyhow::Result<()> {
     wasm_opt_sys::init();

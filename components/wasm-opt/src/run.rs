@@ -7,7 +7,15 @@ use crate::base::{
 };
 use std::path::Path;
 
+/// Execution.
 impl OptimizationOptions {
+    /// Run the Binaryen wasm optimizer.
+    ///
+    /// This loads a module from a file,
+    /// runs optimization passes,
+    /// and writes the module back to a file.
+    ///
+    /// TODO
     pub fn run(
         &self,
         infile: &impl AsRef<Path>,

@@ -1,7 +1,7 @@
 use crate::base::pass_registry;
 use enum_iterator::Sequence;
 
-/// A binaryen optimization pass.
+/// A Binaryen optimization pass.
 ///
 /// These have the same names as given on the command line to
 /// `wasm-opt`, but with Rust capitalization conventions.
@@ -251,7 +251,7 @@ pub enum Pass {
 impl Pass {
     /// Returns the name of the pass.
     ///
-    /// This is the same name used by binaryen to identify the pass on the command line.
+    /// This is the same name used by Binaryen to identify the pass on the command line.
     pub fn name(&self) -> &'static str {
         use Pass::*;
         match self {
@@ -377,7 +377,7 @@ impl Pass {
         }
     }
 
-    /// Get binaryen's description of the pass.
+    /// Get Binaryen's description of the pass.
     pub fn description(&self) -> String {
         // NB: This will abort if the name is invalid
         pass_registry::get_pass_description(self.name())
