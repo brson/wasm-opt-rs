@@ -135,6 +135,7 @@ pub struct Passes {
 
 pub use crate::passes::Pass;
 
+/// Constructors.
 impl OptimizationOptions {
     /// Optimize for size.
     ///

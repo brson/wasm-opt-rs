@@ -2,6 +2,7 @@
 
 use crate::api::*;
 
+/// Builder methods.
 impl OptimizationOptions {
     pub fn reader_file_type(&mut self, value: FileType) -> &mut Self {
         self.reader.file_type = value;

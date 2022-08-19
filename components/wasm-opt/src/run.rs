@@ -7,6 +7,7 @@ use crate::base::{
 };
 use std::path::Path;
 
+/// Execution.
 impl OptimizationOptions {
     pub fn run(
         &self,
