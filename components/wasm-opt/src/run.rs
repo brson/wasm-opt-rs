@@ -15,7 +15,16 @@ impl OptimizationOptions {
     /// runs optimization passes,
     /// and writes the module back to a file.
     ///
-    /// TODO
+    /// The sourcemap arguments are optional, and only have effect
+    /// when reading or writing binary wasm files. When using
+    /// wat files the respective sourcemap argument is ignored.
+    ///
+    /// # Errors
+    ///
+    /// Returns error on I/O failure, or if the input fails to parse.
+    /// If [`PassOptions::validate`] is true, it returns an error
+    /// if the input module fails to validate, or if the module
+    /// fails to validate after any pass.
     pub fn run(
         &self,
         infile: &impl AsRef<Path>,
