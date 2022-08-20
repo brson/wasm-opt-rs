@@ -27,9 +27,9 @@ impl OptimizationOptions {
     /// fails to validate after any pass.
     pub fn run(
         &self,
-        infile: &impl AsRef<Path>,
+        infile: impl AsRef<Path>,
         infile_sourcemap: Option<impl AsRef<Path>>,
-        outfile: &impl AsRef<Path>,
+        outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,
     ) -> anyhow::Result<()> {
         let mut m = Module::new();

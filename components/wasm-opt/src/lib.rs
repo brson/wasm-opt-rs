@@ -36,9 +36,9 @@
 //! use wasm_opt::OptimizationOptions;
 //!
 //! let infile = "hello_world.wasm";
-//! let infile_sourcemap = None;
+//! let infile_sourcemap = Option::<&str>::None;
 //! let outfile = "hello_world_optimized.wasm";
-//! let outfile_sourcemap = None;
+//! let outfile_sourcemap = Option::<&str>::None;
 //!
 //! OptimizationOptions::new_optimize_for_size()
 //!     .run(infile, infile_sourcemap, outfile, outfile_sourcemap)?;
@@ -77,9 +77,9 @@
 //! use wasm_opt::{OptimizationOptions, Pass};
 //!
 //! let infile = "hello_world.wasm";
-//! let infile_sourcemap = None;
+//! let infile_sourcemap = Option::<&str>::None;
 //! let outfile = "hello_world_optimized.wasm";
-//! let outfile_sourcemap = None;
+//! let outfile_sourcemap = Option::<&str>::None;
 //!
 //! // Just run the inliner.
 //! OptimizationOptions::new_opt_level_0()
