@@ -1,12 +1,12 @@
 use crate::base::pass_registry;
-use enum_iterator::Sequence;
+use strum_macros::EnumIter;
 
 /// A Binaryen optimization pass.
 ///
 /// These have the same names as given on the command line to
 /// `wasm-opt`, but with Rust capitalization conventions.
 // Keep these in the same order as PassRegistry::registerPasses
-#[derive(Clone, Debug, Sequence)]
+#[derive(Clone, Debug, EnumIter)]
 pub enum Pass {
     /// Lower unaligned loads and stores to smaller aligned ones.
     AlignmentLowering,

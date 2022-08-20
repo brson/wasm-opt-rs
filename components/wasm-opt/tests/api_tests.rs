@@ -1,5 +1,5 @@
-use enum_iterator::all;
 use std::collections::HashSet;
+use strum::IntoEnumIterator;
 use wasm_opt::base::pass_registry;
 use wasm_opt::Pass;
 
@@ -14,7 +14,7 @@ fn all_passes_correct() -> anyhow::Result<()> {
 
     let mut passes_via_enum = HashSet::<String>::new();
 
-    all::<Pass>().collect::<Vec<_>>().iter().for_each(|item| {
+    Pass::iter().for_each(|item| {
         passes_via_enum.insert(item.name().to_string());
     });
 
