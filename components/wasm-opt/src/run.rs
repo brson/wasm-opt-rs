@@ -26,9 +26,9 @@ impl OptimizationOptions {
         let mut m = Module::new();
         let mut reader = ModuleReader::new();
 
-        let set_drawf =
+        let set_dwarf =
             self.passopts.debug_info && !will_remove_debug_info(&self.passes.more_passes);
-        reader.set_dwarf(set_drawf);
+        reader.set_dwarf(set_dwarf);
 
         let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
 
