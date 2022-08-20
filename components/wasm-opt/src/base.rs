@@ -7,8 +7,6 @@ use std::path::Path;
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 
 pub struct Module(cxx::UniquePtr<ffi::wasm::Module>);
 
