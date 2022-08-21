@@ -18,166 +18,164 @@
 
 pub use cxx;
 
-pub mod ffi {
-    #[cxx::bridge(namespace = "Colors")]
-    pub mod colors {
-        unsafe extern "C++" {
-            include!("shims.h");
+#[cxx::bridge(namespace = "Colors")]
+pub mod colors {
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn setEnabled(enabled: bool);
-        }
+        fn setEnabled(enabled: bool);
+    }
+}
+
+#[cxx::bridge(namespace = "wasm_shims")]
+pub mod wasm {
+    unsafe extern "C++" {
+        include!("shims.h");
+
+        fn validateWasm(wasm: Pin<&mut Module>) -> bool;
     }
 
-    #[cxx::bridge(namespace = "wasm_shims")]
-    pub mod wasm {
-        unsafe extern "C++" {
-            include!("shims.h");
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn validateWasm(wasm: Pin<&mut Module>) -> bool;
-        }
+        type Module;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newModule() -> UniquePtr<Module>;
+    }
 
-            type Module;
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn newModule() -> UniquePtr<Module>;
-        }
+        type ModuleReader;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newModuleReader() -> UniquePtr<ModuleReader>;
 
-            type ModuleReader;
+        fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-            fn newModuleReader() -> UniquePtr<ModuleReader>;
+        fn setDwarf(self: Pin<&mut Self>, dwarf: bool);
 
-            fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
+        fn readText(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
 
-            fn setDwarf(self: Pin<&mut Self>, dwarf: bool);
+        fn readBinary(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString,
+        ) -> Result<()>;
 
-            fn readText(
-                self: Pin<&mut Self>,
-                filename: &CxxString,
-                wasm: Pin<&mut Module>,
-            ) -> Result<()>;
+        fn read(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString,
+        ) -> Result<()>;
+    }
 
-            fn readBinary(
-                self: Pin<&mut Self>,
-                filename: &CxxString,
-                wasm: Pin<&mut Module>,
-                sourceMapFilename: &CxxString,
-            ) -> Result<()>;
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn read(
-                self: Pin<&mut Self>,
-                filename: &CxxString,
-                wasm: Pin<&mut Module>,
-                sourceMapFilename: &CxxString,
-            ) -> Result<()>;
-        }
+        type ModuleWriter;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newModuleWriter() -> UniquePtr<ModuleWriter>;
 
-            type ModuleWriter;
+        fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-            fn newModuleWriter() -> UniquePtr<ModuleWriter>;
+        fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: &CxxString);
 
-            fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
+        fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: &CxxString);
 
-            fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: &CxxString);
+        fn writeText(
+            self: Pin<&mut Self>,
+            wasm: Pin<&mut Module>,
+            filename: &CxxString,
+        ) -> Result<()>;
 
-            fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: &CxxString);
+        fn writeBinary(
+            self: Pin<&mut Self>,
+            wasm: Pin<&mut Module>,
+            filename: &CxxString,
+        ) -> Result<()>;
+    }
 
-            fn writeText(
-                self: Pin<&mut Self>,
-                wasm: Pin<&mut Module>,
-                filename: &CxxString,
-            ) -> Result<()>;
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn writeBinary(
-                self: Pin<&mut Self>,
-                wasm: Pin<&mut Module>,
-                filename: &CxxString,
-            ) -> Result<()>;
-        }
+        fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
 
-            fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
+        fn isPassHidden(name: &CxxString) -> bool;
+    }
 
-            fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn isPassHidden(name: &CxxString) -> bool;
-        }
+        type InliningOptions;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newInliningOptions() -> UniquePtr<InliningOptions>;
 
-            type InliningOptions;
+        fn setAlwaysInlineMaxSize(self: Pin<&mut Self>, size: u32);
 
-            fn newInliningOptions() -> UniquePtr<InliningOptions>;
+        fn setOneCallerInlineMaxSize(self: Pin<&mut Self>, size: u32);
 
-            fn setAlwaysInlineMaxSize(self: Pin<&mut Self>, size: u32);
+        fn setFlexibleInlineMaxSize(self: Pin<&mut Self>, size: u32);
 
-            fn setOneCallerInlineMaxSize(self: Pin<&mut Self>, size: u32);
+        fn setAllowFunctionsWithLoops(self: Pin<&mut Self>, allow: bool);
 
-            fn setFlexibleInlineMaxSize(self: Pin<&mut Self>, size: u32);
+        fn setPartialInliningIfs(self: Pin<&mut Self>, number: u32);
+    }
 
-            fn setAllowFunctionsWithLoops(self: Pin<&mut Self>, allow: bool);
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn setPartialInliningIfs(self: Pin<&mut Self>, number: u32);
-        }
+        type PassOptions;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newPassOptions() -> UniquePtr<PassOptions>;
 
-            type PassOptions;
+        fn setValidate(self: Pin<&mut Self>, validate: bool);
 
-            fn newPassOptions() -> UniquePtr<PassOptions>;
+        fn setValidateGlobally(self: Pin<&mut Self>, validate: bool);
 
-            fn setValidate(self: Pin<&mut Self>, validate: bool);
+        fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
 
-            fn setValidateGlobally(self: Pin<&mut Self>, validate: bool);
+        fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
 
-            fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
+        fn setInliningOptions(self: Pin<&mut Self>, inlining: UniquePtr<InliningOptions>);
 
-            fn setShrinkLevel(self: Pin<&mut Self>, level: i32);
+        fn setTrapsNeverHappen(self: Pin<&mut Self>, ignoreTraps: bool);
 
-            fn setInliningOptions(self: Pin<&mut Self>, inlining: UniquePtr<InliningOptions>);
+        fn setLowMemoryUnused(self: Pin<&mut Self>, memoryUnused: bool);
 
-            fn setTrapsNeverHappen(self: Pin<&mut Self>, ignoreTraps: bool);
+        fn setFastMath(self: Pin<&mut Self>, fastMath: bool);
 
-            fn setLowMemoryUnused(self: Pin<&mut Self>, memoryUnused: bool);
+        fn setZeroFilledMemory(self: Pin<&mut Self>, zeroFilledMemory: bool);
 
-            fn setFastMath(self: Pin<&mut Self>, fastMath: bool);
+        fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
+    }
 
-            fn setZeroFilledMemory(self: Pin<&mut Self>, zeroFilledMemory: bool);
+    unsafe extern "C++" {
+        include!("shims.h");
 
-            fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
-        }
+        type PassRunner<'wasm>;
 
-        unsafe extern "C++" {
-            include!("shims.h");
+        fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
 
-            type PassRunner<'wasm>;
+        fn newPassRunnerWithOptions<'wasm>(
+            wasm: Pin<&'wasm mut Module>,
+            options: UniquePtr<PassOptions>,
+        ) -> UniquePtr<PassRunner<'wasm>>;
 
-            fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
+        fn add(self: Pin<&mut Self>, pass_name: &CxxString);
 
-            fn newPassRunnerWithOptions<'wasm>(
-                wasm: Pin<&'wasm mut Module>,
-                options: UniquePtr<PassOptions>,
-            ) -> UniquePtr<PassRunner<'wasm>>;
+        fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 
-            fn add(self: Pin<&mut Self>, pass_name: &CxxString);
+        fn run(self: Pin<&mut Self>);
 
-            fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
-
-            fn run(self: Pin<&mut Self>);
-
-            fn passRemovesDebugInfo(name: &CxxString) -> bool;
-        }
+        fn passRemovesDebugInfo(name: &CxxString) -> bool;
     }
 }
 

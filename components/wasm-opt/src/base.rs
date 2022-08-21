@@ -1,26 +1,25 @@
 use wasm_opt_cxx_sys as wocxx;
-use wocxx::cxx;
 use wocxx::cxx::let_cxx_string;
-use wocxx::ffi;
+use wocxx::{colors, cxx, wasm};
 
 use std::path::Path;
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 
-pub struct Module(cxx::UniquePtr<ffi::wasm::Module>);
+pub struct Module(cxx::UniquePtr<wasm::Module>);
 
 impl Module {
     pub fn new() -> Module {
-        Module(ffi::wasm::newModule())
+        Module(wasm::newModule())
     }
 }
 
-pub struct ModuleReader(cxx::UniquePtr<ffi::wasm::ModuleReader>);
+pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
 
 impl ModuleReader {
     pub fn new() -> ModuleReader {
-        ModuleReader(ffi::wasm::newModuleReader())
+        ModuleReader(wasm::newModuleReader())
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
@@ -80,11 +79,11 @@ impl ModuleReader {
     }
 }
 
-pub struct ModuleWriter(cxx::UniquePtr<ffi::wasm::ModuleWriter>);
+pub struct ModuleWriter(cxx::UniquePtr<wasm::ModuleWriter>);
 
 impl ModuleWriter {
     pub fn new() -> ModuleWriter {
-        ModuleWriter(ffi::wasm::newModuleWriter())
+        ModuleWriter(wasm::newModuleWriter())
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
@@ -107,7 +106,7 @@ impl ModuleWriter {
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
-        ffi::colors::setEnabled(false);
+        colors::setEnabled(false);
 
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
@@ -128,10 +127,10 @@ impl ModuleWriter {
 pub mod pass_registry {
     use wasm_opt_cxx_sys as wocxx;
     use wocxx::cxx::let_cxx_string;
-    use wocxx::ffi;
+    use wocxx::wasm;
 
     pub fn get_registered_names() -> Vec<String> {
-        let names = ffi::wasm::getRegisteredNames();
+        let names = wasm::getRegisteredNames();
 
         let name_vec: Vec<String> = names
             .iter()
@@ -150,7 +149,7 @@ pub mod pass_registry {
     pub fn get_pass_description(name: &str) -> String {
         let_cxx_string!(name = name);
 
-        let description = ffi::wasm::getPassDescription(&name);
+        let description = wasm::getPassDescription(&name);
         let description = description.as_ref().expect("non-null");
 
         description.to_str().expect("utf8").to_string()
@@ -165,15 +164,15 @@ pub mod pass_registry {
     pub fn is_pass_hidden(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        ffi::wasm::isPassHidden(&name)
+        wasm::isPassHidden(&name)
     }
 }
 
-pub struct InliningOptions(cxx::UniquePtr<ffi::wasm::InliningOptions>);
+pub struct InliningOptions(cxx::UniquePtr<wasm::InliningOptions>);
 
 impl InliningOptions {
     pub fn new() -> InliningOptions {
-        InliningOptions(ffi::wasm::newInliningOptions())
+        InliningOptions(wasm::newInliningOptions())
     }
 
     pub fn set_always_inline_max_size(&mut self, size: u32) {
@@ -202,11 +201,11 @@ impl InliningOptions {
     }
 }
 
-pub struct PassOptions(cxx::UniquePtr<ffi::wasm::PassOptions>);
+pub struct PassOptions(cxx::UniquePtr<wasm::PassOptions>);
 
 impl PassOptions {
     pub fn new() -> PassOptions {
-        PassOptions(ffi::wasm::newPassOptions())
+        PassOptions(wasm::newPassOptions())
     }
 
     pub fn set_validate(&mut self, validate: bool) {
@@ -260,17 +259,17 @@ impl PassOptions {
     }
 }
 
-pub struct PassRunner<'wasm>(cxx::UniquePtr<ffi::wasm::PassRunner<'wasm>>);
+pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);
 
 impl<'wasm> PassRunner<'wasm> {
     pub fn new(wasm: &'wasm mut Module) -> PassRunner<'wasm> {
         let wasm = wasm.0.pin_mut();
-        PassRunner(ffi::wasm::newPassRunner(wasm))
+        PassRunner(wasm::newPassRunner(wasm))
     }
 
     pub fn new_with_options(wasm: &'wasm mut Module, options: PassOptions) -> PassRunner<'wasm> {
         let wasm = wasm.0.pin_mut();
-        PassRunner(ffi::wasm::newPassRunnerWithOptions(wasm, options.0))
+        PassRunner(wasm::newPassRunnerWithOptions(wasm, options.0))
     }
 
     pub fn add(&mut self, pass_name: &str) {
@@ -293,12 +292,12 @@ impl<'wasm> PassRunner<'wasm> {
     pub fn pass_removes_debug_info(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        ffi::wasm::passRemovesDebugInfo(&name)
+        wasm::passRemovesDebugInfo(&name)
     }
 }
 
 pub fn validate_wasm(wasm: &mut Module) -> bool {
-    ffi::wasm::validateWasm(wasm.0.pin_mut())
+    wasm::validateWasm(wasm.0.pin_mut())
 }
 
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
