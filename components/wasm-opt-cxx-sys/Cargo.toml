@@ -4,6 +4,8 @@ version = "0.0.0"
 description = "wasm-opt bindings via cxx"
 license = "MIT / Apache-2.0"
 edition = "2018"
+documentation = "https://docs.rs/wasm-opt-cxx-sys"
+repository = "https://github.com/brson/wasm-opt-rs"
 
 [dependencies]
 anyhow = "1.0.58"
