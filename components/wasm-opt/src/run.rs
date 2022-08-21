@@ -48,7 +48,7 @@ impl OptimizationOptions {
         };
 
         if self.passopts.validate && !validate_wasm(&mut m) {
-            anyhow::bail!("Failed validate wasm: error validating input");
+            anyhow::bail!("Failed to validate wasm: error validating input");
         }
 
         let mut opts = BasePassOptions::new();
@@ -78,10 +78,8 @@ impl OptimizationOptions {
         pass_runner.run();
         drop(pass_runner);
 
-        for pass in &self.passes.more_passes {
-            if self.passopts.validate && !validate_wasm(&mut m) {
-                anyhow::bail!("Failed validate wasm: error after opts");
-            }
+        if self.passopts.validate && !validate_wasm(&mut m) {
+            anyhow::bail!("Failed to validate wasm: error after opts");
         }
 
         let mut writer = ModuleWriter::new();
