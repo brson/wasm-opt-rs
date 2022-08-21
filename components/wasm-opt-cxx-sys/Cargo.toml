@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt-cxx-sys"
-version = "0.0.0"
+version = "0.0.1-preview.1"
 description = "wasm-opt bindings via cxx"
 license = "MIT / Apache-2.0"
 edition = "2018"
@@ -10,7 +10,7 @@ repository = "https://github.com/brson/wasm-opt-rs"
 [dependencies]
 anyhow = "1.0.58"
 cxx = "1.0.72"
-wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.0" }
+wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.1-preview.1" }
 
 [build-dependencies]
 anyhow = "1.0.58"
