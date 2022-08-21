@@ -35,26 +35,37 @@ jobs:
     steps:
       - if: matrix.os == 'ubuntu-18.04'
         name: Install clang-3.9
+        env:
+          CC: clang-3.9
+          CXX: clang++-3.9
         run: |
           sudo apt-get update
           sudo apt-get install clang-3.9
-          clang --version
+          clang-3.9 --version
+          clang++-3.9 --version
 
       - if: ${{ matrix.compiler == 'clang-7' && matrix.os == 'ubuntu-20.04' }}
         name: Install clang-7
+        env:
+          CC: clang-7
+          CXX: clang++-7
         run: |
           sudo apt-get update
           sudo apt-get install clang-7
-          clang --version
+          clang-7 --version
+          clang++-7 --version
           
       - if: ${{ matrix.compiler == 'gcc-7' && matrix.os == 'ubuntu-20.04' }}
         name: Install gcc-7
+        env:
+          CC: gcc-7
+          CXX: g++-7
         run: |
           sudo apt-get update
           sudo apt-get install gcc-7 g++-7
-          gcc --version
-          g++ --version
-          
+          gcc-7 --version
+          g++-7 --version
+
       - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
