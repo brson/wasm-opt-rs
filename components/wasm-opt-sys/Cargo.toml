@@ -1,9 +1,11 @@
 [package]
 name = "wasm-opt-sys"
-version = "0.0.0"
+version = "0.0.1-preview.1"
 description = "Native wasm-opt build"
 license = "MIT / Apache-2.0"
 edition = "2018"
+documentation = "https://docs.rs/wasm-opt-sys"
+repository = "https://github.com/brson/wasm-opt-rs"
 
 [build-dependencies]
 anyhow = "1.0.58"
