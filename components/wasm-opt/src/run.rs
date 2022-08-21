@@ -62,7 +62,7 @@ impl OptimizationOptions {
         opts.set_fast_math(self.passopts.fast_math);
         opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
         opts.set_debug_info(self.passopts.debug_info);
-        
+
         let mut inlining = BaseInliningOptions::new();
         inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
         inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);

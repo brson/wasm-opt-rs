@@ -36,9 +36,14 @@ fn get_binaryen_dir() -> anyhow::Result<PathBuf> {
     let binaryen_packaged_dir = manifest_dir.join("binaryen");
     let binaryen_submodule_dir = manifest_dir.join("../../binaryen");
 
-    match (binaryen_packaged_dir.is_dir(), binaryen_submodule_dir.is_dir()) {
+    match (
+        binaryen_packaged_dir.is_dir(),
+        binaryen_submodule_dir.is_dir(),
+    ) {
         (true, _) => Ok(binaryen_packaged_dir),
         (_, true) => Ok(binaryen_submodule_dir),
-        (false, false) => anyhow::bail!("binaryen source directory doesn't exist (maybe `git submodule update --init`?)"),
+        (false, false) => anyhow::bail!(
+            "binaryen source directory doesn't exist (maybe `git submodule update --init`?)"
+        ),
     }
 }
