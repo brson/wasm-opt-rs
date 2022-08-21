@@ -73,7 +73,14 @@ impl OptimizationOptions {
 
         let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
 
-        pass_runner.add_default_optimization_passes();
+        if self.passes.add_default_passes {
+            pass_runner.add_default_optimization_passes();
+        }
+
+        self.passes
+            .more_passes
+            .iter()
+            .for_each(|pass| pass_runner.add(pass.name()));
 
         pass_runner.run();
         drop(pass_runner);
