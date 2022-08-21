@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
 
     builder
         .include("src")
-        .include("../wasm-opt-sys/binaryen/src")
+        .include("binaryen/src")
         .compile("wasm-opt-cxx");
 
     Ok(())
