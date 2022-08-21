@@ -23,8 +23,8 @@ impl OptimizationOptions {
     ///
     /// Returns error on I/O failure, or if the input fails to parse.
     /// If [`PassOptions::validate`] is true, it returns an error
-    /// if the input module fails to validate, or if the module
-    /// fails to validate after any pass.
+    /// if the input module fails to validate, or if the optimized
+    /// module fails to validate.
     pub fn run(
         &self,
         infile: impl AsRef<Path>,
