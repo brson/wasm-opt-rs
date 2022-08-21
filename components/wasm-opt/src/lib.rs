@@ -93,19 +93,19 @@
 //! some may not make sense to actually use &mdash; Binaryen
 //! is a command-line oriented tool, and some passes are
 //! for debug purposes or print directly to the console.
-//!
-//!
-//! ## Features not included in the library
-//!
-//! ## Caveats
-//!
-//! TODO:
-//! - Reading/writing stdin ("" or "-").
-//! - Console output
-//!
-//! ## Todo
-//!
-//! - reader/writer defaults - write default binary
+//
+//
+// ## Features not included in the library
+//
+// ## Caveats
+//
+// TODO:
+// - Reading/writing stdin ("" or "-").
+// - Console output
+//
+// ## Todo
+//
+// - reader/writer defaults - write default binary
 
 /// The "base" API.
 ///
