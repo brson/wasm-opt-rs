@@ -1,10 +1,10 @@
 #ifndef wasmopt_shims_h
 #define wasmopt_shims_h
 
-#include "../../wasm-opt-sys/binaryen/src/pass.h"
-#include "../../wasm-opt-sys/binaryen/src/wasm-io.h"
-#include "../../wasm-opt-sys/binaryen/src/support/colors.h"
-#include "../../wasm-opt-sys/binaryen/src/wasm-validator.h"
+#include "pass.h"
+#include "wasm-io.h"
+#include "support/colors.h"
+#include "wasm-validator.h"
 
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr

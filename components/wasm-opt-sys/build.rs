@@ -11,13 +11,7 @@ fn main() -> anyhow::Result<()> {
     let output_dir = std::env::var("OUT_DIR")?;
     let output_dir = Path::new(&output_dir);
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let binaryen_dir = manifest_dir.join("binaryen");
-
-    if !binaryen_dir.is_dir() {
-        anyhow::bail!("binaryen doesn't exist");
-    }
+    let binaryen_dir = get_binaryen_dir()?;
 
     let src_dir = binaryen_dir.join("src");
     let src_files = get_src_files(&src_dir)?;
@@ -58,6 +52,32 @@ fn main() -> anyhow::Result<()> {
     builder.compile("wasm-opt-cc");
 
     Ok(())
+}
+
+/// Finds the binaryen source directory.
+///
+/// During development this will be at the workspace level submodule,
+/// but as packaged, will be a subdirectory of the manifest directory.
+///
+/// The packaged subdirectories are put in place by `publish.sh`.
+///
+/// This complex arrangement exists because both `wasm-opt-sys` and
+/// `wasm-opt-cxx-sys` need access to the source; I don't want two identical
+/// submodules; and symlinking a single submodule doesn't appear to work
+/// correctly on windows.
+///
+/// This function is duplicated in `wasm-opt-cxx-sys`.
+fn get_binaryen_dir() -> anyhow::Result<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let binaryen_packaged_dir = manifest_dir.join("binaryen");
+    let binaryen_submodule_dir = manifest_dir.join("../../binaryen");
+
+    match (binaryen_packaged_dir.is_dir(), binaryen_submodule_dir.is_dir()) {
+        (true, _) => Ok(binaryen_packaged_dir),
+        (_, true) => Ok(binaryen_submodule_dir),
+        (false, false) => anyhow::bail!("binaryen source directory doesn't exist (maybe `git submodule update --init`?)"),
+    }
 }
 
 fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
@@ -285,7 +305,9 @@ fn create_config_header() -> anyhow::Result<()> {
                 cmake_version, git_version
             );
         }
-        Err(_) => {}
+        Err(_) => {
+            // Can't get the git version when building from package.
+        }
     }
 
     fs::write(&config_file, config_text)?;
@@ -293,32 +315,11 @@ fn create_config_header() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_project_version_from_git() -> anyhow::Result<String> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let binaryen_dir = manifest_dir.join("binaryen");
-
-    let output = Command::new("git")
-        .arg("-C")
-        .arg(binaryen_dir.as_os_str())
-        .arg("describe")
-        .arg("--tags")
-        .arg("--match")
-        .arg("version_*")
-        .output();
-
-    let output = output?;
-    let output = String::from_utf8(output.stdout)?.trim().to_string();
-
-    Ok(output)
-}
-
 fn get_project_version_from_cmake() -> anyhow::Result<String> {
     let re = Regex::new(r".*?binaryen LANGUAGES C CXX VERSION \d+.*?").unwrap();
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let cmake_file = manifest_dir.join("binaryen/CMakeLists.txt");
+    let binaryen_dir = get_binaryen_dir()?;
+    let cmake_file = binaryen_dir.join("CMakeLists.txt");
 
     let file = File::open(cmake_file)?;
 
@@ -333,4 +334,22 @@ fn get_project_version_from_cmake() -> anyhow::Result<String> {
     let version = &cap[0];
 
     Ok(version.to_string())
+}
+
+fn get_project_version_from_git() -> anyhow::Result<String> {
+    let binaryen_dir = get_binaryen_dir()?;
+
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(binaryen_dir.as_os_str())
+        .arg("describe")
+        .arg("--tags")
+        .arg("--match")
+        .arg("version_*")
+        .output();
+
+    let output = output?;
+    let output = String::from_utf8(output.stdout)?.trim().to_string();
+
+    Ok(output)
 }
