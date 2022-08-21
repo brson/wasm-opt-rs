@@ -3,7 +3,7 @@
 /// This type declares all supported Binaryen options.
 /// It can be modified directly or by its [builder-pattern] methods.
 ///
-/// Call [`OptimizationOptions::run`] to execute optimize a wasm module.
+/// Call [`OptimizationOptions::run`] to perform the optimizations.
 ///
 /// [builder-pattern]: https://rust-unofficial.github.io/patterns/patterns/creational/builder.html
 #[derive(Clone, Debug, Default)]
