@@ -146,17 +146,17 @@ and this leaks into our Rust API,
 where the receiver again must take a `&mut self`:
 
 ```rust
-pub struct ModuleReader(cxx::UniquePtr<ffi::ModuleReader>);
+pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
 
 impl ModuleReader {
-    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) {
+    // FIXME would rather take &self here but the C++ method is not const-correct
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
         // FIXME need to support non-utf8 paths. Does this work on windows?
-        let_cxx_string!(path = path.to_str().expect("utf8"));
-        ffi::ModuleReader_readText(
-            self.0.pin_mut(),
-            &path,
-            wasm.0.pin_mut(),
-        );
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
+
+        let this = self.0.pin_mut();
+        this.readText(&path, wasm.0.pin_mut())
     }
 }
 ```
@@ -166,7 +166,7 @@ and present an idiomatic non-mut Rust receiver
 will require using interior mutability, e.g.
 
 ```rust
-pub struct ModuleReader(RefCell<cxx::UniquePtr<ffi::ModuleReader>>);
+pub struct ModuleReader(RefCell<cxx::UniquePtr<wasm::ModuleReader>>);
 ```
 
 This would allow `ModuleReader` to present `&self` as it logically should,
