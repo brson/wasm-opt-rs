@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use regex::Regex;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
@@ -93,7 +91,7 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
     let output_dir = Path::new(&output_dir);
 
     let temp_file_dir = output_dir.join("wasm_opt.cpp.temp");
-    let mut temp_file = File::create(&temp_file_dir)?;
+    let temp_file = File::create(&temp_file_dir)?;
 
     let mut writer = BufWriter::new(temp_file);
     for line in reader.lines() {
@@ -252,14 +250,14 @@ fn get_converted_wasm_intrinsics_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> 
 
 fn load_wasm_intrinsics_wat(passes_dir: &Path) -> anyhow::Result<(String, usize)> {
     let wasm_intrinsics_wat = passes_dir.join("wasm-intrinsics.wat");
-    let mut wat_contents = std::fs::read_to_string(&wasm_intrinsics_wat)?;
+    let wat_contents = std::fs::read_to_string(&wasm_intrinsics_wat)?;
 
     let mut buffer = String::with_capacity(wat_contents.len() * 5 /* 0xNN, */ + 4 /* null */);
 
     for byte in wat_contents.bytes() {
-        write!(buffer, "0x{:02x},", byte);
+        write!(buffer, "0x{:02x},", byte)?;
     }
-    write!(buffer, "0x00");
+    write!(buffer, "0x00")?;
 
     Ok((buffer, wat_contents.len() + 1))
 }

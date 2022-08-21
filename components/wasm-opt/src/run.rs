@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use crate::api::*;
 use crate::base::{
     validate_wasm, InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
