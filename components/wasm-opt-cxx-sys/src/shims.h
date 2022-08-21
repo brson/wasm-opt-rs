@@ -172,10 +172,6 @@ namespace wasm_shims {
   struct PassOptions {
     wasm::PassOptions inner;
 
-    void setDebug(bool debug) {
-      inner.debug = debug;
-    }
-
     void setValidate(bool validate) {
       inner.validate = validate;
     }

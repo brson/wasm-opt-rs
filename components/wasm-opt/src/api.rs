@@ -75,7 +75,6 @@ pub struct InliningOptions {
 /// Options that affect how optimization passes behave.
 #[derive(Copy, Clone, Debug)]
 pub struct PassOptions {
-    pub debug: bool,
     /// Validate both the unoptimized module and the optimized module.
     ///
     /// Default: `true`.
@@ -312,7 +311,6 @@ impl Default for InliningOptions {
 impl Default for PassOptions {
     fn default() -> PassOptions {
         PassOptions {
-            debug: false,
             validate: true,
             validate_globally: false,
             optimize_level: OptimizeLevel::default(),

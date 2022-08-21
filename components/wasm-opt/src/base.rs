@@ -209,11 +209,6 @@ impl PassOptions {
         PassOptions(ffi::wasm::newPassOptions())
     }
 
-    pub fn set_debug(&mut self, debug: bool) {
-        let this = self.0.pin_mut();
-        this.setDebug(debug);
-    }
-
     pub fn set_validate(&mut self, validate: bool) {
         let this = self.0.pin_mut();
         this.setValidate(validate);

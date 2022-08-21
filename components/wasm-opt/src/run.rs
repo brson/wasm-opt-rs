@@ -52,7 +52,6 @@ impl OptimizationOptions {
         }
 
         let mut opts = BasePassOptions::new();
-        opts.set_debug(self.passopts.debug);
         opts.set_validate(self.passopts.validate);
         opts.set_validate_globally(self.passopts.validate_globally);
         opts.set_optimize_level(self.passopts.optimize_level as i32);

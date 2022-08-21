@@ -137,8 +137,6 @@ pub mod ffi {
 
             fn newPassOptions() -> UniquePtr<PassOptions>;
 
-            fn setDebug(self: Pin<&mut Self>, debug: bool);
-
             fn setValidate(self: Pin<&mut Self>, validate: bool);
 
             fn setValidateGlobally(self: Pin<&mut Self>, validate: bool);
