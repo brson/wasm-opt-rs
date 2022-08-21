@@ -47,8 +47,8 @@ impl OptimizationOptions {
             FileType::Any => reader.read(infile.as_ref(), &mut m, infile_sourcemap)?,
         };
 
-        if self.passopts.validate {
-            validate_wasm(&mut m);
+        if self.passopts.validate && !validate_wasm(&mut m) {
+            anyhow::bail!("Failed validate wasm: error validating input");
         }
 
         let mut opts = BasePassOptions::new();
@@ -62,7 +62,7 @@ impl OptimizationOptions {
         opts.set_fast_math(self.passopts.fast_math);
         opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
         opts.set_debug_info(self.passopts.debug_info);
-
+        
         let mut inlining = BaseInliningOptions::new();
         inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
         inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);
@@ -74,8 +74,15 @@ impl OptimizationOptions {
         let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
 
         pass_runner.add_default_optimization_passes();
+
         pass_runner.run();
         drop(pass_runner);
+
+        for pass in &self.passes.more_passes {
+            if self.passopts.validate && !validate_wasm(&mut m) {
+                anyhow::bail!("Failed validate wasm: error after opts");
+            }
+        }
 
         let mut writer = ModuleWriter::new();
         reader.set_debug_info(false);
