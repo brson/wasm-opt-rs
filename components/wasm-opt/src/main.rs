@@ -14,12 +14,24 @@ mod c {
 
 pub fn wasm_opt_main() -> anyhow::Result<()> {
     use libc::{c_char, c_int};
+    use std::ffi::OsString;
+    #[cfg(unix)]
+    use std::os::unix::ffi::OsStrExt;
 
-    let args: Vec<String> = std::env::args().collect();
+    let args: Vec<OsString> = std::env::args_os().collect();
+
+    #[cfg(unix)]
     let c_args: Result<Vec<std::ffi::CString>, _> = args
         .into_iter()
-        .map(|s| std::ffi::CString::new(s))
+        .map(|s| std::ffi::CString::new(s.as_bytes()))
         .collect();
+
+    #[cfg(windows)]
+    let c_args: Result<Vec<std::ffi::CString>, _> = args
+        .into_iter()
+        .map(|s| std::ffi::CString::new(s.to_str().expect("utf8").as_bytes()))
+        .collect();
+
     let c_args = c_args?;
     let c_ptrs: Vec<*const c_char> = c_args.iter().map(|s| s.as_ptr() as *const c_char).collect();
 
