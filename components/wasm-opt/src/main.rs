@@ -26,12 +26,13 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
     let argc = c_ptrs.len() as c_int;
     let argv = c_ptrs.as_ptr();
 
+    let c_return;
     unsafe {
-        c::wasm_opt_main(argc, argv);
+        c_return = c::wasm_opt_main(argc, argv);
     }
 
     drop(c_ptrs);
     drop(c_args);
 
-    Ok(())
+    std::process::exit(c_return)
 }
