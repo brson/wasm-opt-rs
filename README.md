@@ -49,9 +49,9 @@ It does not require CMake or other C++ build tools.
 
 These are the earliest C++ compiler versions known to work:
 
-- gcc - TODO
-- clang - TODO
-- msvc - TODO
+- gcc 7
+- clang 3.9
+- Visual Studio 2019
 
 
 
@@ -64,20 +64,6 @@ cd wasm-opt-rs
 git submodule update --init --recursive
 cargo build && cargo test
 ```
-
-
-
-
-## Versioning
-
-TODO
-
-
-
-
-## Maintenance
-
-TODO
 
 
 
