@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt"
-version = "0.0.1-preview.1"
+version = "0.0.1-preview.2"
 description = "wasm-opt bindings"
 license = "MIT / Apache-2.0"
 edition = "2018"
