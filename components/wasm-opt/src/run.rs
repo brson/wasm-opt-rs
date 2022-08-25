@@ -14,8 +14,8 @@ impl OptimizationOptions {
     /// and writes the module back to a file.
     ///
     /// The sourcemap arguments are optional, and only have effect
-    /// when reading or writing binary wasm files. When using
-    /// wat files the respective sourcemap argument is ignored.
+    /// when reading or writing binary `wasm` files. When using
+    /// text `wat` files the respective sourcemap argument is ignored.
     ///
     /// # Errors
     ///
