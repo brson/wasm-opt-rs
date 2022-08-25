@@ -177,6 +177,12 @@ pub mod wasm {
 
         fn passRemovesDebugInfo(name: &CxxString) -> bool;
     }
+
+    unsafe extern "C++" {
+        include!("shims.h");
+
+        fn checkInliningOptionsDefaults(inlining_options: UniquePtr<InliningOptions>) -> bool;
+    }
 }
 
 /// Hack to establish linkage to wasm-opt-sys.

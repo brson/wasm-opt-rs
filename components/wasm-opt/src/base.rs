@@ -300,6 +300,10 @@ pub fn validate_wasm(wasm: &mut Module) -> bool {
     wasm::validateWasm(wasm.0.pin_mut())
 }
 
+pub fn check_inlining_options_defaults(inlining_options: InliningOptions) -> bool {
+    wasm::checkInliningOptionsDefaults(inlining_options.0)
+}
+
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();

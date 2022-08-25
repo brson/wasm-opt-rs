@@ -249,6 +249,22 @@ namespace wasm_shims {
   bool passRemovesDebugInfo(const std::string& name) {
     return wasm::PassRunner::passRemovesDebugInfo(std::string(name));
   }
+
+  bool checkInliningOptionsDefaults(std::unique_ptr<InliningOptions> inlining) {
+    auto inliningOptionsDefault = wasm_shims::newInliningOptions();
+
+    // The size assertion will fail when `InliningOptions` fields change,
+    // which indicates the current test need to be updated.
+    assert(sizeof(inliningOptionsDefault->inner) == 20);
+    
+    bool isEqual = (inlining->inner.alwaysInlineMaxSize == inliningOptionsDefault->inner.alwaysInlineMaxSize)
+      && (inlining->inner.oneCallerInlineMaxSize == inliningOptionsDefault->inner.oneCallerInlineMaxSize)
+      && (inlining->inner.flexibleInlineMaxSize == inliningOptionsDefault->inner.flexibleInlineMaxSize)
+      && (inlining->inner.allowFunctionsWithLoops == inliningOptionsDefault->inner.allowFunctionsWithLoops)
+      && (inlining->inner.partialInliningIfs == inliningOptionsDefault->inner.partialInliningIfs);
+    
+    return isEqual;
+  }
 }
 
 #endif // wasmopt_shims_h
