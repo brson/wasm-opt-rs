@@ -284,7 +284,7 @@ checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
 
 [[package]]
 name = "wasm-opt"
-version = "0.0.1-preview.1"
+version = "0.0.1-preview.3"
 dependencies = [
  "anyhow",
  "libc",
@@ -297,7 +297,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-cxx-sys"
-version = "0.0.1-preview.1"
+version = "0.0.1-preview.3"
 dependencies = [
  "anyhow",
  "cxx",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-sys"
-version = "0.0.1-preview.1"
+version = "0.0.1-preview.3"
 dependencies = [
  "anyhow",
  "cc",
