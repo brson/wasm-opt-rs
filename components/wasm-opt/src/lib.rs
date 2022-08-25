@@ -27,7 +27,7 @@
 //! ## Using the library
 //!
 //! The crate provides an [`OptimizationOptions`] type that
-//! follows the builder pattern, with options that closely mirror
+//! follows the builder pattern, with options that closely
 //! mirror the command line options of `wasm-opt`. Once built,
 //! call [`OptimizationOptions::run`] to load, optimize, and write
 //! the optimized module.
