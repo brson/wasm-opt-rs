@@ -182,6 +182,8 @@ pub mod wasm {
         include!("shims.h");
 
         fn checkInliningOptionsDefaults(inlining_options: UniquePtr<InliningOptions>) -> bool;
+
+        fn checkPassOptionsDefaults(pass_options: UniquePtr<PassOptions>) -> bool;
     }
 }
 

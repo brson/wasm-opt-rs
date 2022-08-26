@@ -304,6 +304,10 @@ pub fn check_inlining_options_defaults(inlining_options: InliningOptions) -> boo
     wasm::checkInliningOptionsDefaults(inlining_options.0)
 }
 
+pub fn check_pass_options_defaults(pass_options: PassOptions) -> bool {
+    wasm::checkPassOptionsDefaults(pass_options.0)
+}
+
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();

@@ -251,18 +251,45 @@ namespace wasm_shims {
   }
 
   bool checkInliningOptionsDefaults(std::unique_ptr<InliningOptions> inlining) {
-    auto inliningOptionsDefault = wasm_shims::newInliningOptions();
+    auto inliningOptionsDefaults = wasm_shims::newInliningOptions();
 
     // The size assertion will fail when `InliningOptions` fields change,
     // which indicates the current test need to be updated.
-    assert(sizeof(inliningOptionsDefault->inner) == 20);
+    assert(sizeof(inliningOptionsDefaults->inner) == 20);
     
-    bool isEqual = (inlining->inner.alwaysInlineMaxSize == inliningOptionsDefault->inner.alwaysInlineMaxSize)
-      && (inlining->inner.oneCallerInlineMaxSize == inliningOptionsDefault->inner.oneCallerInlineMaxSize)
-      && (inlining->inner.flexibleInlineMaxSize == inliningOptionsDefault->inner.flexibleInlineMaxSize)
-      && (inlining->inner.allowFunctionsWithLoops == inliningOptionsDefault->inner.allowFunctionsWithLoops)
-      && (inlining->inner.partialInliningIfs == inliningOptionsDefault->inner.partialInliningIfs);
+    bool isEqual = (inlining->inner.alwaysInlineMaxSize == inliningOptionsDefaults->inner.alwaysInlineMaxSize)
+      && (inlining->inner.oneCallerInlineMaxSize == inliningOptionsDefaults->inner.oneCallerInlineMaxSize)
+      && (inlining->inner.flexibleInlineMaxSize == inliningOptionsDefaults->inner.flexibleInlineMaxSize)
+      && (inlining->inner.allowFunctionsWithLoops == inliningOptionsDefaults->inner.allowFunctionsWithLoops)
+      && (inlining->inner.partialInliningIfs == inliningOptionsDefaults->inner.partialInliningIfs);
     
+    return isEqual;
+  }
+
+  bool checkPassOptionsDefaults(std::unique_ptr<PassOptions> passOptions) {
+    auto passOptionsDefaults = wasm::PassOptions::getWithDefaultOptimizationOptions();
+
+    // The size assertion will fail when `PassOptions` or `InliningOptions` fields change.
+    // We need to update the test when the size assertion failed.
+    assert(sizeof(passOptionsDefaults) == 64);
+
+    bool isEqual = (passOptions->inner.debug == passOptionsDefaults.debug)
+      && (passOptions->inner.validate == passOptionsDefaults.validate)
+      && (passOptions->inner.validateGlobally == passOptionsDefaults.validateGlobally)
+      && (passOptions->inner.optimizeLevel == passOptionsDefaults.optimizeLevel) 
+      && (passOptions->inner.shrinkLevel == passOptionsDefaults.shrinkLevel)
+      && (passOptions->inner.trapsNeverHappen == passOptionsDefaults.trapsNeverHappen)
+      && (passOptions->inner.lowMemoryUnused == passOptionsDefaults.lowMemoryUnused)
+      && (passOptions->inner.fastMath == passOptionsDefaults.fastMath)
+      && (passOptions->inner.zeroFilledMemory == passOptionsDefaults.zeroFilledMemory)
+      && (passOptions->inner.debugInfo == passOptionsDefaults.debugInfo)
+      // inlining fields comparison
+      && (passOptions->inner.inlining.alwaysInlineMaxSize == passOptionsDefaults.inlining.alwaysInlineMaxSize)
+      && (passOptions->inner.inlining.oneCallerInlineMaxSize == passOptionsDefaults.inlining.oneCallerInlineMaxSize)
+      && (passOptions->inner.inlining.flexibleInlineMaxSize == passOptionsDefaults.inlining.flexibleInlineMaxSize)
+      && (passOptions->inner.inlining.allowFunctionsWithLoops == passOptionsDefaults.inlining.allowFunctionsWithLoops)
+      && (passOptions->inner.inlining.partialInliningIfs == passOptionsDefaults.inlining.partialInliningIfs);
+   
     return isEqual;
   }
 }
