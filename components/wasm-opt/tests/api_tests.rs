@@ -28,7 +28,7 @@ fn all_passes_correct() -> anyhow::Result<()> {
 }
 
 #[test]
-fn check_inlining_options_defaults() -> anyhow::Result<()> {
+fn test_inlining_options_defaults() -> anyhow::Result<()> {
     let inlining_defaults = InliningOptions::default();
     let mut inlining = BaseInliningOptions::new();
     inlining.set_always_inline_max_size(inlining_defaults.always_inline_max_size);
@@ -43,7 +43,7 @@ fn check_inlining_options_defaults() -> anyhow::Result<()> {
 }
 
 #[test]
-fn check_pass_options_defaults() -> anyhow::Result<()> {
+fn test_pass_options_defaults() -> anyhow::Result<()> {
     let pass_options_defaults = PassOptions::default();
     let mut pass_options = BasePassOptions::new();
     pass_options.set_validate(pass_options_defaults.validate);
@@ -55,6 +55,26 @@ fn check_pass_options_defaults() -> anyhow::Result<()> {
     pass_options.set_fast_math(pass_options_defaults.fast_math);
     pass_options.set_zero_filled_memory(pass_options_defaults.zero_filled_memory);
     pass_options.set_debug_info(pass_options_defaults.debug_info);
+
+    assert_eq!(check_pass_options_defaults(pass_options), true);
+
+    Ok(())
+}
+
+#[test]
+fn test_optimization_options_os() -> anyhow::Result<()> {
+    let opts = OptimizationOptions::new_optimize_for_size();
+
+    let mut pass_options = BasePassOptions::new();
+    pass_options.set_validate(opts.passopts.validate);
+    pass_options.set_validate_globally(opts.passopts.validate_globally);
+    pass_options.set_optimize_level(opts.passopts.optimize_level as i32);
+    pass_options.set_shrink_level(opts.passopts.shrink_level as i32);
+    pass_options.set_traps_never_happen(opts.passopts.traps_never_happen);
+    pass_options.set_low_memory_unused(opts.passopts.low_memory_unused);
+    pass_options.set_fast_math(opts.passopts.fast_math);
+    pass_options.set_zero_filled_memory(opts.passopts.zero_filled_memory);
+    pass_options.set_debug_info(opts.passopts.debug_info);
 
     assert_eq!(check_pass_options_defaults(pass_options), true);
 
