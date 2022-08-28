@@ -73,7 +73,7 @@ jobs:
       - name: Checkout submodule
         run: git submodule update --init --recursive
       - run: cargo build --verbose
-      - run: cargo test --verbose
+      - run: cargo test -- --nocapture
 
   fmt:
     name: Cargo fmt
