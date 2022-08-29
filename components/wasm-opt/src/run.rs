@@ -4,6 +4,25 @@ use crate::base::{
     PassOptions as BasePassOptions, PassRunner,
 };
 use std::path::Path;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum OptimizationError {
+    #[error("Failed to validate wasm: error validating input")]
+    ValidateWasmInput,
+    #[error("Failed to validate wasm: error after opts")]
+    ValidateWasmOutput,
+    #[error("Failed to read text from file")]
+    ReadText,
+    #[error("Failed to read binary from file")]
+    ReadBinary,
+    #[error("Failed to read from file")]
+    ReadAny,
+    #[error("Failed to write binary file")]
+    WriteBinary,
+    #[error("Failed to write text file")]
+    WriteText,
+}
 
 /// Execution.
 impl OptimizationOptions {
@@ -29,7 +48,7 @@ impl OptimizationOptions {
         infile_sourcemap: Option<impl AsRef<Path>>,
         outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), OptimizationError> {
         let mut m = Module::new();
         let mut reader = ModuleReader::new();
 
@@ -40,13 +59,19 @@ impl OptimizationOptions {
         let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
 
         match self.reader.file_type {
-            FileType::Wasm => reader.read_text(infile.as_ref(), &mut m)?,
-            FileType::Wat => reader.read_binary(infile.as_ref(), &mut m, infile_sourcemap)?,
-            FileType::Any => reader.read(infile.as_ref(), &mut m, infile_sourcemap)?,
+            FileType::Wasm => reader
+                .read_text(infile.as_ref(), &mut m)
+                .map_err(|_| OptimizationError::ReadText)?,
+            FileType::Wat => reader
+                .read_binary(infile.as_ref(), &mut m, infile_sourcemap)
+                .map_err(|_| OptimizationError::ReadBinary)?,
+            FileType::Any => reader
+                .read(infile.as_ref(), &mut m, infile_sourcemap)
+                .map_err(|_| OptimizationError::ReadAny)?,
         };
 
         if self.passopts.validate && !validate_wasm(&mut m) {
-            anyhow::bail!("Failed to validate wasm: error validating input");
+            return Err(OptimizationError::ValidateWasmInput);
         }
 
         let mut opts = BasePassOptions::new();
@@ -83,7 +108,7 @@ impl OptimizationOptions {
         drop(pass_runner);
 
         if self.passopts.validate && !validate_wasm(&mut m) {
-            anyhow::bail!("Failed to validate wasm: error after opts");
+            return Err(OptimizationError::ValidateWasmOutput);
         }
 
         let mut writer = ModuleWriter::new();
@@ -95,11 +120,19 @@ impl OptimizationOptions {
         }
 
         match self.writer.file_type {
-            FileType::Wasm => writer.write_binary(&mut m, outfile.as_ref())?,
-            FileType::Wat => writer.write_text(&mut m, outfile.as_ref())?,
+            FileType::Wasm => writer
+                .write_binary(&mut m, outfile.as_ref())
+                .map_err(|_| OptimizationError::WriteBinary)?,
+            FileType::Wat => writer
+                .write_text(&mut m, outfile.as_ref())
+                .map_err(|_| OptimizationError::WriteText)?,
             FileType::Any => match self.reader.file_type {
-                FileType::Any | FileType::Wasm => writer.write_binary(&mut m, outfile.as_ref())?,
-                FileType::Wat => writer.write_text(&mut m, outfile.as_ref())?,
+                FileType::Any | FileType::Wasm => writer
+                    .write_binary(&mut m, outfile.as_ref())
+                    .map_err(|_| OptimizationError::WriteBinary)?,
+                FileType::Wat => writer
+                    .write_text(&mut m, outfile.as_ref())
+                    .map_err(|_| OptimizationError::WriteText)?,
             },
         };
 

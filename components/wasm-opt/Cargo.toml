@@ -16,6 +16,7 @@ wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.1-preview.3" }
 wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.0.1-preview.3" }
 strum = "0.24"
 strum_macros = "0.24"
+thiserror = "1.0.32"
 
 [dev-dependencies]
 tempfile = "3.3.0"
