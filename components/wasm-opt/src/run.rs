@@ -12,16 +12,10 @@ pub enum OptimizationError {
     ValidateWasmInput,
     #[error("Failed to validate wasm: error after opts")]
     ValidateWasmOutput,
-    #[error("Failed to read text from file")]
-    ReadText,
-    #[error("Failed to read binary from file")]
-    ReadBinary,
-    #[error("Failed to read from file")]
-    ReadAny,
-    #[error("Failed to write binary file")]
-    WriteBinary,
-    #[error("Failed to write text file")]
-    WriteText,
+    #[error("Failed to read module")]
+    Read,
+    #[error("Failed to write module")]
+    Write,
 }
 
 /// Execution.
@@ -61,13 +55,13 @@ impl OptimizationOptions {
         match self.reader.file_type {
             FileType::Wasm => reader
                 .read_text(infile.as_ref(), &mut m)
-                .map_err(|_| OptimizationError::ReadText)?,
+                .map_err(|_| OptimizationError::Read)?,
             FileType::Wat => reader
                 .read_binary(infile.as_ref(), &mut m, infile_sourcemap)
-                .map_err(|_| OptimizationError::ReadBinary)?,
+                .map_err(|_| OptimizationError::Read)?,
             FileType::Any => reader
                 .read(infile.as_ref(), &mut m, infile_sourcemap)
-                .map_err(|_| OptimizationError::ReadAny)?,
+                .map_err(|_| OptimizationError::Read)?,
         };
 
         if self.passopts.validate && !validate_wasm(&mut m) {
@@ -122,17 +116,17 @@ impl OptimizationOptions {
         match self.writer.file_type {
             FileType::Wasm => writer
                 .write_binary(&mut m, outfile.as_ref())
-                .map_err(|_| OptimizationError::WriteBinary)?,
+                .map_err(|_| OptimizationError::Write)?,
             FileType::Wat => writer
                 .write_text(&mut m, outfile.as_ref())
-                .map_err(|_| OptimizationError::WriteText)?,
+                .map_err(|_| OptimizationError::Write)?,
             FileType::Any => match self.reader.file_type {
                 FileType::Any | FileType::Wasm => writer
                     .write_binary(&mut m, outfile.as_ref())
-                    .map_err(|_| OptimizationError::WriteBinary)?,
+                    .map_err(|_| OptimizationError::Write)?,
                 FileType::Wat => writer
                     .write_text(&mut m, outfile.as_ref())
-                    .map_err(|_| OptimizationError::WriteText)?,
+                    .map_err(|_| OptimizationError::Write)?,
             },
         };
 
