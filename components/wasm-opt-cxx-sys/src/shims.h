@@ -16,6 +16,13 @@ namespace wasm_shims {
     
     return std::runtime_error(buf.str());
   }
+
+  std::runtime_error map_parse_exception_to_runtime_error(const wasm::MapParseException& e) {
+    std::ostringstream buf;
+    e.dump(buf);
+    
+    return std::runtime_error(buf.str());
+  }
 }
 
 namespace wasm_shims {
@@ -65,6 +72,8 @@ namespace wasm_shims {
                           std::string(sourceMapFilename));
       } catch (const wasm::ParseException &e) {
         throw parse_exception_to_runtime_error(e);
+      } catch (const wasm::MapParseException &e) {
+        throw map_parse_exception_to_runtime_error(e);
       }
     }
 
@@ -77,6 +86,8 @@ namespace wasm_shims {
                           std::string(sourceMapFilename));
       } catch (const wasm::ParseException &e) {
         throw parse_exception_to_runtime_error(e);
+      } catch (const wasm::MapParseException &e) {
+        throw map_parse_exception_to_runtime_error(e);
       }
     }
   };
