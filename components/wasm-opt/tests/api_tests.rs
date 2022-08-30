@@ -7,6 +7,14 @@ use wasm_opt::base::PassOptions as BasePassOptions;
 use wasm_opt::base::{check_inlining_options_defaults, check_pass_options_defaults};
 use wasm_opt::Pass;
 
+use std::error::Error;
+use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write;
+use tempfile::Builder;
+
+static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
+
 #[test]
 fn all_passes_correct() -> anyhow::Result<()> {
     let mut passes_via_base_rs = HashSet::<String>::new();
@@ -77,6 +85,26 @@ fn test_optimization_options_os() -> anyhow::Result<()> {
     pass_options.set_debug_info(opts.passopts.debug_info);
 
     assert_eq!(check_pass_options_defaults(pass_options), true);
+
+    Ok(())
+}
+
+#[test]
+fn optimization_read_module_error_works() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let inpath = temp_dir.path().join("infile.wasm");
+
+    let file = File::create(&inpath)?;
+
+    let mut buf_writer = BufWriter::new(&file);
+    buf_writer.write_all(GARBAGE_FILE)?;
+
+    let outpath = temp_dir.path().join("outfile.wasm");
+
+    let opts = OptimizationOptions::new_optimize_for_size();
+    let res = opts.run(inpath, None::<&str>, outpath, None::<&str>);
+
+    assert!(res.err().unwrap().source().is_some());
 
     Ok(())
 }

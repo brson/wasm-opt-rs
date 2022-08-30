@@ -13,9 +13,15 @@ pub enum OptimizationError {
     #[error("Failed to validate wasm: error after opts")]
     ValidateWasmOutput,
     #[error("Failed to read module")]
-    Read,
+    Read {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync + 'static>,
+    },
     #[error("Failed to write module")]
-    Write,
+    Write {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync + 'static>,
+    },
 }
 
 /// Execution.
@@ -53,15 +59,23 @@ impl OptimizationOptions {
         let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
 
         match self.reader.file_type {
-            FileType::Wasm => reader
-                .read_text(infile.as_ref(), &mut m)
-                .map_err(|_| OptimizationError::Read)?,
+            FileType::Wasm => {
+                reader
+                    .read_text(infile.as_ref(), &mut m)
+                    .map_err(|e| OptimizationError::Read {
+                        source: Box::from(e),
+                    })?
+            }
             FileType::Wat => reader
                 .read_binary(infile.as_ref(), &mut m, infile_sourcemap)
-                .map_err(|_| OptimizationError::Read)?,
+                .map_err(|e| OptimizationError::Read {
+                    source: Box::from(e),
+                })?,
             FileType::Any => reader
                 .read(infile.as_ref(), &mut m, infile_sourcemap)
-                .map_err(|_| OptimizationError::Read)?,
+                .map_err(|e| OptimizationError::Read {
+                    source: Box::from(e),
+                })?,
         };
 
         if self.passopts.validate && !validate_wasm(&mut m) {
@@ -114,22 +128,29 @@ impl OptimizationOptions {
         }
 
         match self.writer.file_type {
-            FileType::Wasm => writer
-                .write_binary(&mut m, outfile.as_ref())
-                .map_err(|_| OptimizationError::Write)?,
-            FileType::Wat => writer
-                .write_text(&mut m, outfile.as_ref())
-                .map_err(|_| OptimizationError::Write)?,
+            FileType::Wasm => writer.write_binary(&mut m, outfile.as_ref()).map_err(|e| {
+                OptimizationError::Write {
+                    source: Box::from(e),
+                }
+            })?,
+            FileType::Wat => writer.write_text(&mut m, outfile.as_ref()).map_err(|e| {
+                OptimizationError::Write {
+                    source: Box::from(e),
+                }
+            })?,
             FileType::Any => match self.reader.file_type {
                 FileType::Any | FileType::Wasm => writer
                     .write_binary(&mut m, outfile.as_ref())
-                    .map_err(|_| OptimizationError::Write)?,
-                FileType::Wat => writer
-                    .write_text(&mut m, outfile.as_ref())
-                    .map_err(|_| OptimizationError::Write)?,
+                    .map_err(|e| OptimizationError::Write {
+                        source: Box::from(e),
+                    })?,
+                FileType::Wat => writer.write_text(&mut m, outfile.as_ref()).map_err(|e| {
+                    OptimizationError::Write {
+                        source: Box::from(e),
+                    }
+                })?,
             },
         };
-
         Ok(())
     }
 }
