@@ -11,6 +11,8 @@
 
 namespace wasm_shims {
   std::runtime_error parse_exception_to_runtime_error(const wasm::ParseException& e) {
+    Colors::setEnabled(false);
+
     std::ostringstream buf;
     e.dump(buf);
     
@@ -18,6 +20,8 @@ namespace wasm_shims {
   }
 
   std::runtime_error map_parse_exception_to_runtime_error(const wasm::MapParseException& e) {
+    Colors::setEnabled(false);
+
     std::ostringstream buf;
     e.dump(buf);
     
