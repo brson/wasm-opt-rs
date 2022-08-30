@@ -150,6 +150,34 @@ fn module_read_garbage_error_works() -> anyhow::Result<()> {
 }
 
 #[test]
+fn map_parse_exception_works() -> anyhow::Result<()> {
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let path = temp_dir.path().join("hello_world.wasm");
+
+    let temp_file = File::create(&path)?;
+    let mut buf_writer = BufWriter::new(&temp_file);
+    buf_writer.write_all(WASM_FILE)?;
+
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
+
+    let source_map_path = temp_dir.path().join("bad_source_map_path");
+    let res = reader.read_binary(&path, &mut m, Some(&source_map_path));
+    match res {
+        Ok(()) => panic!(),
+        Err(e) => println!("Module read_binary failed: {}", e),
+    }
+
+    let res = reader.read(&path, &mut m, Some(&source_map_path));
+    match res {
+        Ok(()) => panic!(),
+        Err(e) => println!("Module read failed: {}", e),
+    }
+
+    Ok(())
+}
+
+#[test]
 fn pass_runner_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
