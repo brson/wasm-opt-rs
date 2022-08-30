@@ -11,13 +11,10 @@
 
 namespace wasm_shims {
   std::runtime_error parse_exception_to_runtime_error(const wasm::ParseException& e) {
-    if (e.line == -1ul) {
-      return std::runtime_error(e.text);
-    } else {
-      std::ostringstream buf;
-      buf << "At " << e.line << ", " << e.col << ": " << e.text;
-      return std::runtime_error(buf.str());
-    }
+    std::ostringstream buf;
+    e.dump(buf);
+    
+    return std::runtime_error(buf.str());
   }
 }
 
