@@ -22,6 +22,8 @@ pub enum OptimizationError {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
+    #[error("Refusing to read from stdin")]
+    InvalideStdinPath,
 }
 
 /// Execution.
@@ -49,7 +51,7 @@ impl OptimizationOptions {
     ) -> Result<(), OptimizationError> {
         self.run_with_sourcemap(infile, None::<&str>, outfile, None::<&str>)
     }
-    
+
     pub fn run_with_sourcemap(
         &self,
         infile: impl AsRef<Path>,
@@ -57,6 +59,11 @@ impl OptimizationOptions {
         outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,
     ) -> Result<(), OptimizationError> {
+        let infile = infile.as_ref();
+        if infile.as_os_str().is_empty() || infile.as_os_str().eq(std::ffi::OsStr::new("-")) {
+            return Err(OptimizationError::InvalideStdinPath);
+        }
+
         let mut m = Module::new();
         let mut reader = ModuleReader::new();
 
@@ -69,21 +76,21 @@ impl OptimizationOptions {
         match self.reader.file_type {
             FileType::Wasm => {
                 reader
-                    .read_text(infile.as_ref(), &mut m)
+                    .read_text(infile, &mut m)
                     .map_err(|e| OptimizationError::Read {
                         source: Box::from(e),
                     })?
             }
             FileType::Wat => reader
-                .read_binary(infile.as_ref(), &mut m, infile_sourcemap)
+                .read_binary(infile, &mut m, infile_sourcemap)
                 .map_err(|e| OptimizationError::Read {
                     source: Box::from(e),
                 })?,
-            FileType::Any => reader
-                .read(infile.as_ref(), &mut m, infile_sourcemap)
-                .map_err(|e| OptimizationError::Read {
+            FileType::Any => reader.read(infile, &mut m, infile_sourcemap).map_err(|e| {
+                OptimizationError::Read {
                     source: Box::from(e),
-                })?,
+                }
+            })?,
         };
 
         if self.passopts.validate && !validate_wasm(&mut m) {
