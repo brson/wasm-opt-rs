@@ -245,8 +245,6 @@ pub enum Pass {
     Untee,
     /// Removes obviously unneeded code.
     Vacuum,
-    /// Fixup nested pops within catches.
-    CatchPopFixup,
 }
 
 impl Pass {
@@ -374,7 +372,6 @@ impl Pass {
             TrapModeJs => "trap-mode-js",
             Untee => "untee",
             Vacuum => "vacuum",
-            CatchPopFixup => "catch-pop-fixup",
         }
     }
 

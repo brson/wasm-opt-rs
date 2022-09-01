@@ -4,7 +4,9 @@ use wasm_opt::api::*;
 use wasm_opt::base::pass_registry;
 use wasm_opt::base::InliningOptions as BaseInliningOptions;
 use wasm_opt::base::PassOptions as BasePassOptions;
-use wasm_opt::base::{check_inlining_options_defaults, check_pass_options_defaults};
+use wasm_opt::base::{
+    check_inlining_options_defaults, check_pass_options_defaults, pass_registry::is_pass_hidden,
+};
 use wasm_opt::Pass;
 
 use std::error::Error;
@@ -21,7 +23,9 @@ fn all_passes_correct() -> anyhow::Result<()> {
     pass_registry::get_registered_names()
         .iter()
         .for_each(|name| {
-            passes_via_base_rs.insert(name.to_string());
+            if !is_pass_hidden(name) {
+                passes_via_base_rs.insert(name.to_string());
+            }
         });
 
     let mut passes_via_enum = HashSet::<String>::new();
