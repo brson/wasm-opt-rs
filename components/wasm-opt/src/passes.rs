@@ -6,6 +6,7 @@ use strum_macros::EnumIter;
 /// These have the same names as given on the command line to
 /// `wasm-opt`, but with Rust capitalization conventions.
 // Keep these in the same order as PassRegistry::registerPasses
+#[non_exhaustive]
 #[derive(Clone, Debug, EnumIter)]
 pub enum Pass {
     /// Lower unaligned loads and stores to smaller aligned ones.
