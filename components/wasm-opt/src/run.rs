@@ -45,6 +45,14 @@ impl OptimizationOptions {
     pub fn run(
         &self,
         infile: impl AsRef<Path>,
+        outfile: impl AsRef<Path>,
+    ) -> Result<(), OptimizationError> {
+        self.run_with_sourcemap(infile, None::<&str>, outfile, None::<&str>)
+    }
+    
+    pub fn run_with_sourcemap(
+        &self,
+        infile: impl AsRef<Path>,
         infile_sourcemap: Option<impl AsRef<Path>>,
         outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,

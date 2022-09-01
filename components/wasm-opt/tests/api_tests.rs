@@ -106,7 +106,7 @@ fn optimization_read_module_error_works() -> anyhow::Result<()> {
     let outpath = temp_dir.path().join("outfile.wasm");
 
     let opts = OptimizationOptions::new_optimize_for_size();
-    let res = opts.run(inpath, None::<&str>, outpath, None::<&str>);
+    let res = opts.run(inpath, outpath);
 
     assert!(res.err().unwrap().source().is_some());
 
