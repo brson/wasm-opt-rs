@@ -1,3 +1,7 @@
+pub use crate::features::Feature;
+pub use crate::passes::Pass;
+use std::collections::HashSet;
+
 /// Optimization options and optimization builder.
 ///
 /// This type declares all supported Binaryen options.
@@ -18,6 +22,8 @@ pub struct OptimizationOptions {
     pub passopts: PassOptions,
     /// The set of optimization passes to apply.
     pub passes: Passes,
+    /// The set of wasm-features.
+    pub features: Features,
 }
 
 /// Options for reading the unoptimized wasm module.
@@ -132,7 +138,16 @@ pub struct Passes {
     pub more_passes: Vec<Pass>,
 }
 
-pub use crate::passes::Pass;
+#[derive(Clone, Debug)]
+pub enum Features {
+    Default,
+    MvpOnly,
+    All,
+    Custom {
+        enabled: HashSet<Feature>,
+        disabled: HashSet<Feature>,
+    },
+}
 
 /// Constructors.
 impl OptimizationOptions {
@@ -342,5 +357,11 @@ impl Default for Passes {
             add_default_passes: true,
             more_passes: vec![],
         }
+    }
+}
+
+impl Default for Features {
+    fn default() -> Features {
+        Features::Default
     }
 }
