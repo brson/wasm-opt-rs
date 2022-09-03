@@ -1,4 +1,4 @@
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Feature {
     MVP = 0,
     Atomics = 1 << 0,
@@ -21,6 +21,6 @@ pub enum Feature {
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
-    All = ((1 << 16) - 1) & !(1 << 13),
+    All = ((1 << 16) - 1) & !(1 << 13), // All = ((1 << 16) - 1) & ~GCNNLocals,
     AllPossible = 1 << 16,
 }
