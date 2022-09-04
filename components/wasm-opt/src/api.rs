@@ -150,6 +150,14 @@ pub enum Features {
 }
 
 impl Features {
+    pub fn mvp_features_only() -> Self {
+        Features::MvpOnly
+    }
+
+    pub fn all_features() -> Self {
+        Features::All
+    }
+    
     pub fn enable_feature(feature: Feature) -> Self {
         let mut features = HashSet::<Feature>::new();
         features.insert(feature);
