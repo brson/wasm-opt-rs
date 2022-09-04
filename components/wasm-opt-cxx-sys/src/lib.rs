@@ -160,6 +160,20 @@ pub mod wasm {
     unsafe extern "C++" {
         include!("shims.h");
 
+        type WasmFeatureSet;
+
+        fn newFeatureSet() -> UniquePtr<WasmFeatureSet>;
+
+        fn setMVP(self: Pin<&mut Self>);
+
+        fn setAll(self: Pin<&mut Self>);
+
+        fn set(self: Pin<&mut Self>,  feature_set: UniquePtr<WasmFeatureSet>);
+    }
+
+    unsafe extern "C++" {
+        include!("shims.h");
+
         type PassRunner<'wasm>;
 
         fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;

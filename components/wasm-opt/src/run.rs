@@ -116,6 +116,9 @@ impl OptimizationOptions {
         inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
         opts.set_inlining_options(inlining);
 
+        // todo:
+        //        opts.apply_features(self.features);
+
         let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
 
         if self.passes.add_default_passes {

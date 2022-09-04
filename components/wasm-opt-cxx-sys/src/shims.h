@@ -5,6 +5,7 @@
 #include "wasm-io.h"
 #include "support/colors.h"
 #include "wasm-validator.h"
+#include "wasm-features.h"
 
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr
@@ -227,6 +228,28 @@ namespace wasm_shims {
 
   std::unique_ptr<PassOptions> newPassOptions() {
     return std::make_unique<PassOptions>();
+  }
+}
+
+namespace wasm_shims {
+  struct WasmFeatureSet {
+    FeatureSet inner;
+
+    void setMVP() {
+      inner.setMVP();
+    }
+
+    void setAll() {
+      inner.setAll();
+    }
+
+    void set(std::unique_ptr<wasm_shims::WasmFeatureSet> featureSet) {
+      inner.set(featureSet->inner);
+    }
+  };
+
+  std::unique_ptr<WasmFeatureSet> newFeatureSet() {
+    return std::make_unique<WasmFeatureSet>();
   }
 }
 
