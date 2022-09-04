@@ -157,7 +157,7 @@ impl Features {
     pub fn all_features() -> Self {
         Features::All
     }
-    
+
     pub fn enable_feature(feature: Feature) -> Self {
         let mut features = HashSet::<Feature>::new();
         features.insert(feature);

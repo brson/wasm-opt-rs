@@ -168,7 +168,7 @@ pub mod wasm {
 
         fn setAll(self: Pin<&mut Self>);
 
-        fn set(self: Pin<&mut Self>,  feature_set: UniquePtr<WasmFeatureSet>);
+        fn set(self: Pin<&mut Self>, feature_set: UniquePtr<WasmFeatureSet>);
     }
 
     unsafe extern "C++" {
