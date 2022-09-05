@@ -35,9 +35,9 @@ impl OptimizationOptions {
     /// runs optimization passes,
     /// and writes the module back to a file.
     ///
-    /// The sourcemap arguments are optional, and only have effect
-    /// when reading or writing binary `wasm` files. When using
-    /// text `wat` files the respective sourcemap argument is ignored.
+    /// To supply sourcemaps for the input module,
+    /// and preserve them for the output module,
+    /// use [`OptimizationOptions::run_with_sourcemaps`].
     ///
     /// # Errors
     ///
@@ -50,10 +50,26 @@ impl OptimizationOptions {
         infile: impl AsRef<Path>,
         outfile: impl AsRef<Path>,
     ) -> Result<(), OptimizationError> {
-        self.run_with_sourcemap(infile, None::<&str>, outfile, None::<&str>)
+        self.run_with_sourcemaps(infile, None::<&str>, outfile, None::<&str>)
     }
 
-    pub fn run_with_sourcemap(
+    /// Run the Binaryen wasm optimizer.
+    ///
+    /// This loads a module from a file,
+    /// runs optimization passes,
+    /// and writes the module back to a file.
+    ///
+    /// The sourcemap arguments are optional, and only have effect
+    /// when reading or writing binary `wasm` files. When using
+    /// text `wat` files the respective sourcemap argument is ignored.
+    ///
+    /// # Errors
+    ///
+    /// Returns error on I/O failure, or if the input fails to parse.
+    /// If [`PassOptions::validate`] is true, it returns an error
+    /// if the input module fails to validate, or if the optimized
+    /// module fails to validate.
+    pub fn run_with_sourcemaps(
         &self,
         infile: impl AsRef<Path>,
         infile_sourcemap: Option<impl AsRef<Path>>,

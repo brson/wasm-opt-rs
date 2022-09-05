@@ -133,3 +133,5 @@ mod features;
 /// The `run` method that re-implements the logic from `wasm-opt.cpp`
 /// on top of `OptimizationOptions`.
 mod run;
+
+pub mod integration;
