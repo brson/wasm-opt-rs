@@ -8,6 +8,7 @@ use std::ffi::{OsStr, OsString};
 use thiserror::Error;
 use crate::api::{OptimizationOptions, FileType};
 use crate::run::OptimizationError;
+use crate::profiles::Profile;
 
 /// Interpret a pre-built [`Command`] as an [`OptimizationOptions`],
 /// then call [`OptimizationOptions::run`] on it.
@@ -127,28 +128,28 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* from optimization-options.h */
 
             "-O" => {
-                todo!()
+                Profile::default().apply_to_opts(&mut opts);
             }
             "-O0" => {
-                todo!()
+                Profile::opt_level_0().apply_to_opts(&mut opts);
             }
             "-O1" => {
-                todo!()
+                Profile::opt_level_1().apply_to_opts(&mut opts);
             }
             "-O2" => {
-                todo!()
+                Profile::opt_level_2().apply_to_opts(&mut opts);
             }
             "-O3" => {
-                todo!()
+                Profile::opt_level_3().apply_to_opts(&mut opts);
             }
             "-O4" => {
-                todo!()
+                Profile::opt_level_4().apply_to_opts(&mut opts);
             }
             "-Os" => {
-                todo!()
+                Profile::optimize_for_size().apply_to_opts(&mut opts);
             }
             "-Oz" => {
-                todo!()
+                Profile::optimize_for_size_aggressively().apply_to_opts(&mut opts);
             }
             "--optimize-level" | "-ol" => {
                 todo!()

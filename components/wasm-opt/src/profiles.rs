@@ -1,5 +1,6 @@
 use crate::api::{OptimizationOptions, OptimizeLevel, ShrinkLevel};
 
+#[derive(Eq, PartialEq, Debug)]
 pub struct Profile {
     optimize_level: OptimizeLevel,
     shrink_level: ShrinkLevel,
@@ -7,6 +8,10 @@ pub struct Profile {
 }
 
 impl Profile {
+    pub fn default() -> Profile {
+        Profile::optimize_for_size()
+    }
+
     pub fn optimize_for_size() -> Profile {
         Profile {
             optimize_level: OptimizeLevel::Level2,
@@ -86,4 +91,11 @@ fn default_optimization_options_are_for_size() {
     assert_eq!(opts1.passopts.optimize_level, opts2.passopts.optimize_level);
     assert_eq!(opts1.passopts.shrink_level, opts2.passopts.shrink_level);
     assert_eq!(opts1.passes.add_default_passes, opts2.passes.add_default_passes);
+}
+
+#[test]
+fn default_is_os() {
+    let opts1 = Profile::default();
+    let opts2 = Profile::optimize_for_size();
+    assert_eq!(opts1, opts2);
 }
