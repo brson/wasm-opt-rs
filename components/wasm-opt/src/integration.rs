@@ -6,7 +6,7 @@ use std::result::Result;
 use std::path::PathBuf;
 use std::ffi::{OsStr, OsString};
 use thiserror::Error;
-use crate::api::{OptimizationOptions, FileType};
+use crate::api::{OptimizationOptions, FileType, OptimizeLevel, ShrinkLevel};
 use crate::run::OptimizationError;
 use crate::profiles::Profile;
 
@@ -63,6 +63,10 @@ pub enum Error {
     OutputFileRequired,
     #[error("The `wasm-opt` argument list ended while expecting another argument")]
     UnexpectedEndOfArgs,
+    #[error("Argument must be unicode: {arg:?}")]
+    NeedUnicode {
+        arg: OsString,
+    },
     #[error("Unsupported `wasm-opt` command-line arguments: {args:?}")]
     Unsupported {
         args: Vec<OsString>,
@@ -152,13 +156,29 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 Profile::optimize_for_size_aggressively().apply_to_opts(&mut opts);
             }
             "--optimize-level" | "-ol" => {
-                todo!()
+                match parse_unicode(&mut args)?.as_str() {
+                    "0" => { opts.optimize_level(OptimizeLevel::Level0); },
+                    "1" => { opts.optimize_level(OptimizeLevel::Level1); },
+                    "2" => { opts.optimize_level(OptimizeLevel::Level2); },
+                    "3" => { opts.optimize_level(OptimizeLevel::Level3); },
+                    "4" => { opts.optimize_level(OptimizeLevel::Level4); },
+                    arg => {
+                        unsupported.push(OsString::from(arg));
+                    }
+                }
             }
             "--shrink-level" | "-s" => {
-                todo!()
+                match parse_unicode(&mut args)?.as_str() {
+                    "0" => { opts.shrink_level(ShrinkLevel::Level0); },
+                    "1" => { opts.shrink_level(ShrinkLevel::Level1); },
+                    "2" => { opts.shrink_level(ShrinkLevel::Level2); },
+                    arg => {
+                        unsupported.push(OsString::from(arg));
+                    }
+                }
             }
             "--debuginfo" | "-g" => {
-                todo!()
+                opts.debug_info(true);
             }
             "--always-inline-max-function-size" | "-aimfs" => {
                 todo!()
@@ -268,6 +288,22 @@ fn parse_path_into<'item>(
         }
 
         Ok(())
+    } else {
+        Err(Error::UnexpectedEndOfArgs)
+    }
+}
+
+fn parse_unicode<'item>(
+    args: &mut impl Iterator<Item = &'item OsStr>
+) -> Result<String, Error> {
+    if let Some(arg) = args.next() {
+        if let Some(arg) = arg.to_str() {
+            Ok(arg.to_owned())
+        } else {
+            Err(Error::NeedUnicode {
+                arg: arg.to_owned(),
+            })
+        }
     } else {
         Err(Error::UnexpectedEndOfArgs)
     }
