@@ -93,4 +93,42 @@ impl OptimizationOptions {
         self.passes.more_passes.push(value);
         self
     }
+
+    pub fn mvp_features_only(&mut self) -> &mut Self {
+        self.features = Features::MvpOnly;
+        self
+    }
+
+    pub fn all_features(&mut self) -> &mut Self {
+        self.features = Features::All;
+        self
+    }
+
+    pub fn enable_feature(&mut self, feature: Feature) -> &mut Self {
+        match &mut self.features {
+            Features::Default | Features::MvpOnly | Features::All => {}
+            Features::Custom {
+                enabled: features,
+                disabled: _,
+            } => {
+                features.insert(feature);
+            }
+        }
+
+        self
+    }
+
+    pub fn disable_feature(&mut self, feature: Feature) -> &mut Self {
+        match &mut self.features {
+            Features::Default | Features::MvpOnly | Features::All => {}
+            Features::Custom {
+                enabled: _,
+                disabled: features,
+            } => {
+                features.insert(feature);
+            }
+        }
+
+        self
+    }
 }

@@ -13,6 +13,10 @@ impl Module {
     pub fn new() -> Module {
         Module(wasm::newModule())
     }
+
+    pub fn apply_features(&mut self, enabled_features: FeatureSet, disabled_features: FeatureSet) {
+        wasm::applyFeatures(self.0.pin_mut(), enabled_features.0, disabled_features.0);
+    }
 }
 
 pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
@@ -257,6 +261,56 @@ impl PassOptions {
         let this = self.0.pin_mut();
         this.setDebugInfo(debug_info);
     }
+}
+
+pub struct FeatureSet(cxx::UniquePtr<wasm::WasmFeatureSet>);
+
+impl FeatureSet {
+    pub fn new() -> FeatureSet {
+        FeatureSet(wasm::newFeatureSet())
+    }
+
+    pub fn set_mvp(&mut self) {
+        let this = self.0.pin_mut();
+        this.setMVP();
+    }
+
+    pub fn set_all(&mut self) {
+        let this = self.0.pin_mut();
+        this.setAll();
+    }
+
+    pub fn set(&mut self, feature: Feature) {
+        let this = self.0.pin_mut();
+        this.set(feature as u32);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Feature {
+    MVP = 0,
+    Atomics = 1 << 0,
+    MutableGlobals = 1 << 1,
+    TruncSat = 1 << 2,
+    SIMD = 1 << 3,
+    BulkMemory = 1 << 4,
+    SignExt = 1 << 5,
+    ExceptionHandling = 1 << 6,
+    TailCall = 1 << 7,
+    ReferenceTypes = 1 << 8,
+    Multivalue = 1 << 9,
+    GC = 1 << 10,
+    Memory64 = 1 << 11,
+    TypedFunctionReferences = 1 << 12,
+    // TODO: Remove this feature when the wasm spec stabilizes.
+    GCNNLocals = 1 << 13,
+    RelaxedSIMD = 1 << 14,
+    ExtendedConst = 1 << 15,
+    // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
+    // get all possible values use AllPossible. See setAll() below for more
+    // details.
+    All = ((1 << 16) - 1) & !(1 << 13), // All = ((1 << 16) - 1) & ~GCNNLocals,
+    AllPossible = 1 << 16,
 }
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);

@@ -1,6 +1,7 @@
 use crate::api::*;
 use crate::base::{
-    validate_wasm, InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
+    validate_wasm, Feature as BaseFeature, FeatureSet as BaseFeatureSet,
+    InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
     PassOptions as BasePassOptions, PassRunner,
 };
 use std::path::Path;
@@ -116,8 +117,32 @@ impl OptimizationOptions {
         inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
         opts.set_inlining_options(inlining);
 
-        // todo:
-        //        opts.apply_features(self.features);
+        let mut feature_set_enabled = BaseFeatureSet::new();
+        let mut feature_set_disabled = BaseFeatureSet::new();
+        match &self.features {
+            Features::Default => {}
+            Features::MvpOnly => {
+                feature_set_enabled.set_mvp();
+                feature_set_disabled.set_all();
+            }
+            Features::All => {
+                feature_set_enabled.set_all();
+                feature_set_disabled.set_mvp();
+            }
+            Features::Custom { enabled, disabled } => {
+                enabled.iter().for_each(|f| {
+                    let feature = convert_feature(f);
+                    feature_set_enabled.set(feature);
+                });
+
+                disabled.iter().for_each(|f| {
+                    let feature = convert_feature(f);
+                    feature_set_disabled.set(feature);
+                });
+            }
+        }
+
+        m.apply_features(feature_set_enabled, feature_set_disabled);
 
         let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
 
@@ -177,4 +202,28 @@ fn will_remove_debug_info(passes: &Vec<Pass>) -> bool {
     passes
         .iter()
         .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
+}
+
+fn convert_feature(feature: &Feature) -> BaseFeature {
+    match feature {
+        Feature::MVP => BaseFeature::MVP,
+        Feature::Atomics => BaseFeature::Atomics,
+        Feature::MutableGlobals => BaseFeature::MutableGlobals,
+        Feature::TruncSat => BaseFeature::TruncSat,
+        Feature::SIMD => BaseFeature::SIMD,
+        Feature::BulkMemory => BaseFeature::BulkMemory,
+        Feature::SignExt => BaseFeature::SignExt,
+        Feature::ExceptionHandling => BaseFeature::ExceptionHandling,
+        Feature::TailCall => BaseFeature::TailCall,
+        Feature::ReferenceTypes => BaseFeature::ReferenceTypes,
+        Feature::Multivalue => BaseFeature::Multivalue,
+        Feature::GC => BaseFeature::GC,
+        Feature::Memory64 => BaseFeature::Memory64,
+        Feature::TypedFunctionReferences => BaseFeature::TypedFunctionReferences,
+        Feature::GCNNLocals => BaseFeature::GCNNLocals,
+        Feature::RelaxedSIMD => BaseFeature::RelaxedSIMD,
+        Feature::ExtendedConst => BaseFeature::ExtendedConst,
+        Feature::All => BaseFeature::All,
+        Feature::AllPossible => BaseFeature::AllPossible,
+    }
 }

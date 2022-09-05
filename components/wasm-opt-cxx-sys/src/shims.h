@@ -243,13 +243,20 @@ namespace wasm_shims {
       inner.setAll();
     }
 
-    void set(std::unique_ptr<wasm_shims::WasmFeatureSet> featureSet) {
-      inner.set(featureSet->inner);
+    void set(uint32_t feature) {
+      inner.set(feature);
     }
   };
 
   std::unique_ptr<WasmFeatureSet> newFeatureSet() {
     return std::make_unique<WasmFeatureSet>();
+  }
+}
+
+namespace wasm_shims {
+  void applyFeatures(wasm::Module& wasm, std::unique_ptr<WasmFeatureSet> enabledFeatures, std::unique_ptr<WasmFeatureSet> disabledFeatures) {
+    wasm.features.enable(enabledFeatures->inner);
+    wasm.features.disable(disabledFeatures->inner);
   }
 }
 

@@ -149,36 +149,6 @@ pub enum Features {
     },
 }
 
-impl Features {
-    pub fn mvp_features_only() -> Self {
-        Features::MvpOnly
-    }
-
-    pub fn all_features() -> Self {
-        Features::All
-    }
-
-    pub fn enable_feature(feature: Feature) -> Self {
-        let mut features = HashSet::<Feature>::new();
-        features.insert(feature);
-
-        Features::Custom {
-            enabled: features,
-            disabled: HashSet::<Feature>::new(),
-        }
-    }
-
-    pub fn disable_feature(feature: Feature) -> Self {
-        let mut features = HashSet::<Feature>::new();
-        features.insert(feature);
-
-        Features::Custom {
-            enabled: HashSet::<Feature>::new(),
-            disabled: features,
-        }
-    }
-}
-
 /// Constructors.
 impl OptimizationOptions {
     /// Optimize for size.
