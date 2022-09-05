@@ -268,11 +268,7 @@ fn parse_infile_path(
     maybe_input_file: &mut Option<PathBuf>,
     unsupported: &mut Vec<OsString>,
 ) {
-    if maybe_input_file.is_none() {
-        *maybe_input_file = Some(PathBuf::from(arg));
-    } else {
-        unsupported.push(OsString::from(arg));
-    }
+    parse_path_into(&mut Some(arg).into_iter(), maybe_input_file, unsupported).expect("impossible")
 }
 
 fn parse_path_into<'item>(
