@@ -127,6 +127,9 @@ mod builder;
 /// The list of optimization passes.
 mod passes;
 
+/// Definitions of -O1, -O2, etc.
+mod profiles;
+
 /// The list of wasm features.
 mod features;
 

@@ -1,5 +1,6 @@
 pub use crate::features::Feature;
 pub use crate::passes::Pass;
+pub use crate::profiles::Profile;
 use std::collections::HashSet;
 
 /// Optimization options and optimization builder.
@@ -107,7 +108,7 @@ pub struct PassOptions {
 ///
 /// See the documentation of various [`OptimizationOptions`]
 /// constructors for a general description of how these behave.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum OptimizeLevel {
     Level0 = 0,
     Level1 = 1,
@@ -122,7 +123,7 @@ pub enum OptimizeLevel {
 ///
 /// See the documentation of various [`OptimizationOptions`]
 /// constructors for a general description of how these behave.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ShrinkLevel {
     Level0 = 0,
     Level1 = 1,
@@ -163,7 +164,7 @@ impl OptimizationOptions {
     /// - [`OptimizeLevel::Level2`],
     /// - [`ShrinkLevel::Level1`].
     pub fn new_optimize_for_size() -> Self {
-        OptimizationOptions::default()
+        Profile::optimize_for_size().into_opts()
     }
 
     /// Optimize for size, but even more.
@@ -175,14 +176,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-Oz` argument to `wasm-opt`.
     pub fn new_optimize_for_size_aggressively() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level2;
-        passopts.shrink_level = ShrinkLevel::Level2;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts
+        Profile::optimize_for_size_aggressively().into_opts()
     }
 
     /// Do not optimize.
@@ -195,16 +189,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-O0` argument to `wasm-opt`.
     pub fn new_opt_level_0() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level0;
-        passopts.shrink_level = ShrinkLevel::Level0;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts.passes.add_default_passes = false;
-
-        opts
+        Profile::opt_level_0().into_opts()
     }
 
     /// Apply basic optimizations.
@@ -218,14 +203,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-O1` argument to `wasm-opt`.
     pub fn new_opt_level_1() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level1;
-        passopts.shrink_level = ShrinkLevel::Level0;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts
+        Profile::opt_level_1().into_opts()
     }
 
     /// Apply most optimizations.
@@ -241,14 +219,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-O2` argument to `wasm-opt`.
     pub fn new_opt_level_2() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level2;
-        passopts.shrink_level = ShrinkLevel::Level0;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts
+        Profile::opt_level_2().into_opts()
     }
 
     /// Apply slower optimizations.
@@ -262,14 +233,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-O3` argument to `wasm-opt`.
     pub fn new_opt_level_3() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level3;
-        passopts.shrink_level = ShrinkLevel::Level0;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts
+        Profile::opt_level_3().into_opts()
     }
 
     /// Apply the most aggressive optimizations.
@@ -284,14 +248,7 @@ impl OptimizationOptions {
     ///
     /// This corresponds to the `-O4` argument to `wasm-opt`.
     pub fn new_opt_level_4() -> Self {
-        let mut passopts = PassOptions::default();
-        passopts.optimize_level = OptimizeLevel::Level4;
-        passopts.shrink_level = ShrinkLevel::Level0;
-
-        let mut opts = OptimizationOptions::default();
-        opts.passopts = passopts;
-
-        opts
+        Profile::opt_level_4().into_opts()
     }
 }
 
