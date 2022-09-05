@@ -5,6 +5,7 @@ use std::iter::Iterator;
 use std::result::Result;
 use std::path::PathBuf;
 use std::ffi::{OsStr, OsString};
+use std::num::ParseIntError;
 use thiserror::Error;
 use crate::api::{OptimizationOptions, FileType, OptimizeLevel, ShrinkLevel};
 use crate::run::OptimizationError;
@@ -66,6 +67,12 @@ pub enum Error {
     #[error("Argument must be unicode: {arg:?}")]
     NeedUnicode {
         arg: OsString,
+    },
+    #[error("Argument must be a number: {arg:?}")]
+    NeedNumber {
+        arg: OsString,
+        #[source]
+        source: ParseIntError,
     },
     #[error("Unsupported `wasm-opt` command-line arguments: {args:?}")]
     Unsupported {
@@ -181,31 +188,31 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 opts.debug_info(true);
             }
             "--always-inline-max-function-size" | "-aimfs" => {
-                todo!()
+                opts.always_inline_max_size(parse_u32(&mut args)?);
             }
             "--flexible-inline-max-function-size" | "-fimfs" => {
-                todo!()
+                opts.flexible_inline_max_size(parse_u32(&mut args)?);
             }
             "--one-caller-inline-max-function-size" | "-ocifms" => {
-                todo!()
+                opts.one_caller_inline_max_size(parse_u32(&mut args)?);
             }
             "--inline-functions-with-loops" | "-ifwl" => {
-                todo!()
+                opts.allow_functions_with_loops(true);
             }
             "--partial-inlining-ifs" | "-pii" => {
-                todo!()
+                opts.partial_inlining_ifs(parse_u32(&mut args)?);
             }
             "--traps-never-happen" | "-tnh" => {
-                todo!()
+                opts.traps_never_happen(true);
             }
             "--low-memory-unused" | "-lmu" => {
-                todo!()
+                opts.low_memory_unused(true);
             }
             "--fast-math" | "-ffm" => {
-                todo!()
+                opts.fast_math(true);
             }
             "--zero-filled-memory" | "-uim" => {
-                todo!()
+                opts.zero_filled_memory(true);
             }
 
             /* from tool-options.h */
@@ -220,7 +227,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 /* pass */
             }
             "--no-validation" | "-n" => {
-                todo!()
+                opts.validate(false);
             }
             "--pass-arg" | "-pa" => {
                 todo!()
@@ -303,4 +310,15 @@ fn parse_unicode<'item>(
     } else {
         Err(Error::UnexpectedEndOfArgs)
     }
+}
+
+fn parse_u32<'item>(
+    args: &mut impl Iterator<Item = &'item OsStr>
+) -> Result<u32, Error> {
+    let arg = parse_unicode(args)?;
+    let number: u32 = arg.parse().map_err(|e| Error::NeedNumber {
+        arg: OsString::from(arg),
+        source: e,
+    })?;
+    Ok(number)
 }
