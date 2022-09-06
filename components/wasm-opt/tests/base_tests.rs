@@ -1,4 +1,5 @@
 use wasm_opt::base::*;
+use strum::IntoEnumIterator;
 
 use std::fs::{self, File};
 use std::io::BufWriter;
@@ -418,5 +419,18 @@ fn write_file_path_not_exists() -> anyhow::Result<()> {
 
     assert!(r.is_err());
 
+    Ok(())
+}
+
+#[test]
+fn all_features_correct() -> anyhow::Result<()> {
+    let features_via_shims = get_feature_array();
+    let mut features_via_base = Vec::<u32>::new();
+
+    Feature::iter().for_each(|f| {
+        features_via_base.push(f as u32);
+    });
+    
+    assert_eq!(features_via_shims, features_via_base);
     Ok(())
 }

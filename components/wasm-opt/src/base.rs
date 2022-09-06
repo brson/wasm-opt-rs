@@ -3,6 +3,7 @@ use wocxx::cxx::let_cxx_string;
 use wocxx::{colors, cxx, wasm};
 
 use std::path::Path;
+use strum_macros::EnumIter;
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
@@ -286,7 +287,18 @@ impl FeatureSet {
     }
 }
 
-#[derive(Clone, Debug)]
+pub fn get_feature_array() -> Vec<u32> {
+    let f = wasm::getFeatureArray();
+
+    let feature_vec: Vec<u32> = f
+        .iter()
+        .map(|f| *f)
+        .collect();
+    
+    feature_vec
+}
+
+#[derive(Clone, Debug, EnumIter)]
 pub enum Feature {
     MVP = 0,
     Atomics = 1 << 0,
@@ -310,7 +322,7 @@ pub enum Feature {
     // get all possible values use AllPossible. See setAll() below for more
     // details.
     All = ((1 << 16) - 1) & !(1 << 13), // All = ((1 << 16) - 1) & ~GCNNLocals,
-    AllPossible = 1 << 16,
+    AllPossible = (1 << 16) - 1,
 }
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);
