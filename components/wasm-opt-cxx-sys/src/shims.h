@@ -255,29 +255,27 @@ namespace wasm_shims {
 
 namespace wasm_shims {  
   std::unique_ptr<std::vector<uint32_t>> getFeatureArray() {
-    auto featureSet = newFeatureSet();
-    
     std::vector<uint32_t> f;
 
-    f.push_back(featureSet->inner.Feature::MVP);
-    f.push_back(featureSet->inner.Feature::Atomics);
-    f.push_back(featureSet->inner.Feature::MutableGlobals);
-    f.push_back(featureSet->inner.Feature::TruncSat);
-    f.push_back(featureSet->inner.Feature::SIMD);
-    f.push_back(featureSet->inner.Feature::BulkMemory);
-    f.push_back(featureSet->inner.Feature::SignExt);
-    f.push_back(featureSet->inner.Feature::ExceptionHandling);
-    f.push_back(featureSet->inner.Feature::TailCall);
-    f.push_back(featureSet->inner.Feature::ReferenceTypes);
-    f.push_back(featureSet->inner.Feature::Multivalue);
-    f.push_back(featureSet->inner.Feature::GC);
-    f.push_back(featureSet->inner.Feature::Memory64);
-    f.push_back(featureSet->inner.Feature::TypedFunctionReferences);
-    f.push_back(featureSet->inner.Feature::GCNNLocals);
-    f.push_back(featureSet->inner.Feature::RelaxedSIMD);
-    f.push_back(featureSet->inner.Feature::ExtendedConst);
-    f.push_back(featureSet->inner.Feature::All);
-    f.push_back(featureSet->inner.Feature::AllPossible);
+    f.push_back(FeatureSet::Feature::MVP);
+    f.push_back(FeatureSet::Feature::Atomics);
+    f.push_back(FeatureSet::Feature::MutableGlobals);
+    f.push_back(FeatureSet::Feature::TruncSat);
+    f.push_back(FeatureSet::Feature::SIMD);
+    f.push_back(FeatureSet::Feature::BulkMemory);
+    f.push_back(FeatureSet::Feature::SignExt);
+    f.push_back(FeatureSet::Feature::ExceptionHandling);
+    f.push_back(FeatureSet::Feature::TailCall);
+    f.push_back(FeatureSet::Feature::ReferenceTypes);
+    f.push_back(FeatureSet::Feature::Multivalue);
+    f.push_back(FeatureSet::Feature::GC);
+    f.push_back(FeatureSet::Feature::Memory64);
+    f.push_back(FeatureSet::Feature::TypedFunctionReferences);
+    f.push_back(FeatureSet::Feature::GCNNLocals);
+    f.push_back(FeatureSet::Feature::RelaxedSIMD);
+    f.push_back(FeatureSet::Feature::ExtendedConst);
+    f.push_back(FeatureSet::Feature::All);
+    f.push_back(FeatureSet::Feature::AllPossible);
 
     return std::make_unique<std::vector<uint32_t>>(f);
   }
