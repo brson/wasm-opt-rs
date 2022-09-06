@@ -290,11 +290,8 @@ impl FeatureSet {
 pub fn get_feature_array() -> Vec<u32> {
     let f = wasm::getFeatureArray();
 
-    let feature_vec: Vec<u32> = f
-        .iter()
-        .map(|f| *f)
-        .collect();
-    
+    let feature_vec: Vec<u32> = f.iter().map(|f| *f).collect();
+
     feature_vec
 }
 

@@ -90,7 +90,10 @@ fn default_optimization_options_are_for_size() {
     let opts2 = Profile::optimize_for_size().into_opts();
     assert_eq!(opts1.passopts.optimize_level, opts2.passopts.optimize_level);
     assert_eq!(opts1.passopts.shrink_level, opts2.passopts.shrink_level);
-    assert_eq!(opts1.passes.add_default_passes, opts2.passes.add_default_passes);
+    assert_eq!(
+        opts1.passes.add_default_passes,
+        opts2.passes.add_default_passes
+    );
 }
 
 #[test]

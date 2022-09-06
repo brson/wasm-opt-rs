@@ -1,15 +1,15 @@
 //! Easy integration with tools that already use `wasm-opt` via CLI.
 
-use std::process::Command;
-use std::iter::Iterator;
-use std::result::Result;
-use std::path::PathBuf;
-use std::ffi::{OsStr, OsString};
-use std::num::ParseIntError;
-use thiserror::Error;
-use crate::api::{OptimizationOptions, FileType, OptimizeLevel, ShrinkLevel};
-use crate::run::OptimizationError;
+use crate::api::{FileType, OptimizationOptions, OptimizeLevel, ShrinkLevel};
 use crate::profiles::Profile;
+use crate::run::OptimizationError;
+use std::ffi::{OsStr, OsString};
+use std::iter::Iterator;
+use std::num::ParseIntError;
+use std::path::PathBuf;
+use std::process::Command;
+use std::result::Result;
+use thiserror::Error;
 
 /// Interpret a pre-built [`Command`] as an [`OptimizationOptions`],
 /// then call [`OptimizationOptions::run`] on it.
@@ -65,9 +65,7 @@ pub enum Error {
     #[error("The `wasm-opt` argument list ended while expecting another argument")]
     UnexpectedEndOfArgs,
     #[error("Argument must be unicode: {arg:?}")]
-    NeedUnicode {
-        arg: OsString,
-    },
+    NeedUnicode { arg: OsString },
     #[error("Argument must be a number: {arg:?}")]
     NeedNumber {
         arg: OsString,
@@ -75,15 +73,13 @@ pub enum Error {
         source: ParseIntError,
     },
     #[error("Unsupported `wasm-opt` command-line arguments: {args:?}")]
-    Unsupported {
-        args: Vec<OsString>,
-    },
+    Unsupported { args: Vec<OsString> },
     #[error("Error while optimization wasm modules")]
     ExecutionError(
         #[from]
         #[source]
-        OptimizationError
-    )
+        OptimizationError,
+    ),
 }
 
 struct ParsedCliArgs {
@@ -268,7 +264,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
         output_file,
         output_sourcemap,
     })
-}    
+}
 
 fn parse_infile_path(
     arg: &OsStr,
@@ -296,9 +292,7 @@ fn parse_path_into<'item>(
     }
 }
 
-fn parse_unicode<'item>(
-    args: &mut impl Iterator<Item = &'item OsStr>
-) -> Result<String, Error> {
+fn parse_unicode<'item>(args: &mut impl Iterator<Item = &'item OsStr>) -> Result<String, Error> {
     if let Some(arg) = args.next() {
         if let Some(arg) = arg.to_str() {
             Ok(arg.to_owned())
@@ -312,9 +306,7 @@ fn parse_unicode<'item>(
     }
 }
 
-fn parse_u32<'item>(
-    args: &mut impl Iterator<Item = &'item OsStr>
-) -> Result<u32, Error> {
+fn parse_u32<'item>(args: &mut impl Iterator<Item = &'item OsStr>) -> Result<u32, Error> {
     let arg = parse_unicode(args)?;
     let number: u32 = arg.parse().map_err(|e| Error::NeedNumber {
         arg: OsString::from(arg),

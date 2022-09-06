@@ -1,5 +1,5 @@
-use wasm_opt::base::*;
 use strum::IntoEnumIterator;
+use wasm_opt::base::*;
 
 use std::fs::{self, File};
 use std::io::BufWriter;
@@ -430,7 +430,7 @@ fn all_features_correct() -> anyhow::Result<()> {
     Feature::iter().for_each(|f| {
         features_via_base.push(f as u32);
     });
-    
+
     assert_eq!(features_via_shims, features_via_base);
     Ok(())
 }

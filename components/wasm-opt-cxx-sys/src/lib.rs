@@ -174,7 +174,7 @@ pub mod wasm {
     unsafe extern "C++" {
         fn getFeatureArray() -> UniquePtr<CxxVector<u32>>;
     }
-    
+
     unsafe extern "C++" {
         fn applyFeatures(
             wasm: Pin<&mut Module>,
