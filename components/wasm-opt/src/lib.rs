@@ -138,3 +138,5 @@ mod features;
 mod run;
 
 pub mod integration;
+
+mod fake_command;

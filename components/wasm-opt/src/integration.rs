@@ -7,9 +7,10 @@ use std::ffi::{OsStr, OsString};
 use std::iter::Iterator;
 use std::num::ParseIntError;
 use std::path::PathBuf;
-use std::process::Command;
 use std::result::Result;
 use thiserror::Error;
+
+pub use crate::fake_command::Command;
 
 /// Interpret a pre-built [`Command`] as an [`OptimizationOptions`],
 /// then call [`OptimizationOptions::run`] on it.
