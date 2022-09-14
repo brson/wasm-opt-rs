@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2018"
 description = "wasm-pack sample"
 license = "MIT / Apache-2.0"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

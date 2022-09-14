@@ -4,4 +4,5 @@ members = [
 ]
 exclude = [
   "components/hello-world", # not compatible with Rust 1.48
+  "components/conformance-tests",
 ]
