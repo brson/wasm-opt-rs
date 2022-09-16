@@ -1,8 +1,8 @@
-use std::process::Command as StdCommand;
-use std::process::{ExitStatus, Output, Child, Stdio};
 use std::ffi::{OsStr, OsString};
 use std::io::Result;
 use std::path::Path;
+use std::process::Command as StdCommand;
+use std::process::{Child, ExitStatus, Output, Stdio};
 
 /// Like [`std::process::Command`] but args are iterable in old versions of Rust.
 pub struct Command {
@@ -30,7 +30,8 @@ impl Command {
         S: AsRef<OsStr>,
     {
         let args: Vec<_> = args.into_iter().collect();
-        self.cached_args.extend(args.iter().map(|arg| OsString::from(arg)));
+        self.cached_args
+            .extend(args.iter().map(|arg| OsString::from(arg)));
         self.inner.args(args);
         self
     }
@@ -98,13 +99,19 @@ impl Command {
 
     pub fn get_args(&self) -> CommandArgs<'_> {
         CommandArgs {
-            inner: self.cached_args.iter().map(&|arg: &OsString| arg.as_os_str()),
+            inner: self
+                .cached_args
+                .iter()
+                .map(&|arg: &OsString| arg.as_os_str()),
         }
     }
 }
 
 pub struct CommandArgs<'cmd> {
-    inner: std::iter::Map<std::slice::Iter<'cmd, OsString>, &'cmd dyn for <'r> Fn(&'r OsString) -> &'r OsStr>, // omg
+    inner: std::iter::Map<
+        std::slice::Iter<'cmd, OsString>,
+        &'cmd dyn for<'r> Fn(&'r OsString) -> &'r OsStr,
+    >, // omg
 }
 
 impl<'cmd> Iterator for CommandArgs<'cmd> {
