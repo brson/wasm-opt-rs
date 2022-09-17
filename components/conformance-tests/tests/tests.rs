@@ -53,8 +53,11 @@ fn run_test(args: TestArgs) -> Result<()> {
     fs::create_dir_all(&api_tempdir)?;
     
     let binaryen_out = run_test_binaryen(&args, &binaryen_tempdir)?;
+    println!("1");
     let rust_out = run_test_rust(&args, &rust_tempdir)?;
+    println!("2");
     let api_out = run_test_api(&args, &rust_tempdir)?;
+    println!("3");
 
     let binaryen_out_file = fs::read(binaryen_out.outfile)?;
     let rust_out_file = fs::read(rust_out.outfile)?;
@@ -178,22 +181,33 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
     })
 }
 
-#[test]
-fn smoke_test() -> Result<()> {
+fn get_test_infile_wasm() -> Result<PathBuf> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = PathBuf::from(manifest_dir);
     let workspace = manifest_dir.join("../..");
     let infile = workspace.join("components/wasm-opt/tests/ink_example_multisig.wasm");
 
+    Ok(infile)
+}
+
+fn get_test_infile_wat() -> Result<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = PathBuf::from(manifest_dir);
+    let workspace = manifest_dir.join("../..");
+    let infile = workspace.join("components/wasm-opt/tests/hello_world.wat");
+
+    Ok(infile)
+}
+    
+#[test]
+fn wasm_to_wasm_o() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
     let outfile = PathBuf::from("outfile");
     
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
 
-    let mut args = Vec::new();
-    args.push("-O");
-//    args.push("--intrinsic-lowering");
-//    args.push("-O");
+    let args = vec!["-O"];
     
     run_test(TestArgs {
         infile,
@@ -203,3 +217,141 @@ fn smoke_test() -> Result<()> {
         args,
     })
 }
+
+#[test]
+fn wasm_to_wasm_o0() -> Result<()> {
+    // todo:
+    // run_test_api not show the warning:
+    // `warning: no passes specified, not doing any work`
+    
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O0"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_os() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_oz() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Oz"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_o1() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O1"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_o2() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O2"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_o3() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O3"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_o4() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O4"];
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
