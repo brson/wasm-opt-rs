@@ -63,25 +63,19 @@ fn run_test(args: TestArgs) -> Result<()> {
     let api_out_file = fs::read(api_out.outfile)?;
     assert_eq!(api_out_file, rust_out_file);
 
-    if binaryen_out.outfile_sourcemap.is_none()
-        && rust_out.outfile_sourcemap.is_none()
-        && api_out.outfile_sourcemap.is_none() {
-
-        } else if binaryen_out.outfile_sourcemap.is_some()
-        && rust_out.outfile_sourcemap.is_some()
-        && api_out.outfile_sourcemap.is_some() {        
-
-            let binaryen_out_sourcemap = fs::read(binaryen_out.outfile_sourcemap.expect("sourcemap"))?;
-            let rust_out_sourcemap = fs::read(rust_out.outfile_sourcemap.expect("sourcemap"))?;
+    match (binaryen_out.outfile_sourcemap, rust_out.outfile_sourcemap, api_out.outfile_sourcemap) {
+        (None, None, None) => {},
+        (Some(binaryen_out), Some(rust_out), Some(api_out)) => {
+            let binaryen_out_sourcemap = fs::read(binaryen_out)?;
+            let rust_out_sourcemap = fs::read(rust_out)?;
             assert_eq!(binaryen_out_sourcemap, rust_out_sourcemap);
 
-            let api_out_sourcemap = fs::read(api_out.outfile_sourcemap.expect("sourcemap"))?;
+            let api_out_sourcemap = fs::read(api_out)?;
             assert_eq!(api_out_sourcemap, rust_out_sourcemap);
-
-        } else {
-            anyhow::bail!("output_sourcemap test failed");
         }
-    
+        _ => anyhow::bail!("output_sourcemap test failed"),
+    }
+
     drop(binaryen_tempdir);
     drop(rust_tempdir);
     drop(api_tempdir);
