@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -29,7 +29,9 @@ fn get_dirs() -> Result<Dirs> {
     let binaryen_build = out_dir.join("binaryen-test-build");
 
     Ok(Dirs {
-        workspace, binaryen_src, binaryen_build,
+        workspace,
+        binaryen_src,
+        binaryen_build,
     })
 }
 

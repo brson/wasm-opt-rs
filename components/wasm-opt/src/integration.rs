@@ -46,7 +46,7 @@ pub use crate::fake_command::Command;
 ///   are not provided.
 pub fn run_from_command_args(command: Command) -> Result<(), Error> {
     let parsed = parse_command_args(command)?;
-        
+
     parsed.opts.run_with_sourcemaps(
         parsed.input_file,
         parsed.input_sourcemap,
