@@ -53,17 +53,16 @@ fn run_test(args: TestArgs) -> Result<()> {
     fs::create_dir_all(&api_tempdir)?;
     
     let binaryen_out = run_test_binaryen(&args, &binaryen_tempdir)?;
-    println!("1");
     let rust_out = run_test_rust(&args, &rust_tempdir)?;
-    println!("2");
-    let api_out = run_test_api(&args, &rust_tempdir)?;
-    println!("3");
+    let api_out = run_test_api(&args, &api_tempdir)?;
 
     let binaryen_out_file = fs::read(binaryen_out.outfile)?;
     let rust_out_file = fs::read(rust_out.outfile)?;
+
     assert_eq!(binaryen_out_file, rust_out_file);
 
     let api_out_file = fs::read(api_out.outfile)?;
+
     assert_eq!(api_out_file, rust_out_file);
 
     match (binaryen_out.outfile_sourcemap, rust_out.outfile_sourcemap, api_out.outfile_sourcemap) {
@@ -104,11 +103,13 @@ fn run_test_binaryen(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
     if let Some(outfile_sourcemap) = &args.outfile_sourcemap {
         cmd.args(["--output-source-map", outfile_sourcemap.to_str().expect("PathBuf")]);
     }
-    
-    args.args.iter().for_each(|arg| {
-        cmd.arg(arg);
-    });
-    
+
+    if !args.args.is_empty() {
+        args.args.iter().for_each(|arg| {
+            cmd.arg(arg);
+        });
+    }
+
     if !cmd.status()?.success() {
         anyhow::bail!("run binaryen failed");
     }  
@@ -136,9 +137,11 @@ fn run_test_rust(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         cmd.args(["--output-source-map", outfile_sourcemap.to_str().expect("PathBuf")]);
     }
 
-    args.args.iter().for_each(|arg| {
-        cmd.arg(arg);
-    });
+    if !args.args.is_empty() {
+        args.args.iter().for_each(|arg| {
+            cmd.arg(arg);
+        });
+    }
 
     if !cmd.status()?.success() {
         anyhow::bail!("run rust wasm-opt failed");
@@ -169,10 +172,12 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         cmd.args(["--output-source-map", outfile_sourcemap.to_str().expect("PathBuf")]);
     }
 
-    args.args.iter().for_each(|arg| {
-        cmd.arg(arg);
-    });
-
+    if !args.args.is_empty() {
+        args.args.iter().for_each(|arg| {
+            cmd.arg(arg);
+        });
+    }
+    
     integration::run_from_command_args(cmd)?;
 
     Ok(TestOut {
@@ -198,6 +203,25 @@ fn get_test_infile_wat() -> Result<PathBuf> {
 
     Ok(infile)
 }
+
+#[test]
+fn wasm_to_wasm_no_optimization_args() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile");
+    
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = Vec::new();
+    
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
     
 #[test]
 fn wasm_to_wasm_o() -> Result<()> {
@@ -220,10 +244,6 @@ fn wasm_to_wasm_o() -> Result<()> {
 
 #[test]
 fn wasm_to_wasm_o0() -> Result<()> {
-    // todo:
-    // run_test_api not show the warning:
-    // `warning: no passes specified, not doing any work`
-    
     let infile = get_test_infile_wasm()?;
     let outfile = PathBuf::from("outfile");
     
