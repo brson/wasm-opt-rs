@@ -48,11 +48,16 @@
 //!
 //! - [`OptimizationOptions::new_optimize_for_size`] &middot; `-Os` or `-O`
 //! - [`OptimizationOptions::new_optimize_for_size_aggressively`] &middot; `-Oz`
-//! - [`OptimizationOptions::new_opt_level_0`] &middot; `-O0`
+//! - [`OptimizationOptions::new_opt_level_0`] &middot; `-O0`, or no `-O*` argument.
 //! - [`OptimizationOptions::new_opt_level_1`] &middot; `-O1`
 //! - [`OptimizationOptions::new_opt_level_2`] &middot; `-O2`
 //! - [`OptimizationOptions::new_opt_level_3`] &middot; `-O3`
 //! - [`OptimizationOptions::new_opt_level_4`] &middot; `-O4`
+//!
+//! The `default` constructor for `OptimizationOptions` produces the same
+//! options as `OptimizationOptions::new_optimize_for_size`.
+//! To get the same optimization options as invoking `wasm-opt` with no `-O*` argument,
+//! call `OptimizationOptions::new_opt_level_0`.
 //!
 //! By default, the `run` method will read either binary `wasm` or text `wat` files,
 //! inspecting the first few bytes for the binary header and choosing as appropriate,
