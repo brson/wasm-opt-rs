@@ -108,7 +108,11 @@ fn run_test_binaryen(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    if let Some(outfile_sourcemap) = &args.outfile_sourcemap {
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
+        tempdir.join(s)
+    });
+
+    if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
             "--output-source-map",
             outfile_sourcemap.to_str().expect("PathBuf"),
@@ -127,7 +131,7 @@ fn run_test_binaryen(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
 
     Ok(TestOut {
         outfile,
-        outfile_sourcemap: args.outfile_sourcemap.as_ref().map(|s| s.to_path_buf()),
+        outfile_sourcemap,
     })
 }
 
@@ -147,7 +151,11 @@ fn run_test_rust(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    if let Some(outfile_sourcemap) = &args.outfile_sourcemap {
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
+        tempdir.join(s)
+    });
+
+    if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
             "--output-source-map",
             outfile_sourcemap.to_str().expect("PathBuf"),
@@ -166,7 +174,7 @@ fn run_test_rust(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
 
     Ok(TestOut {
         outfile,
-        outfile_sourcemap: args.outfile_sourcemap.as_ref().map(|s| s.to_path_buf()),
+        outfile_sourcemap,
     })
 }
 
@@ -188,7 +196,11 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    if let Some(outfile_sourcemap) = &args.outfile_sourcemap {
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
+        tempdir.join(s)
+    });
+
+    if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
             "--output-source-map",
             outfile_sourcemap.to_str().expect("PathBuf"),
@@ -205,7 +217,7 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
 
     Ok(TestOut {
         outfile,
-        outfile_sourcemap: args.outfile_sourcemap.as_ref().map(|s| s.to_path_buf()),
+        outfile_sourcemap,
     })
 }
 
@@ -223,6 +235,15 @@ fn get_test_infile_wat() -> Result<PathBuf> {
     let manifest_dir = PathBuf::from(manifest_dir);
     let workspace = manifest_dir.join("../..");
     let infile = workspace.join("components/wasm-opt/tests/hello_world.wat");
+
+    Ok(infile)
+}
+
+fn get_test_sourcemap() -> Result<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = PathBuf::from(manifest_dir);
+    let workspace = manifest_dir.join("../..");
+    let infile = workspace.join("components/wasm-opt/tests/hello_world.map");
 
     Ok(infile)
 }
@@ -464,6 +485,86 @@ fn wat_to_wasm_no_optimization_args() -> Result<()> {
     let outfile_sourcemap = None::<PathBuf>;
 
     let args = Vec::new();
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wat_to_wasm_os() -> Result<()> {
+    let infile = get_test_infile_wat()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wat_os() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wat");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--emit-text"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_with_sourcemap_to_wasm_without_sourcemap_os() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = get_test_sourcemap()?;
+    let infile_sourcemap = Some(infile_sourcemap);
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_with_sourcemap_to_wasm_with_sourcemap_os() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = get_test_sourcemap()?;
+    let infile_sourcemap = Some(infile_sourcemap);
+
+    let outfile_sourcemap = PathBuf::from("outfile_sourcemap.map");
+    let outfile_sourcemap = Some(outfile_sourcemap);
+
+    let args = vec!["-Os"];
 
     run_test(TestArgs {
         infile,
