@@ -230,7 +230,7 @@ fn get_test_infile_wat() -> Result<PathBuf> {
 #[test]
 fn wasm_to_wasm_no_optimization_args() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -249,7 +249,7 @@ fn wasm_to_wasm_no_optimization_args() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -268,7 +268,7 @@ fn wasm_to_wasm_o() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o0() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -287,7 +287,7 @@ fn wasm_to_wasm_o0() -> Result<()> {
 #[test]
 fn wasm_to_wasm_os() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -306,7 +306,7 @@ fn wasm_to_wasm_os() -> Result<()> {
 #[test]
 fn wasm_to_wasm_oz() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -325,7 +325,7 @@ fn wasm_to_wasm_oz() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o1() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -344,7 +344,7 @@ fn wasm_to_wasm_o1() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o2() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -363,7 +363,7 @@ fn wasm_to_wasm_o2() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o3() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
@@ -382,12 +382,88 @@ fn wasm_to_wasm_o3() -> Result<()> {
 #[test]
 fn wasm_to_wasm_o4() -> Result<()> {
     let infile = get_test_infile_wasm()?;
-    let outfile = PathBuf::from("outfile");
+    let outfile = PathBuf::from("outfile.wasm");
 
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
 
     let args = vec!["-O4"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wat_o() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wat");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O", "--emit-text"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wat_no_optimization_args() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wat");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["--emit-text"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wat_to_wasm_o() -> Result<()> {
+    let infile = get_test_infile_wat()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-O"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wat_to_wasm_no_optimization_args() -> Result<()> {
+    let infile = get_test_infile_wat()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = Vec::new();
 
     run_test(TestArgs {
         infile,

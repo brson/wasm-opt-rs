@@ -86,7 +86,7 @@ namespace wasm_shims {
               Module& wasm,
               const std::string& sourceMapFilename) {
       try {
-        inner.readBinary(std::string(filename),
+        inner.read(std::string(filename),
                           wasm,
                           std::string(sourceMapFilename));
       } catch (const wasm::ParseException &e) {
