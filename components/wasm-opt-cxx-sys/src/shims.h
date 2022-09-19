@@ -73,8 +73,8 @@ namespace wasm_shims {
                                  const std::string& sourceMapFilename) {
       try {
         inner.readBinary(std::string(filename),
-                          wasm,
-                          std::string(sourceMapFilename));
+                         wasm,
+                         std::string(sourceMapFilename));
       } catch (const wasm::ParseException &e) {
         throw parse_exception_to_runtime_error(e);
       } catch (const wasm::MapParseException &e) {
@@ -87,8 +87,8 @@ namespace wasm_shims {
               const std::string& sourceMapFilename) {
       try {
         inner.read(std::string(filename),
-                          wasm,
-                          std::string(sourceMapFilename));
+                   wasm,
+                   std::string(sourceMapFilename));
       } catch (const wasm::ParseException &e) {
         throw parse_exception_to_runtime_error(e);
       } catch (const wasm::MapParseException &e) {

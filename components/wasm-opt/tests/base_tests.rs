@@ -128,19 +128,22 @@ fn module_read_garbage_error_works() -> anyhow::Result<()> {
 
     let mut m = Module::new();
     let mut reader = ModuleReader::new();
-
     let res = reader.read_text(&path, &mut m);
     match res {
         Ok(()) => {}
         Err(_) => println!("Module read_text failed"),
     }
 
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
     let res = reader.read_binary(&path, &mut m, None);
     match res {
         Ok(()) => {}
         Err(_) => println!("Module read_binary failed"),
     }
 
+    let mut m = Module::new();
+    let mut reader = ModuleReader::new();
     let res = reader.read(&path, &mut m, None);
     match res {
         Ok(()) => {}
