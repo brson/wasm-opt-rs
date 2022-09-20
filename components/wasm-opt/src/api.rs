@@ -272,7 +272,7 @@ impl Default for InliningOptions {
     fn default() -> InliningOptions {
         InliningOptions {
             always_inline_max_size: 2,
-            one_caller_inline_max_size: u32::max_value(),
+            one_caller_inline_max_size: u32::MAX,
             flexible_inline_max_size: 20,
             allow_functions_with_loops: false,
             partial_inlining_ifs: 0,

@@ -108,9 +108,7 @@ fn run_test_binaryen(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
-        tempdir.join(s)
-    });
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| tempdir.join(s));
 
     if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
@@ -151,9 +149,7 @@ fn run_test_rust(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
-        tempdir.join(s)
-    });
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| tempdir.join(s));
 
     if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
@@ -196,9 +192,7 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         ]);
     }
 
-    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| {
-        tempdir.join(s)
-    });
+    let outfile_sourcemap = args.outfile_sourcemap.as_ref().map(|s| tempdir.join(s));
 
     if let Some(ref outfile_sourcemap) = outfile_sourcemap {
         cmd.args([
@@ -565,6 +559,36 @@ fn wasm_with_sourcemap_to_wasm_with_sourcemap_os() -> Result<()> {
     let outfile_sourcemap = Some(outfile_sourcemap);
 
     let args = vec!["-Os"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_o0_inlining_opt() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec![
+        "-O0",
+        "--always-inline-max-function-size",
+        "2",
+        "--flexible-inline-max-function-size",
+        "20",
+        "--one-caller-inline-max-function-size",
+        "5",
+        "--inline-functions-with-loops",
+        "--partial-inlining-ifs",
+        "0",
+    ];
 
     run_test(TestArgs {
         infile,
