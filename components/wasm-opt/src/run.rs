@@ -179,7 +179,7 @@ impl OptimizationOptions {
         }
 
         let mut writer = ModuleWriter::new();
-        reader.set_debug_info(false);
+        writer.set_debug_info(self.passopts.debug_info);
 
         if let Some(filename) = outfile_sourcemap {
             writer
