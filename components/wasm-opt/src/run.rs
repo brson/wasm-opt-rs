@@ -186,6 +186,10 @@ impl OptimizationOptions {
                 .set_source_map_filename(filename.as_ref().to_str().expect("source map filename"));
         }
 
+        if let Some(url) = &self.writer.source_map_url {
+            writer.set_source_map_url(url);
+        }
+
         match self.writer.file_type {
             FileType::Wasm => writer.write_binary(&mut m, outfile.as_ref()).map_err(|e| {
                 OptimizationError::Write {

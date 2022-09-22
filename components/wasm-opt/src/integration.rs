@@ -130,7 +130,8 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 parse_path_into(&mut args, &mut output_sourcemap, &mut unsupported)?;
             }
             "--output-source-map-url" | "-osu" => {
-                todo!()
+                let url = parse_unicode(&mut args)?;
+                opts.writer_source_map_url(&url);
             }
 
             /* from optimization-options.h */
