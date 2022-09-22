@@ -63,7 +63,7 @@ fn run_test(args: TestArgs) -> Result<()> {
     assert_eq!(binaryen_out_file, rust_out_file);
 
     let api_out_file = fs::read(api_out.outfile)?;
-
+        
     assert_eq!(api_out_file, rust_out_file);
 
     match (
@@ -627,6 +627,25 @@ fn wasm_to_wasm_zero_filled_memory() -> Result<()> {
     let outfile_sourcemap = None::<PathBuf>;
 
     let args = vec!["-Os", "--zero-filled-memory"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_source_map_url() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--output-source-map-url", "https://example.com"];
 
     run_test(TestArgs {
         infile,

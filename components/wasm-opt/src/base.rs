@@ -107,7 +107,7 @@ impl ModuleWriter {
         let_cxx_string!(source_map_url = source_map_url);
 
         let this = self.0.pin_mut();
-        this.setSourceMapFilename(&source_map_url);
+        this.setSourceMapUrl(&source_map_url);
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
