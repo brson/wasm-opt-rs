@@ -216,10 +216,10 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* from tool-options.h */
 
             "--mvp-features" | "-mvp" => {
-                todo!()
+                opts.mvp_features_only();
             }
             "--all-features" | "-all" => {
-                todo!()
+                opts.all_features();
             }
             "--quiet" | "-q" => {
                 /* pass */
