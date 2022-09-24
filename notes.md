@@ -13,8 +13,32 @@ it _shrinks_ WebAssembly modules.
 dependency of (I think) every wasm-targetting toolchain I have ever used (though
 it seems like [`wasm-pack`] may have removed it at some point?).
 
-
 todo
+
+## Table of Contents
+
+- [Preface: Installing the `wasm-opt` bin with cargo]
+- [Preface: Installing the `wasm-opt` library from Rust]
+- [The Plan: Our bin strategy]
+- [The Plan: Our `cxx` lib strategy]
+- [`cxx` and Binaryen]
+  - [Constructors and `cxx`]
+  - [By-val `std::string`]
+  - [`const`-correctness]
+  - [Exceptions and `std::exception`]
+- [Binaryen-specific surprises]
+  - [Colors]
+  - [Some Binaryen APIs make assertions about how they are called]
+  - [Binaryen early exits]
+  - [Unicode paths don't work on Windows]
+- [A Rusty API]
+- [Toolchain integration]
+- [Opinions about `cxx`]
+- [Unexpected obstacles]
+  - todo
+- [Future plans]
+- [Thanks]
+
 
 ## Preface: Installing the `wasm-opt` bin with cargo
 
@@ -72,11 +96,12 @@ we ran into binding binaryen APIs,
 and our solutions.
 
 
+## `cxx` lessons
 
-## Constructors and `cxx`
+### Constructors and `cxx`
 
 
-## By-val `std::string`
+### By-val `std::string`
 
 Binaryen's `ModuleReader` etc. methods take
 `std::string` by value,
@@ -101,7 +126,7 @@ Gets a C++ shim:
 
 This incurs a copy of the string.
 
-## `const`-correctness
+### `const`-correctness
 
 Binaryen's APIs are not const-correct,
 and `cxx` expects const-correctness.
@@ -179,14 +204,16 @@ imposing another atomic flag check that should always succeed.
 
 
 
-## Colors
-
-
-
 ## `ParseException` doesn't implement `std::exception`
 
 `cxx` can translate exceptions to Rust as long as they implement
 `std::exception`, but `ParseException` does not.
+
+
+
+## Colors
+
+
 
 ## Some binaryen APIs make assertions about how they are called
 
@@ -289,18 +316,26 @@ todo example
 
 ## Unexpected obstacles
 
-## Obstacle: C++17
+### Obstacle: C++17
 
-## Obstacle: MSRV
+### Obstacle: MSRV
 
-## Obstacle: The `cc` crate and rebuild times
+### Obstacle: The `cc` crate and rebuild times
 
-## Obstacle: GitHub actions and ARM workers
+### Obstacle: GitHub actions and ARM workers
 
-## Obstacle: binaryen console assumptions
+### Obstacle: binaryen console assumptions
 
-## Obstacle: the binaryen fuzzing features
+### Obstacle: the binaryen fuzzing features
 
 
 ## Future plans
 
+
+
+## TODO topics
+
+- talking to the stakeholders
+- integration into cargo-contract
+  - Command-api
+  - planning for reversion
