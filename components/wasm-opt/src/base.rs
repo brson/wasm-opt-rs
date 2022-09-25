@@ -262,6 +262,14 @@ impl PassOptions {
         let this = self.0.pin_mut();
         this.setDebugInfo(debug_info);
     }
+
+    pub fn set_arguments(&mut self, key: &str, value: &str) {
+        let_cxx_string!(key = key);
+        let_cxx_string!(value = value);
+
+        let this = self.0.pin_mut();
+        this.setArguments(&key, &value);
+    }
 }
 
 pub struct FeatureSet(cxx::UniquePtr<wasm::WasmFeatureSet>);

@@ -89,6 +89,13 @@ impl OptimizationOptions {
         self
     }
 
+    pub fn set_pass_arg(&mut self, key: &str, value: &str) -> &mut Self {
+        self.passopts
+            .arguments
+            .insert(key.to_string(), value.to_string());
+        self
+    }
+
     pub fn add_default_passes(&mut self, value: bool) -> &mut Self {
         self.passes.add_default_passes = value;
         self

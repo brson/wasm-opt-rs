@@ -1,7 +1,7 @@
 pub use crate::features::Feature;
 pub use crate::passes::Pass;
 pub use crate::profiles::Profile;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Optimization options and optimization builder.
 ///
@@ -81,7 +81,7 @@ pub struct InliningOptions {
 }
 
 /// Options that affect how optimization passes behave.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct PassOptions {
     /// Validate both the unoptimized module and the optimized module.
     ///
@@ -101,6 +101,7 @@ pub struct PassOptions {
     pub fast_math: bool,
     pub zero_filled_memory: bool,
     pub debug_info: bool,
+    pub arguments: HashMap<String, String>,
 }
 
 /// The amount of optimization to apply.
@@ -294,6 +295,7 @@ impl Default for PassOptions {
             fast_math: false,
             zero_filled_memory: false,
             debug_info: false,
+            arguments: HashMap::<String, String>::new(),
         }
     }
 }

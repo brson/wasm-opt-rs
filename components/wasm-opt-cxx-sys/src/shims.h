@@ -224,6 +224,10 @@ namespace wasm_shims {
     void setDebugInfo(bool debugInfo) {
       inner.debugInfo = debugInfo;
     }
+
+    void setArguments(const std::string& key, const std::string& value) {
+      inner.arguments[key] = value;
+    }
   };
 
   std::unique_ptr<PassOptions> newPassOptions() {

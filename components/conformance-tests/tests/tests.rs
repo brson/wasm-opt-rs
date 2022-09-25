@@ -693,3 +693,22 @@ fn wasm_to_wasm_all_features() -> Result<()> {
         args,
     })
 }
+
+#[test]
+fn wasm_to_wasm_pass_arg() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--pass-arg", "testarg@testvalue"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}

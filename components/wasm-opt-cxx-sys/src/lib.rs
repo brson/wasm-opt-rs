@@ -155,6 +155,8 @@ pub mod wasm {
         fn setZeroFilledMemory(self: Pin<&mut Self>, zeroFilledMemory: bool);
 
         fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
+
+        fn setArguments(self: Pin<&mut Self>, key: &CxxString, value: &CxxString);
     }
 
     unsafe extern "C++" {

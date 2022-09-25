@@ -228,7 +228,13 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 opts.validate(false);
             }
             "--pass-arg" | "-pa" => {
-                todo!()
+                let args = parse_unicode(&mut args)?;
+                if args.contains("@") {
+                    let args: Vec<&str> = args.split("@").collect();
+                    opts.set_pass_arg(args[0], args[1]);
+                } else {
+                    opts.set_pass_arg(&args, "1");
+                }
             }
 
             /* fallthrough */
