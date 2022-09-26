@@ -240,7 +240,9 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* fallthrough */
 
             _ => {
+                // todo emit unsupported errors on "-.*" and "--.*"
                 // todo parse pass names
+                // todo parse pass names w/ pass args (--pass-name=key@value). I think this is something binaryen supports.
                 // todo parse enable/disable feature names
 
                 parse_infile_path(OsStr::new(arg), &mut input_file, &mut unsupported);
