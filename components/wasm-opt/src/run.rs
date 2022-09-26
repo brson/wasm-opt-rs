@@ -115,31 +115,8 @@ impl OptimizationOptions {
             return Err(OptimizationError::ValidateWasmInput);
         }
 
-        let mut opts = BasePassOptions::new();
-        opts.set_validate(self.passopts.validate);
-        opts.set_validate_globally(self.passopts.validate_globally);
-        opts.set_optimize_level(self.passopts.optimize_level as i32);
-        opts.set_shrink_level(self.passopts.shrink_level as i32);
-        opts.set_traps_never_happen(self.passopts.traps_never_happen);
-        opts.set_low_memory_unused(self.passopts.low_memory_unused);
-        opts.set_fast_math(self.passopts.fast_math);
-        opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
-        opts.set_debug_info(self.passopts.debug_info);
-
-        self.passopts
-            .arguments
-            .iter()
-            .for_each(|(key, value)| opts.set_arguments(key, value));
-
-        let mut inlining = BaseInliningOptions::new();
-        inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
-        inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);
-        inlining.set_flexible_inline_max_size(self.inlining.flexible_inline_max_size);
-        inlining.set_allow_functions_with_loops(self.inlining.allow_functions_with_loops);
-        inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
-        opts.set_inlining_options(inlining);
-
-        let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
+        let passopts = self.translate_pass_options();
+        let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
 
         if self.passes.add_default_passes {
             pass_runner.add_default_optimization_passes();
@@ -216,6 +193,36 @@ impl OptimizationOptions {
         }
 
         m.apply_features(feature_set_enabled, feature_set_disabled);
+    }
+
+    fn translate_pass_options(&self) -> BasePassOptions {
+        let mut opts = BasePassOptions::new();
+
+        opts.set_validate(self.passopts.validate);
+        opts.set_validate_globally(self.passopts.validate_globally);
+        opts.set_optimize_level(self.passopts.optimize_level as i32);
+        opts.set_shrink_level(self.passopts.shrink_level as i32);
+        opts.set_traps_never_happen(self.passopts.traps_never_happen);
+        opts.set_low_memory_unused(self.passopts.low_memory_unused);
+        opts.set_fast_math(self.passopts.fast_math);
+        opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
+        opts.set_debug_info(self.passopts.debug_info);
+
+        self.passopts
+            .arguments
+            .iter()
+            .for_each(|(key, value)| opts.set_arguments(key, value));
+
+        let mut inlining = BaseInliningOptions::new();
+        inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
+        inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);
+        inlining.set_flexible_inline_max_size(self.inlining.flexible_inline_max_size);
+        inlining.set_allow_functions_with_loops(self.inlining.allow_functions_with_loops);
+        inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
+
+        opts.set_inlining_options(inlining);
+
+        opts
     }
 }
 
