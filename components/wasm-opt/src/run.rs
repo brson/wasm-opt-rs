@@ -90,6 +90,9 @@ impl OptimizationOptions {
         }
 
         let mut m = Module::new();
+
+        self.apply_features(&mut m);
+
         let mut reader = ModuleReader::new();
 
         let set_dwarf =
@@ -146,33 +149,6 @@ impl OptimizationOptions {
         inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
         opts.set_inlining_options(inlining);
 
-        let mut feature_set_enabled = BaseFeatureSet::new();
-        let mut feature_set_disabled = BaseFeatureSet::new();
-        match &self.features {
-            Features::Default => {}
-            Features::MvpOnly => {
-                feature_set_enabled.set_mvp();
-                feature_set_disabled.set_all();
-            }
-            Features::All => {
-                feature_set_enabled.set_all();
-                feature_set_disabled.set_mvp();
-            }
-            Features::Custom { enabled, disabled } => {
-                enabled.iter().for_each(|f| {
-                    let feature = convert_feature(f);
-                    feature_set_enabled.set(feature);
-                });
-
-                disabled.iter().for_each(|f| {
-                    let feature = convert_feature(f);
-                    feature_set_disabled.set(feature);
-                });
-            }
-        }
-
-        m.apply_features(feature_set_enabled, feature_set_disabled);
-
         let mut pass_runner = PassRunner::new_with_options(&mut m, opts);
 
         if self.passes.add_default_passes {
@@ -228,6 +204,35 @@ impl OptimizationOptions {
             },
         };
         Ok(())
+    }
+
+    fn apply_features(&self, m: &mut Module) {
+        let mut feature_set_enabled = BaseFeatureSet::new();
+        let mut feature_set_disabled = BaseFeatureSet::new();
+        match &self.features {
+            Features::Default => {}
+            Features::MvpOnly => {
+                feature_set_enabled.set_mvp();
+                feature_set_disabled.set_all();
+            }
+            Features::All => {
+                feature_set_enabled.set_all();
+                feature_set_disabled.set_mvp();
+            }
+            Features::Custom { enabled, disabled } => {
+                enabled.iter().for_each(|f| {
+                    let feature = convert_feature(f);
+                    feature_set_enabled.set(feature);
+                });
+
+                disabled.iter().for_each(|f| {
+                    let feature = convert_feature(f);
+                    feature_set_disabled.set(feature);
+                });
+            }
+        }
+
+        m.apply_features(feature_set_enabled, feature_set_disabled);
     }
 }
 
