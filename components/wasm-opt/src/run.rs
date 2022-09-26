@@ -84,7 +84,11 @@ impl OptimizationOptions {
         outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,
     ) -> Result<(), OptimizationError> {
-        let infile = infile.as_ref();
+        let infile: &Path = infile.as_ref();
+        let infile_sourcemap: Option<&Path> = infile_sourcemap.as_ref().map(AsRef::as_ref);
+        let outfile: &Path = outfile.as_ref();
+        let outfile_sourcemap: Option<&Path> = outfile_sourcemap.as_ref().map(AsRef::as_ref);
+
         if infile.as_os_str().is_empty() || infile == Path::new("-") {
             return Err(OptimizationError::InvalideStdinPath);
         }
@@ -98,8 +102,6 @@ impl OptimizationOptions {
         let set_dwarf =
             self.passopts.debug_info && !will_remove_debug_info(&self.passes.more_passes);
         reader.set_dwarf(set_dwarf);
-
-        let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
 
         match self.reader.file_type {
             FileType::Wasm => {
@@ -172,7 +174,7 @@ impl OptimizationOptions {
 
         if let Some(filename) = outfile_sourcemap {
             writer
-                .set_source_map_filename(filename.as_ref()).map_err(|e| {
+                .set_source_map_filename(filename).map_err(|e| {
                     OptimizationError::Write {
                         source: Box::from(e),
                     }
@@ -184,23 +186,23 @@ impl OptimizationOptions {
         }
 
         match self.writer.file_type {
-            FileType::Wasm => writer.write_binary(&mut m, outfile.as_ref()).map_err(|e| {
+            FileType::Wasm => writer.write_binary(&mut m, outfile).map_err(|e| {
                 OptimizationError::Write {
                     source: Box::from(e),
                 }
             })?,
-            FileType::Wat => writer.write_text(&mut m, outfile.as_ref()).map_err(|e| {
+            FileType::Wat => writer.write_text(&mut m, outfile).map_err(|e| {
                 OptimizationError::Write {
                     source: Box::from(e),
                 }
             })?,
             FileType::Any => match self.reader.file_type {
                 FileType::Any | FileType::Wasm => writer
-                    .write_binary(&mut m, outfile.as_ref())
+                    .write_binary(&mut m, outfile)
                     .map_err(|e| OptimizationError::Write {
                         source: Box::from(e),
                     })?,
-                FileType::Wat => writer.write_text(&mut m, outfile.as_ref()).map_err(|e| {
+                FileType::Wat => writer.write_text(&mut m, outfile).map_err(|e| {
                     OptimizationError::Write {
                         source: Box::from(e),
                     }
