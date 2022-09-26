@@ -104,24 +104,12 @@ impl OptimizationOptions {
         reader.set_dwarf(set_dwarf);
 
         match self.reader.file_type {
-            FileType::Wasm => {
-                reader
-                    .read_text(infile, &mut m)
-                    .map_err(|e| OptimizationError::Read {
-                        source: Box::from(e),
-                    })?
-            }
-            FileType::Wat => reader
-                .read_binary(infile, &mut m, infile_sourcemap)
-                .map_err(|e| OptimizationError::Read {
-                    source: Box::from(e),
-                })?,
-            FileType::Any => reader.read(infile, &mut m, infile_sourcemap).map_err(|e| {
-                OptimizationError::Read {
-                    source: Box::from(e),
-                }
-            })?,
-        };
+            FileType::Wasm => reader.read_text(infile, &mut m),
+            FileType::Wat => reader.read_binary(infile, &mut m, infile_sourcemap),
+            FileType::Any => reader.read(infile, &mut m, infile_sourcemap),
+        }.map_err(|e| OptimizationError::Read {
+            source: Box::from(e),
+        })?;
 
         if self.passopts.validate && !validate_wasm(&mut m) {
             return Err(OptimizationError::ValidateWasmInput);
