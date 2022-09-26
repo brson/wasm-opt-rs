@@ -1,13 +1,12 @@
 use std::collections::HashSet;
 use strum::IntoEnumIterator;
-use wasm_opt::*;
 use wasm_opt::base::pass_registry;
 use wasm_opt::base::InliningOptions as BaseInliningOptions;
 use wasm_opt::base::PassOptions as BasePassOptions;
 use wasm_opt::base::{
     check_inlining_options_defaults, check_pass_options_defaults, pass_registry::is_pass_hidden,
 };
-use wasm_opt::Pass;
+use wasm_opt::*;
 
 use std::error::Error;
 use std::fs::File;

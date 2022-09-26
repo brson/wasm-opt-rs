@@ -108,7 +108,8 @@ impl OptimizationOptions {
                 FileType::Wasm => reader.read_text(infile, &mut m),
                 FileType::Wat => reader.read_binary(infile, &mut m, infile_sourcemap),
                 FileType::Any => reader.read(infile, &mut m, infile_sourcemap),
-            }.map_err(|e| OptimizationError::Read {
+            }
+            .map_err(|e| OptimizationError::Read {
                 source: Box::from(e),
             })?;
         }
@@ -144,10 +145,9 @@ impl OptimizationOptions {
 
             if let Some(filename) = outfile_sourcemap {
                 writer
-                    .set_source_map_filename(filename).map_err(|e| {
-                        OptimizationError::Write {
-                            source: Box::from(e),
-                        }
+                    .set_source_map_filename(filename)
+                    .map_err(|e| OptimizationError::Write {
+                        source: Box::from(e),
                     })?;
             }
 
@@ -162,10 +162,9 @@ impl OptimizationOptions {
                     FileType::Any | FileType::Wasm => writer.write_binary(&mut m, outfile),
                     FileType::Wat => writer.write_text(&mut m, outfile),
                 },
-            }.map_err(|e| {
-                OptimizationError::Write {
-                    source: Box::from(e),
-                }
+            }
+            .map_err(|e| OptimizationError::Write {
+                source: Box::from(e),
             })?;
         }
 
