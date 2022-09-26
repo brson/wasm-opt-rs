@@ -1,6 +1,6 @@
 pub use crate::features::Feature;
 pub use crate::passes::Pass;
-pub use crate::profiles::Profile;
+use crate::profiles::Profile;
 use std::collections::{HashMap, HashSet};
 
 /// Optimization options and optimization builder.
