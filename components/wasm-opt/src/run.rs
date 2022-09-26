@@ -223,7 +223,7 @@ impl OptimizationOptions {
     }
 }
 
-fn will_remove_debug_info(passes: &Vec<Pass>) -> bool {
+fn will_remove_debug_info(passes: &[Pass]) -> bool {
     passes
         .iter()
         .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
