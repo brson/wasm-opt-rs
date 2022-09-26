@@ -315,11 +315,13 @@ pub enum Feature {
     GcNnLocals = 1 << 13,
     RelaxedSimd = 1 << 14,
     ExtendedConst = 1 << 15,
+    Strings = 1 << 16,
+    MultiMemories = 1 << 17,
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
-    All = ((1 << 16) - 1) & !(1 << 13), // All = ((1 << 16) - 1) & ~GCNNLocals,
-    AllPossible = (1 << 16) - 1,
+    All = ((1 << 18) - 1) & !(1 << 13), // All = ((1 << 18) - 1) & ~GCNNLocals,
+    AllPossible = (1 << 18) - 1,
 }
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);

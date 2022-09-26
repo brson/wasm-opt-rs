@@ -263,6 +263,8 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::GcNnLocals => BaseFeature::GcNnLocals,
         Feature::RelaxedSimd => BaseFeature::RelaxedSimd,
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
+        Feature::Strings => BaseFeature::Strings,
+        Feature::MultiMemories => BaseFeature::MultiMemories,
         Feature::All => BaseFeature::All,
         Feature::AllPossible => BaseFeature::AllPossible,
     }

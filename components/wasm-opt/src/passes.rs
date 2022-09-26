@@ -71,6 +71,12 @@ pub enum Pass {
     Gto,
     /// Globally optimize struct values.
     Gsi,
+    /// Grand unified flow analyses.
+    ///
+    /// Optimize the entire program using information about what content can actually appear in each location.
+    Gufa,
+    /// Gufa plus local optimizations in functions we modified.
+    GufaOptimizing,
     /// Apply more specific subtypes to type fields where possible.
     TypeRefining,
     /// Replace GC allocations with locals.
@@ -285,6 +291,8 @@ impl Pass {
             GlobalRefining => "global-refining",
             Gto => "gto",
             Gsi => "gsi",
+            Gufa => "gufa",
+            GufaOptimizing => "gufa-optimizing",
             TypeRefining => "type-refining",
             Heap2Local => "heap2local",
             InlineMain => "inline-main",

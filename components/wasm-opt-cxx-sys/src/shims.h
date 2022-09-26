@@ -273,6 +273,8 @@ namespace wasm_shims {
     f.push_back(FeatureSet::Feature::GCNNLocals);
     f.push_back(FeatureSet::Feature::RelaxedSIMD);
     f.push_back(FeatureSet::Feature::ExtendedConst);
+    f.push_back(FeatureSet::Feature::Strings);
+    f.push_back(FeatureSet::Feature::MultiMemories);
     f.push_back(FeatureSet::Feature::All);
     f.push_back(FeatureSet::Feature::AllPossible);
 

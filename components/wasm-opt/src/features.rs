@@ -65,6 +65,11 @@ pub enum Feature {
     ///
     /// [Specification](https://github.com/WebAssembly/relaxed-simd/tree/main/proposals/relaxed-simd).
     ExtendedConst,
+    Strings,
+    /// Multiple memories.
+    ///
+    /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
+    MultiMemories,
     /// All features, excluding [`Feature::GcNnLocals`].
     All,
     /// All features.

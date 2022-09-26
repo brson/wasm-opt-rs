@@ -146,14 +146,17 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
 
     let ir_dir = src_dir.join("ir");
     let ir_files = [
+        "drop.cpp",
         "eh-utils.cpp",
         "ExpressionManipulator.cpp",
         "ExpressionAnalyzer.cpp",
         "LocalGraph.cpp",
+        "LocalStructuralDominance.cpp",
         "lubs.cpp",
         "memory-utils.cpp",
         "module-utils.cpp",
         "names.cpp",
+        "possible-contents.cpp",
         "properties.cpp",
         "ReFinalize.cpp",
         "stack-utils.cpp",

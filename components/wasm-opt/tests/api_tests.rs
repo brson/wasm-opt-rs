@@ -33,6 +33,10 @@ fn all_passes_correct() -> anyhow::Result<()> {
         passes_via_enum.insert(item.name().to_string());
     });
 
+    let diff: Vec<_> = passes_via_base_rs.difference(&passes_via_enum).collect();
+
+    println!("diff: {:?}", diff);
+
     assert_eq!(passes_via_base_rs, passes_via_enum);
 
     Ok(())

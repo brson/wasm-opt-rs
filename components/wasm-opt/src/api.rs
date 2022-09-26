@@ -309,7 +309,7 @@ impl Default for PassOptions {
     fn default() -> PassOptions {
         PassOptions {
             validate: true,
-            validate_globally: false,
+            validate_globally: true,
             optimize_level: OptimizeLevel::default(),
             shrink_level: ShrinkLevel::default(),
             traps_never_happen: false,
