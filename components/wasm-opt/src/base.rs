@@ -297,23 +297,23 @@ pub fn get_feature_array() -> Vec<u32> {
 
 #[derive(Clone, Debug, EnumIter)]
 pub enum Feature {
-    MVP = 0,
+    Mvp = 0,
     Atomics = 1 << 0,
     MutableGlobals = 1 << 1,
     TruncSat = 1 << 2,
-    SIMD = 1 << 3,
+    Simd = 1 << 3,
     BulkMemory = 1 << 4,
     SignExt = 1 << 5,
     ExceptionHandling = 1 << 6,
     TailCall = 1 << 7,
     ReferenceTypes = 1 << 8,
     Multivalue = 1 << 9,
-    GC = 1 << 10,
+    Gc = 1 << 10,
     Memory64 = 1 << 11,
     TypedFunctionReferences = 1 << 12,
     // TODO: Remove this feature when the wasm spec stabilizes.
-    GCNNLocals = 1 << 13,
-    RelaxedSIMD = 1 << 14,
+    GcNnLocals = 1 << 13,
+    RelaxedSimd = 1 << 14,
     ExtendedConst = 1 << 15,
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
