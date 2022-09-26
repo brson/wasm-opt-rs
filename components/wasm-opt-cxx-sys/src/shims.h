@@ -348,7 +348,7 @@ namespace wasm_shims {
     //    assert(sizeof(passOptionsDefaults) == 64); // Unix
     //    assert(sizeof(passOptionsDefaults) == 56); // Windows
     //    assert(sizeof(passOptionsDefaults) == 88); // Ubuntu
-    std::cout << " -------- size of optimizationsOptions " << sizeof(passOptionsDefaults);
+    // std::cout << " -------- size of optimizationsOptions " << sizeof(passOptionsDefaults);
 
     bool isEqual = (passOptions->inner.debug == passOptionsDefaults.debug)
       && (passOptions->inner.validate == passOptionsDefaults.validate)
