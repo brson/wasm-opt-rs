@@ -174,29 +174,18 @@ impl OptimizationOptions {
         }
 
         match self.writer.file_type {
-            FileType::Wasm => writer.write_binary(&mut m, outfile).map_err(|e| {
-                OptimizationError::Write {
-                    source: Box::from(e),
-                }
-            })?,
-            FileType::Wat => writer.write_text(&mut m, outfile).map_err(|e| {
-                OptimizationError::Write {
-                    source: Box::from(e),
-                }
-            })?,
+            FileType::Wasm => writer.write_binary(&mut m, outfile),
+            FileType::Wat => writer.write_text(&mut m, outfile),
             FileType::Any => match self.reader.file_type {
-                FileType::Any | FileType::Wasm => writer
-                    .write_binary(&mut m, outfile)
-                    .map_err(|e| OptimizationError::Write {
-                        source: Box::from(e),
-                    })?,
-                FileType::Wat => writer.write_text(&mut m, outfile).map_err(|e| {
-                    OptimizationError::Write {
-                        source: Box::from(e),
-                    }
-                })?,
+                FileType::Any | FileType::Wasm => writer.write_binary(&mut m, outfile),
+                FileType::Wat => writer.write_text(&mut m, outfile),
             },
-        };
+        }.map_err(|e| {
+            OptimizationError::Write {
+                source: Box::from(e),
+            }
+        })?;
+
         Ok(())
     }
 
