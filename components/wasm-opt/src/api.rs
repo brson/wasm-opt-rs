@@ -141,11 +141,21 @@ pub struct Passes {
     pub more_passes: Vec<Pass>,
 }
 
+/// Which wasm [`Feature`]s to enable and disable.
+///
+/// Disabling [`Feature::Mvp`] means no features are disabled.
 #[derive(Clone, Debug)]
 pub enum Features {
+    /// Enables [`Feature::Mvp`].
+    /// Disables [`Feature::Mvp`].
     Default,
+    /// Enables [`Feature::Mvp`].
+    /// Disables [`Feature::All`].
     MvpOnly,
+    /// Enables [`Feature::All`].
+    /// Disables [Feature::Mvp`].
     All,
+    /// Specify which features to enable and disable.
     Custom {
         enabled: HashSet<Feature>,
         disabled: HashSet<Feature>,
