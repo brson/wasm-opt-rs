@@ -316,7 +316,9 @@ namespace wasm_shims {
   bool passRemovesDebugInfo(const std::string& name) {
     return wasm::PassRunner::passRemovesDebugInfo(std::string(name));
   }
+}
 
+namespace wasm_shims {
   bool checkInliningOptionsDefaults(std::unique_ptr<InliningOptions> inlining) {
     auto inliningOptionsDefaults = wasm_shims::newInliningOptions();
 
