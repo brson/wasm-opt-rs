@@ -37,9 +37,7 @@ impl ModuleReader {
         this.setDwarf(dwarf);
     }
 
-    // FIXME would rather take &self here but the C++ method is not const-correct
     pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
-        // FIXME need to support non-utf8 paths. Does this work on windows?
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
@@ -56,9 +54,8 @@ impl ModuleReader {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let source_map_filename = source_map_filename
-            .map(|p| p.to_str().expect("utf8"))
-            .unwrap_or("");
+        let source_map_filename = source_map_filename.unwrap_or(&Path::new(""));
+        let source_map_filename = convert_path_to_u8(source_map_filename)?;
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
@@ -74,9 +71,8 @@ impl ModuleReader {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let source_map_filename = source_map_filename
-            .map(|p| p.to_str().expect("utf8"))
-            .unwrap_or("");
+        let source_map_filename = source_map_filename.unwrap_or(&Path::new(""));
+        let source_map_filename = convert_path_to_u8(source_map_filename)?;
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
@@ -148,12 +144,7 @@ pub mod pass_registry {
         name_vec
     }
 
-    /// The `pass.cpp` method does assertion before searching:
-    /// ```ignore
-    /// assert(passInfos.find(name) != passInfos.end());
-    /// ```
-    /// The assertion will fail and the method call will be aborted if
-    /// received invalid `name`
+    /// Aborts if `name` is invalid.
     pub fn get_pass_description(name: &str) -> String {
         let_cxx_string!(name = name);
 
@@ -163,12 +154,7 @@ pub mod pass_registry {
         description.to_str().expect("utf8").to_string()
     }
 
-    /// The `pass.cpp` method does assertion before searching:
-    /// ```ignore
-    /// assert(passInfos.find(name) != passInfos.end());
-    /// ```
-    /// The assertion will fail and the method call will be aborted if
-    /// received invalid `name`
+    /// Aborts if `name` is invalid.
     pub fn is_pass_hidden(name: &str) -> bool {
         let_cxx_string!(name = name);
 
@@ -382,6 +368,7 @@ pub fn check_pass_options_defaults(pass_options: PassOptions) -> bool {
     wasm::checkPassOptionsDefaults(pass_options.0)
 }
 
+// FIXME binaryen unicode path handling is broken on windows
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();
