@@ -255,9 +255,7 @@ namespace wasm_shims {
   std::unique_ptr<WasmFeatureSet> newFeatureSet() {
     return std::make_unique<WasmFeatureSet>();
   }
-}
 
-namespace wasm_shims {  
   std::unique_ptr<std::vector<uint32_t>> getFeatureArray() {
     std::vector<uint32_t> f;
 
@@ -283,9 +281,7 @@ namespace wasm_shims {
 
     return std::make_unique<std::vector<uint32_t>>(f);
   }
-}
 
-namespace wasm_shims {
   void applyFeatures(wasm::Module& wasm, std::unique_ptr<WasmFeatureSet> enabledFeatures, std::unique_ptr<WasmFeatureSet> disabledFeatures) {
     wasm.features.enable(enabledFeatures->inner);
     wasm.features.disable(disabledFeatures->inner);
