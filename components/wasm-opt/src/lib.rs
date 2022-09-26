@@ -108,43 +108,46 @@
 //
 // - reader/writer defaults - write default binary
 
-/// The "base" API.
-///
-/// This API hides the `cxx` types,
-/// but otherwise sticks closely to the Binaryen API.
-///
-/// This is hidden because we don't need to commit to these low-level APIs,
-/// but want to keep testing them from the `tests` folder.
-#[doc(hidden)]
-pub mod base;
-
-/// The entire API surface is exported here.
-///
-/// Some public methods are defined in other non-pub modules.
+// Most of the API surface is exported here.
+//
+// Many public methods are defined in other non-pub modules.
 pub use api::*;
 
-/// Types and constructors used in the API.
-mod api;
-
-/// A builder interface for `OptimizationOptions`.
-mod builder;
-
-/// The list of optimization passes.
-mod passes;
-
-/// Definitions of -O1, -O2, etc.
-mod profiles;
-
-/// The list of wasm features.
-mod features;
-
-/// The `run` method that re-implements the logic from `wasm-opt.cpp`
-/// on top of `OptimizationOptions`.
-mod run;
+// Returned by the `run` method.
+pub use run::OptimizationError;
 
 // Easy integration with tools that already use `wasm-opt` via CLI.
 pub mod integration;
 
-/// A thin wrapper around `std::process::Command` that provides the unstable
-/// `get_args` method.
+// The "base" API.
+//
+// This API hides the `cxx` types,
+// but otherwise sticks closely to the Binaryen API.
+//
+// This is hidden because we don't need to commit to these low-level APIs,
+// but want to keep testing them from the `tests` folder.
+#[doc(hidden)]
+pub mod base;
+
+// Types and constructors used in the API.
+mod api;
+
+// A builder interface for `OptimizationOptions`.
+mod builder;
+
+// The list of optimization passes.
+mod passes;
+
+// Definitions of -O1, -O2, etc.
+mod profiles;
+
+// The list of wasm features.
+mod features;
+
+// The `run` method that re-implements the logic from `wasm-opt.cpp`
+// on top of `OptimizationOptions`.
+mod run;
+
+// A thin wrapper around `std::process::Command` that provides the unstable
+// `get_args` method.
 mod fake_command;

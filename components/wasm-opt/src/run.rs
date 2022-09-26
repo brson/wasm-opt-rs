@@ -24,7 +24,7 @@ pub enum OptimizationError {
         source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
     #[error("Refusing to read from stdin")]
-    InvalideStdinPath,
+    InvalidStdinPath,
 }
 
 /// Execution.
@@ -90,7 +90,7 @@ impl OptimizationOptions {
         let outfile_sourcemap: Option<&Path> = outfile_sourcemap.as_ref().map(AsRef::as_ref);
 
         if infile.as_os_str().is_empty() || infile == Path::new("-") {
-            return Err(OptimizationError::InvalideStdinPath);
+            return Err(OptimizationError::InvalidStdinPath);
         }
 
         let mut m = Module::new();
