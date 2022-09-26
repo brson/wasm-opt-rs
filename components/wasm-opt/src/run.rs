@@ -45,6 +45,10 @@ impl OptimizationOptions {
     /// If [`PassOptions::validate`] is true, it returns an error
     /// if the input module fails to validate, or if the optimized
     /// module fails to validate.
+    ///
+    /// The Rust API does not support reading a module on stdin, as the CLI
+    /// does. If `infile` is empty or "-",
+    /// [`OptimizationError::InvalidStdinPath`] is returned.
     pub fn run(
         &self,
         infile: impl AsRef<Path>,
@@ -69,6 +73,10 @@ impl OptimizationOptions {
     /// If [`PassOptions::validate`] is true, it returns an error
     /// if the input module fails to validate, or if the optimized
     /// module fails to validate.
+    ///
+    /// The Rust API does not support reading a module on stdin, as the CLI
+    /// does. If `infile` is empty or "-",
+    /// [`OptimizationError::InvalidStdinPath`] is returned.
     pub fn run_with_sourcemaps(
         &self,
         infile: impl AsRef<Path>,
@@ -77,7 +85,7 @@ impl OptimizationOptions {
         outfile_sourcemap: Option<impl AsRef<Path>>,
     ) -> Result<(), OptimizationError> {
         let infile = infile.as_ref();
-        if infile.as_os_str().is_empty() || infile.as_os_str().eq(std::ffi::OsStr::new("-")) {
+        if infile.as_os_str().is_empty() || infile == Path::new("-") {
             return Err(OptimizationError::InvalideStdinPath);
         }
 
