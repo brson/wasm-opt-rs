@@ -172,7 +172,11 @@ impl OptimizationOptions {
 
         if let Some(filename) = outfile_sourcemap {
             writer
-                .set_source_map_filename(filename.as_ref().to_str().expect("source map filename"));
+                .set_source_map_filename(filename.as_ref()).map_err(|e| {
+                    OptimizationError::Write {
+                        source: Box::from(e),
+                    }
+                })?;
         }
 
         if let Some(url) = &self.writer.source_map_url {

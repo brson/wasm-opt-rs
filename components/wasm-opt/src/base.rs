@@ -96,11 +96,14 @@ impl ModuleWriter {
         this.setDebugInfo(debug);
     }
 
-    pub fn set_source_map_filename(&mut self, source_map_filename: &str) {
+    pub fn set_source_map_filename(&mut self, source_map_filename: &Path) -> Result<(), cxx::Exception> {
+        let source_map_filename = convert_path_to_u8(source_map_filename)?;
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
         this.setSourceMapFilename(&source_map_filename);
+
+        Ok(())
     }
 
     pub fn set_source_map_url(&mut self, source_map_url: &str) {
