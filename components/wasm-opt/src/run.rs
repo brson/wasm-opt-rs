@@ -97,71 +97,77 @@ impl OptimizationOptions {
 
         self.apply_features(&mut m);
 
-        let mut reader = ModuleReader::new();
+        {
+            let mut reader = ModuleReader::new();
 
-        let set_dwarf =
-            self.passopts.debug_info && !will_remove_debug_info(&self.passes.more_passes);
-        reader.set_dwarf(set_dwarf);
+            let set_dwarf =
+                self.passopts.debug_info && !will_remove_debug_info(&self.passes.more_passes);
+            reader.set_dwarf(set_dwarf);
 
-        match self.reader.file_type {
-            FileType::Wasm => reader.read_text(infile, &mut m),
-            FileType::Wat => reader.read_binary(infile, &mut m, infile_sourcemap),
-            FileType::Any => reader.read(infile, &mut m, infile_sourcemap),
-        }.map_err(|e| OptimizationError::Read {
-            source: Box::from(e),
-        })?;
-
-        if self.passopts.validate && !validate_wasm(&mut m) {
-            return Err(OptimizationError::ValidateWasmInput);
-        }
-
-        let passopts = self.translate_pass_options();
-        let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
-
-        if self.passes.add_default_passes {
-            pass_runner.add_default_optimization_passes();
-        }
-
-        self.passes
-            .more_passes
-            .iter()
-            .for_each(|pass| pass_runner.add(pass.name()));
-
-        pass_runner.run();
-        drop(pass_runner);
-
-        if self.passopts.validate && !validate_wasm(&mut m) {
-            return Err(OptimizationError::ValidateWasmOutput);
-        }
-
-        let mut writer = ModuleWriter::new();
-        writer.set_debug_info(self.passopts.debug_info);
-
-        if let Some(filename) = outfile_sourcemap {
-            writer
-                .set_source_map_filename(filename).map_err(|e| {
-                    OptimizationError::Write {
-                        source: Box::from(e),
-                    }
-                })?;
-        }
-
-        if let Some(url) = &self.writer.source_map_url {
-            writer.set_source_map_url(url);
-        }
-
-        match self.writer.file_type {
-            FileType::Wasm => writer.write_binary(&mut m, outfile),
-            FileType::Wat => writer.write_text(&mut m, outfile),
-            FileType::Any => match self.reader.file_type {
-                FileType::Any | FileType::Wasm => writer.write_binary(&mut m, outfile),
-                FileType::Wat => writer.write_text(&mut m, outfile),
-            },
-        }.map_err(|e| {
-            OptimizationError::Write {
+            match self.reader.file_type {
+                FileType::Wasm => reader.read_text(infile, &mut m),
+                FileType::Wat => reader.read_binary(infile, &mut m, infile_sourcemap),
+                FileType::Any => reader.read(infile, &mut m, infile_sourcemap),
+            }.map_err(|e| OptimizationError::Read {
                 source: Box::from(e),
+            })?;
+        }
+
+        {
+            if self.passopts.validate && !validate_wasm(&mut m) {
+                return Err(OptimizationError::ValidateWasmInput);
             }
-        })?;
+
+            let passopts = self.translate_pass_options();
+            let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
+
+            if self.passes.add_default_passes {
+                pass_runner.add_default_optimization_passes();
+            }
+
+            self.passes
+                .more_passes
+                .iter()
+                .for_each(|pass| pass_runner.add(pass.name()));
+
+            pass_runner.run();
+            drop(pass_runner);
+
+            if self.passopts.validate && !validate_wasm(&mut m) {
+                return Err(OptimizationError::ValidateWasmOutput);
+            }
+        }
+
+        {
+            let mut writer = ModuleWriter::new();
+            writer.set_debug_info(self.passopts.debug_info);
+
+            if let Some(filename) = outfile_sourcemap {
+                writer
+                    .set_source_map_filename(filename).map_err(|e| {
+                        OptimizationError::Write {
+                            source: Box::from(e),
+                        }
+                    })?;
+            }
+
+            if let Some(url) = &self.writer.source_map_url {
+                writer.set_source_map_url(url);
+            }
+
+            match self.writer.file_type {
+                FileType::Wasm => writer.write_binary(&mut m, outfile),
+                FileType::Wat => writer.write_text(&mut m, outfile),
+                FileType::Any => match self.reader.file_type {
+                    FileType::Any | FileType::Wasm => writer.write_binary(&mut m, outfile),
+                    FileType::Wat => writer.write_text(&mut m, outfile),
+                },
+            }.map_err(|e| {
+                OptimizationError::Write {
+                    source: Box::from(e),
+                }
+            })?;
+        }
 
         Ok(())
     }
