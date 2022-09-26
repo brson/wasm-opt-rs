@@ -142,6 +142,9 @@ mod features;
 /// on top of `OptimizationOptions`.
 mod run;
 
+// Easy integration with tools that already use `wasm-opt` via CLI.
 pub mod integration;
 
+/// A thin wrapper around `std::process::Command` that provides the unstable
+/// `get_args` method.
 mod fake_command;
