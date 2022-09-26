@@ -124,7 +124,7 @@ pub mod base;
 pub use api::*;
 
 /// Types and constructors used in the API.
-pub mod api;
+mod api;
 
 /// A builder interface for `OptimizationOptions`.
 mod builder;

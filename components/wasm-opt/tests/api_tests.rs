@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use strum::IntoEnumIterator;
-use wasm_opt::api::*;
+use wasm_opt::*;
 use wasm_opt::base::pass_registry;
 use wasm_opt::base::InliningOptions as BaseInliningOptions;
 use wasm_opt::base::PassOptions as BasePassOptions;
