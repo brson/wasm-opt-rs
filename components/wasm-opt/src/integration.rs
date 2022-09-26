@@ -154,7 +154,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* from optimization-options.h */
 
             "-O" => {
-                Profile::default().apply_to_opts(&mut opts);
+                Profile::optimize_for_size().apply_to_opts(&mut opts);
             }
             "-O0" => {
                 Profile::opt_level_0().apply_to_opts(&mut opts);

@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 /// Call [`OptimizationOptions::run`] to perform the optimizations.
 ///
 /// [builder-pattern]: https://rust-unofficial.github.io/patterns/patterns/creational/builder.html
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct OptimizationOptions {
     /// Options for reading the unoptimized wasm module.
     pub reader: ReaderOptions,
@@ -164,6 +164,17 @@ pub enum Features {
 
 /// Constructors.
 impl OptimizationOptions {
+    pub(crate) fn new_empty() -> Self {
+        OptimizationOptions {
+            reader: ReaderOptions::default(),
+            writer: WriterOptions::default(),
+            inlining: InliningOptions::default(),
+            passopts: PassOptions::default(),
+            passes: Passes::default(),
+            features: Features::default(),
+        }
+    }
+
     /// Optimize for size.
     ///
     /// This corresponds to the `-Os` argument to `wasm-opt`,
@@ -199,7 +210,8 @@ impl OptimizationOptions {
     ///
     /// It adds no default passes.
     ///
-    /// This corresponds to the `-O0` argument to `wasm-opt`.
+    /// This corresponds to the `-O0` argument to `wasm-opt`,
+    /// and also to calling `wasm-opt` with no `-O*` optional at all.
     pub fn new_opt_level_0() -> Self {
         Profile::opt_level_0().into_opts()
     }
