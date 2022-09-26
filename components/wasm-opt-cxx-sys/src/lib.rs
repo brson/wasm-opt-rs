@@ -34,13 +34,11 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        fn validateWasm(wasm: Pin<&mut Module>) -> bool;
-    }
-
-    unsafe extern "C++" {
         type Module;
 
         fn newModule() -> UniquePtr<Module>;
+
+        fn validateWasm(wasm: Pin<&mut Module>) -> bool;
     }
 
     unsafe extern "C++" {

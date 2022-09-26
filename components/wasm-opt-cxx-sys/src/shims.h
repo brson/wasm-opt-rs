@@ -31,19 +31,16 @@ namespace wasm_shims {
 }
 
 namespace wasm_shims {
-  bool validateWasm(wasm::Module& wasm) {
-    wasm::WasmValidator v;
-
-    return v.validate(wasm);
-  }
-  
-}
-
-namespace wasm_shims {
   typedef wasm::Module Module;
 
   std::unique_ptr<Module> newModule() {
     return std::make_unique<Module>();
+  }
+
+  bool validateWasm(wasm::Module& wasm) {
+    wasm::WasmValidator v;
+
+    return v.validate(wasm);
   }
 }
 
