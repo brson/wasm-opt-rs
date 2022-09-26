@@ -7,22 +7,29 @@ use crate::base::{
 use std::path::Path;
 use thiserror::Error;
 
+/// An error resulting from the [`OptimizationOptions::run`] method.
 #[derive(Error, Debug)]
 pub enum OptimizationError {
+    /// The input module did not validate.
     #[error("Failed to validate wasm: error validating input")]
     ValidateWasmInput,
+    /// The output module did not validate.
     #[error("Failed to validate wasm: error after opts")]
     ValidateWasmOutput,
+    /// An error occurred while reading the input module.
     #[error("Failed to read module")]
     Read {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
+    /// An error occurred while writing the output module.
     #[error("Failed to write module")]
     Write {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
+    /// The input file path represents stdin to Binaryen,
+    /// but the API does not support reading stdin.
     #[error("Refusing to read from stdin")]
     InvalidStdinPath,
 }

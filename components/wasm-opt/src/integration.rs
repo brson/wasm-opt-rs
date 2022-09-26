@@ -1,4 +1,13 @@
 //! Easy integration with tools that already use `wasm-opt` via CLI.
+//!
+//! The [`run_from_command_args`] function interprets the arguments to
+//! a [`Command`], typically used for executing a subprocess, to construct
+//! an [`OptimizationOptions`], then runs the optimizer.
+//!
+//! Note that integrators must used the provided `Command` type, _not_
+//! `std::process::Command`. The provided type is a thin wrapper around the
+//! standard type that is needed for backwards compatibility with older versions
+//! of Rust.
 
 use crate::api::{FileType, OptimizationOptions, OptimizeLevel, ShrinkLevel};
 use crate::profiles::Profile;
@@ -20,11 +29,11 @@ pub use crate::fake_command::Command;
 /// the command-line tool or the integrated API from a single `Command` builder.
 /// New programs that just need to optimize wasm should use `OptimizationOptions` directly.
 ///
-/// This function is provided on a best-effort bases to support programs
+/// This function is provided on a best-effort basis to support programs
 /// trying to integrate with the crate.
 /// In general, it should support any command line options that are also supported
 /// by the `OptimizationOptions` API,
-/// but it may not parse &mdash; and in some cases may not even interpret &mdash;
+/// but it may not parse &mdash; and in some cases may not interpret &mdash;
 /// those commands in exactly the same way.
 /// It is meant to make it _possible_ to produce a single command-line that works
 /// with both the CLI and the API,
@@ -57,24 +66,32 @@ pub fn run_from_command_args(command: Command) -> Result<(), Error> {
     Ok(())
 }
 
+/// An error resulting from [`run_from_command_args`].
 #[derive(Error, Debug)]
 pub enum Error {
+    /// No input file specified.
     #[error("An input file is required")]
     InputFileRequired,
+    /// No output file specified.
     #[error("The `-o` option to `wasm-opt` is required")]
     OutputFileRequired,
+    /// Expected another argument.
     #[error("The `wasm-opt` argument list ended while expecting another argument")]
     UnexpectedEndOfArgs,
+    /// Expected to parse unicode.
     #[error("Argument must be unicode: {arg:?}")]
     NeedUnicode { arg: OsString },
+    /// Expected to parse a number.
     #[error("Argument must be a number: {arg:?}")]
     NeedNumber {
         arg: OsString,
         #[source]
         source: ParseIntError,
     },
+    /// Unsupported or unrecognized command-line option.
     #[error("Unsupported `wasm-opt` command-line arguments: {args:?}")]
     Unsupported { args: Vec<OsString> },
+    /// An error occurred while executing [`OptimizationOptions::run`].
     #[error("Error while optimization wasm modules")]
     ExecutionError(
         #[from]
