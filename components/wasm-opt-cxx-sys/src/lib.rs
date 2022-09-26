@@ -31,21 +31,19 @@ pub mod colors {
 pub mod wasm {
     unsafe extern "C++" {
         include!("shims.h");
+    }
 
+    unsafe extern "C++" {
         fn validateWasm(wasm: Pin<&mut Module>) -> bool;
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type Module;
 
         fn newModule() -> UniquePtr<Module>;
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type ModuleReader;
 
         fn newModuleReader() -> UniquePtr<ModuleReader>;
@@ -76,8 +74,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type ModuleWriter;
 
         fn newModuleWriter() -> UniquePtr<ModuleWriter>;
@@ -102,8 +98,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
 
         fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
@@ -112,8 +106,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type InliningOptions;
 
         fn newInliningOptions() -> UniquePtr<InliningOptions>;
@@ -130,8 +122,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type PassOptions;
 
         fn newPassOptions() -> UniquePtr<PassOptions>;
@@ -160,8 +150,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type WasmFeatureSet;
 
         fn newFeatureSet() -> UniquePtr<WasmFeatureSet>;
@@ -186,8 +174,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         type PassRunner<'wasm>;
 
         fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
@@ -207,8 +193,6 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        include!("shims.h");
-
         fn checkInliningOptionsDefaults(inlining_options: UniquePtr<InliningOptions>) -> bool;
 
         fn checkPassOptionsDefaults(pass_options: UniquePtr<PassOptions>) -> bool;
