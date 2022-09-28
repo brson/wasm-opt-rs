@@ -9,11 +9,14 @@ use wasm_opt::base::{
 use wasm_opt::*;
 
 use std::error::Error;
+use std::ffi::OsString;
 use std::fs::File;
 use std::io::BufWriter;
 use std::io::Write;
+use std::path::PathBuf;
 use tempfile::Builder;
 
+static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
 static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
 
 #[test]
@@ -112,6 +115,57 @@ fn optimization_read_module_error_works() -> anyhow::Result<()> {
     let res = opts.run(inpath, outpath);
 
     assert!(res.err().unwrap().source().is_some());
+
+    Ok(())
+}
+
+#[test]
+fn pass_arg_unsupported_works() -> anyhow::Result<()> {
+    use wasm_opt::integration::Command;
+
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let inpath = temp_dir.path().join("infile.wasm");
+
+    let infile = File::create(&inpath)?;
+
+    let mut buf_writer = BufWriter::new(&infile);
+    buf_writer.write_all(WASM_FILE)?;
+
+    let outfile = temp_dir.path().join("outfile.wasm");
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = PathBuf::from(manifest_dir);
+    let workspace = manifest_dir.join("../..");
+    let rust_wasm_opt_dir = workspace.join("target/release/wasm-opt");
+
+    let mut cmd = Command::new(rust_wasm_opt_dir);
+    cmd.arg(&inpath);
+    cmd.args(["--output", outfile.to_str().expect("PathBuf")]);
+
+    cmd.arg("-p");
+    cmd.arg("--whatever");
+    cmd.arg("--no-validation");
+
+    let res = integration::run_from_command_args(cmd);
+
+    assert!(res.is_err());
+
+    if let Some(err) = res.err() {
+        match err {
+            integration::Error::Unsupported { args } => {
+                if args.contains(&OsString::from("--no-validation")) {
+                    panic!();
+                }
+
+                if !(args.contains(&OsString::from("-p"))
+                    && args.contains(&OsString::from("--whatever")))
+                {
+                    panic!();
+                }
+            }
+            _ => panic!(),
+        }
+    }
 
     Ok(())
 }
