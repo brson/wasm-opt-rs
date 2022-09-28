@@ -10,7 +10,7 @@ use wasm_opt::*;
 
 use std::error::Error;
 use std::ffi::OsString;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufWriter;
 use std::io::Write;
 use std::path::PathBuf;
@@ -18,6 +18,7 @@ use tempfile::Builder;
 
 static WASM_FILE: &[u8] = include_bytes!("hello_world.wasm");
 static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
+static MULTISIG_WASM: &[u8] = include_bytes!("ink_example_multisig.wasm");
 
 #[test]
 fn all_passes_correct() -> anyhow::Result<()> {
@@ -115,6 +116,43 @@ fn optimization_read_module_error_works() -> anyhow::Result<()> {
     let res = opts.run(inpath, outpath);
 
     assert!(res.err().unwrap().source().is_some());
+
+    Ok(())
+}
+
+#[test]
+fn pass_arg_works() -> anyhow::Result<()> {
+    use wasm_opt::integration::Command;
+
+    let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
+    let inpath = temp_dir.path().join("infile.wasm");
+
+    let infile = File::create(&inpath)?;
+
+    let mut buf_writer = BufWriter::new(&infile);
+    buf_writer.write_all(MULTISIG_WASM)?;
+
+    let outfile = temp_dir.path().join("outfile.wasm");
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = PathBuf::from(manifest_dir);
+    let workspace = manifest_dir.join("../..");
+    let rust_wasm_opt_dir = workspace.join("target/release/wasm-opt");
+
+    let mut cmd = Command::new(rust_wasm_opt_dir);
+    cmd.arg(&inpath);
+    cmd.args(["--output", outfile.to_str().expect("PathBuf")]);
+
+    cmd.arg("--extract-function");
+    cmd.arg("--pass-arg");
+    cmd.arg("extract-function@rust_begin_unwind");
+
+    integration::run_from_command_args(cmd)?;
+
+    let infile_reader = fs::read(inpath)?;
+    let outfile_reader = fs::read(outfile)?;
+
+    assert!(infile_reader.len() >= outfile_reader.len());
 
     Ok(())
 }

@@ -9,7 +9,7 @@
 //! standard type that is needed for backwards compatibility with older versions
 //! of Rust.
 
-use crate::api::{FileType, OptimizationOptions, OptimizeLevel, ShrinkLevel};
+use crate::api::{FileType, OptimizationOptions, OptimizeLevel, Pass, ShrinkLevel};
 use crate::profiles::Profile;
 use crate::run::OptimizationError;
 use std::ffi::{OsStr, OsString};
@@ -17,6 +17,7 @@ use std::iter::Iterator;
 use std::num::ParseIntError;
 use std::path::PathBuf;
 use std::result::Result;
+use strum::IntoEnumIterator;
 use thiserror::Error;
 
 pub use crate::fake_command::Command;
@@ -257,16 +258,24 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* fallthrough */
 
             _ => {
-                if arg.starts_with("-") && arg.len() > 1 {
-                    unsupported.push(OsString::from(arg));
-                } else {
-                    parse_infile_path(OsStr::new(arg), &mut input_file, &mut unsupported);
-                }
-                
-                // todo parse pass names
                 // todo parse pass names w/ pass args (--pass-name=key@value). I think this is something binaryen supports.
                 // todo parse enable/disable feature names
-                
+
+                let mut is_pass = false;
+                Pass::iter().for_each(|item| {
+                    if arg.contains(&item.name().to_string()) {
+                        opts.add_pass(item);
+                        is_pass = true;
+                    }
+                });
+
+                if !is_pass {
+                    if arg.starts_with("-") && arg.len() > 1 {
+                        unsupported.push(OsString::from(arg));
+                    } else {
+                        parse_infile_path(OsStr::new(arg), &mut input_file, &mut unsupported);
+                    }
+                }
             }
         }
     }

@@ -702,8 +702,8 @@ fn wasm_to_wasm_pass_arg() -> Result<()> {
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
 
-    let args = vec!["-Os", "--pass-arg", "asyncify-removelist@main", "--pass-arg", "asyncify-removelist@m*n"];
-
+    let args = vec!["--extract-function", "--pass-arg", "extract-function@rust_begin_unwind"];
+    
     run_test(TestArgs {
         infile,
         infile_sourcemap,
