@@ -385,7 +385,6 @@ fn is_pass_hidden_works() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore]
 fn read_file_not_exists() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm-opt").tempdir()?;
     let path = temp_dir.path().join("not-a-file.wasm");
@@ -400,7 +399,6 @@ fn read_file_not_exists() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore]
 fn write_file_path_not_exists() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm-opt").tempdir()?;
     let path = temp_dir.path().join("hello_world.wat");
