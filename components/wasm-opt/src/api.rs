@@ -25,6 +25,8 @@ pub struct OptimizationOptions {
     pub passes: Passes,
     /// The set of wasm-features.
     pub features: Features,
+    /// Run passes to convergence, continuing while binary size decreases
+    pub converge: bool,
 }
 
 /// Options for reading the unoptimized wasm module.
@@ -172,6 +174,7 @@ impl OptimizationOptions {
             passopts: PassOptions::default(),
             passes: Passes::default(),
             features: Features::default(),
+            converge: false,
         }
     }
 

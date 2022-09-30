@@ -141,6 +141,9 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             "--emit-text" | "-S" => {
                 opts.writer_file_type(FileType::Wat);
             }
+            "--converge" | "-c" => {
+                opts.set_converge();
+            }
             "--input-source-map" | "-ism" => {
                 parse_path_into(&mut args, &mut input_sourcemap, &mut unsupported)?;
             }

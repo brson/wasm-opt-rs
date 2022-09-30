@@ -14,6 +14,11 @@ impl OptimizationOptions {
         self
     }
 
+    pub fn set_converge(&mut self) -> &mut Self {
+        self.converge = true;
+        self
+    }
+
     pub fn writer_source_map_url(&mut self, value: &str) -> &mut Self {
         self.writer.source_map_url = Some(value.to_string());
         self
