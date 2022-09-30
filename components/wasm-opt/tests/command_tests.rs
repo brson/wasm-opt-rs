@@ -29,7 +29,8 @@ fn pass_arg_works() -> anyhow::Result<()> {
 
     let mut cmd = Command::new(rust_wasm_opt_dir);
     cmd.arg(&inpath);
-    cmd.args(["--output", outfile.to_str().expect("PathBuf")]);
+    cmd.arg("--output");
+    cmd.arg(outfile.to_str().expect("PathBuf"));
 
     cmd.arg("--extract-function");
     cmd.arg("--pass-arg");
@@ -64,7 +65,8 @@ fn pass_arg_unsupported_works() -> anyhow::Result<()> {
 
     let mut cmd = Command::new(rust_wasm_opt_dir);
     cmd.arg(&inpath);
-    cmd.args(["--output", outfile.to_str().expect("PathBuf")]);
+    cmd.arg("--output");
+    cmd.arg(outfile.to_str().expect("PathBuf"));
 
     cmd.arg("-p");
     cmd.arg("--whatever");
