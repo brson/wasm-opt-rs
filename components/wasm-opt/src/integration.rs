@@ -62,6 +62,7 @@ pub fn run_from_command_args(command: Command) -> Result<(), Error> {
         parsed.input_sourcemap,
         parsed.output_file,
         parsed.output_sourcemap,
+        parsed.sourcemap_url,
     )?;
 
     Ok(())
@@ -107,6 +108,7 @@ struct ParsedCliArgs {
     input_sourcemap: Option<PathBuf>,
     output_file: PathBuf,
     output_sourcemap: Option<PathBuf>,
+    sourcemap_url: Option<String>,
 }
 
 #[rustfmt::skip]
@@ -119,6 +121,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
     let mut input_sourcemap: Option<PathBuf> = None;
     let mut output_file: Option<PathBuf> = None;
     let mut output_sourcemap: Option<PathBuf> = None;
+    let mut sourcemap_url: Option<String> = None;
 
     let mut unsupported: Vec<OsString> = vec![];
 
@@ -151,8 +154,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 parse_path_into(&mut args, &mut output_sourcemap, &mut unsupported)?;
             }
             "--output-source-map-url" | "-osu" => {
-                let url = parse_unicode(&mut args)?;
-                opts.writer_source_map_url(&url);
+                sourcemap_url = Some(parse_unicode(&mut args)?);
             }
 
             /* from optimization-options.h */
@@ -306,6 +308,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
         input_sourcemap,
         output_file,
         output_sourcemap,
+        sourcemap_url,
     })
 }
 

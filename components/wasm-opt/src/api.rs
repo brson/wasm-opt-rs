@@ -55,7 +55,6 @@ pub struct WriterOptions {
     /// If [`ReaderOptions::file_type`] is [`FileType::Wat`],
     /// write a wat file, otherwise write a wasm file.
     pub file_type: FileType,
-    pub source_map_url: Option<String>,
 }
 
 /// Module format used by [`ReaderOptions`] and [`WriterOptions`].
@@ -289,7 +288,6 @@ impl Default for WriterOptions {
     fn default() -> WriterOptions {
         WriterOptions {
             file_type: FileType::Wasm,
-            source_map_url: None,
         }
     }
 }

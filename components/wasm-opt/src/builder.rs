@@ -19,11 +19,6 @@ impl OptimizationOptions {
         self
     }
 
-    pub fn writer_source_map_url(&mut self, value: &str) -> &mut Self {
-        self.writer.source_map_url = Some(value.to_string());
-        self
-    }
-
     pub fn always_inline_max_size(&mut self, value: u32) -> &mut Self {
         self.inlining.always_inline_max_size = value;
         self

@@ -62,7 +62,7 @@ impl OptimizationOptions {
         infile: impl AsRef<Path>,
         outfile: impl AsRef<Path>,
     ) -> Result<(), OptimizationError> {
-        self.run_with_sourcemaps(infile, None::<&str>, outfile, None::<&str>)
+        self.run_with_sourcemaps(infile, None::<&str>, outfile, None::<&str>, None::<&str>)
     }
 
     /// Run the Binaryen wasm optimizer.
@@ -91,11 +91,13 @@ impl OptimizationOptions {
         infile_sourcemap: Option<impl AsRef<Path>>,
         outfile: impl AsRef<Path>,
         outfile_sourcemap: Option<impl AsRef<Path>>,
+        sourcemap_url: Option<impl AsRef<str>>,
     ) -> Result<(), OptimizationError> {
         let infile: &Path = infile.as_ref();
         let infile_sourcemap: Option<&Path> = infile_sourcemap.as_ref().map(AsRef::as_ref);
         let outfile: &Path = outfile.as_ref();
         let outfile_sourcemap: Option<&Path> = outfile_sourcemap.as_ref().map(AsRef::as_ref);
+        let sourcemap_url: Option<&str> = sourcemap_url.as_ref().map(AsRef::as_ref);
 
         if infile.as_os_str().is_empty() || infile == Path::new("-") {
             return Err(OptimizationError::InvalidStdinPath);
@@ -152,7 +154,7 @@ impl OptimizationOptions {
                     })?;
             }
 
-            if let Some(url) = &self.writer.source_map_url {
+            if let Some(url) = sourcemap_url {
                 writer.set_source_map_url(url);
             }
 
