@@ -129,26 +129,10 @@ impl OptimizationOptions {
             self.create_and_run_pass_runner(&mut m);
 
             if self.converge {
-                let mut current_size;
-                let mut last_size =
-                    self.get_file_size(&mut m)
-                        .map_err(|e| OptimizationError::Write {
-                            source: Box::from(e),
-                        })?;
-
-                loop {
-                    current_size =
-                        self.get_file_size(&mut m)
-                            .map_err(|e| OptimizationError::Write {
-                                source: Box::from(e),
-                            })?;
-
-                    if current_size >= last_size {
-                        break;
-                    }
-
-                    last_size = current_size;
-                }
+                self.keep_running_pass_runner(&mut m)
+                    .map_err(|e| OptimizationError::Write {
+                        source: Box::from(e),
+                    })?;
             }
 
             if self.passopts.validate && !validate_wasm(&mut m) {
@@ -204,6 +188,25 @@ impl OptimizationOptions {
             .for_each(|pass| pass_runner.add(pass.name()));
 
         pass_runner.run();
+    }
+
+    fn keep_running_pass_runner(&self, m: &mut Module) -> anyhow::Result<()> {
+        let mut m = &mut *m;
+        let mut last_size = self.get_file_size(&mut m)?;
+        let mut current_size;
+
+        loop {
+            let mut m = &mut *m;
+            current_size = self.get_file_size(&mut m)?;
+
+            if current_size >= last_size {
+                break;
+            }
+
+            last_size = current_size;
+        }
+
+        Ok(())
     }
 
     fn get_file_size(&self, m: &mut Module) -> anyhow::Result<usize> {
