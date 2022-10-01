@@ -56,6 +56,21 @@ These are the earliest C++ compiler versions known to work:
 
 
 
+## Versioning
+
+Binaryen uses a single monotonically-increasing number for versions.
+This crate uses the semver minor version to track the Binaryen version,
+so e.g. the `wasm-opt` crate version `0.110.0` corresponds to Binaryen 110.
+Point releases are used for bugfixes.
+
+Since minor version bumps of crates earlier than `1.0.0` are considered breaking,
+users need to explicitly upgrade versions of `wasm-opt` to get new Binaryen releases,
+and upgrades may have breaking API changes,
+though we don't anticipate significant changes.
+
+
+
+
 ## Building from source
 
 ```
