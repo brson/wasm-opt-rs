@@ -319,6 +319,7 @@ dependencies = [
  "libc",
  "strum",
  "strum_macros",
+ "tempfile",
  "thiserror",
  "wasm-opt-cxx-sys",
  "wasm-opt-sys",

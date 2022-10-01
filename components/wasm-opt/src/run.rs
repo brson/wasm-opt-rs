@@ -4,6 +4,7 @@ use crate::base::{
     InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
     PassOptions as BasePassOptions, PassRunner,
 };
+use std::fs;
 use std::path::Path;
 use thiserror::Error;
 
@@ -101,7 +102,6 @@ impl OptimizationOptions {
         }
 
         let mut m = Module::new();
-
         self.apply_features(&mut m);
 
         {
@@ -126,20 +126,30 @@ impl OptimizationOptions {
                 return Err(OptimizationError::ValidateWasmInput);
             }
 
-            let passopts = self.translate_pass_options();
-            let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
+            self.create_and_run_pass_runner(&mut m);
 
-            if self.passes.add_default_passes {
-                pass_runner.add_default_optimization_passes();
+            if self.converge {
+                let mut current_size;
+                let mut last_size =
+                    self.get_file_size(&mut m)
+                        .map_err(|e| OptimizationError::Write {
+                            source: Box::from(e),
+                        })?;
+
+                loop {
+                    current_size =
+                        self.get_file_size(&mut m)
+                            .map_err(|e| OptimizationError::Write {
+                                source: Box::from(e),
+                            })?;
+
+                    if current_size >= last_size {
+                        break;
+                    }
+
+                    last_size = current_size;
+                }
             }
-
-            self.passes
-                .more_passes
-                .iter()
-                .for_each(|pass| pass_runner.add(pass.name()));
-
-            pass_runner.run();
-            drop(pass_runner);
 
             if self.passopts.validate && !validate_wasm(&mut m) {
                 return Err(OptimizationError::ValidateWasmOutput);
@@ -176,6 +186,39 @@ impl OptimizationOptions {
         }
 
         Ok(())
+    }
+
+    fn create_and_run_pass_runner(&self, m: &mut Module) {
+        let passopts = self.translate_pass_options();
+
+        let mut m = &mut *m;
+        let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
+
+        if self.passes.add_default_passes {
+            pass_runner.add_default_optimization_passes();
+        }
+
+        self.passes
+            .more_passes
+            .iter()
+            .for_each(|pass| pass_runner.add(pass.name()));
+
+        pass_runner.run();
+    }
+
+    fn get_file_size(&self, m: &mut Module) -> anyhow::Result<usize> {
+        let tempdir = tempfile::tempdir()?;
+        let temp_outfile = tempdir.path().join("wasm_opt_temp_outfile.wasm");
+
+        self.create_and_run_pass_runner(m);
+
+        let mut m = &mut *m;
+        let mut writer = ModuleWriter::new();
+        writer.write_binary(&mut m, &temp_outfile)?;
+
+        let file_size = fs::read(&temp_outfile).expect("read file").len();
+
+        Ok(file_size)
     }
 
     fn apply_features(&self, m: &mut Module) {
