@@ -183,8 +183,6 @@ impl OptimizationOptions {
     /// This corresponds to the `-Os` argument to `wasm-opt`,
     /// and also the `-O` argument to `wasm-opt`.
     ///
-    /// It is the same as [`OptimizationOptions::default`].
-    ///
     /// It applies
     /// - [`Passes::add_default_passes`],
     /// - [`OptimizeLevel::Level2`],
