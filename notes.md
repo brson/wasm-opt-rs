@@ -1,10 +1,13 @@
 # Creating `wasm-opt` Rust bindings with `cxx`
 
 I have recently created a [`wasm-opt`] crate for Rust.
-`wasm-opt` is a component of the [Binaryen] toolkit
+`wasm-opt` is a component of the [Binaryen] toolkit,
+writtin in C++,
 that optimizes [WebAssembly] modules,
 and perhaps more importantly,
 it _shrinks_ WebAssembly modules.
+The `wasm-opt` crate allows `wasm-opt` to be installed via cargo,
+and also includes an ideomatic Rust API to access `wasm-opt` programatically.
 
 [Binaryen]: https://github.com/WebAssembly/binaryen
 [WebAssembly]: https://webassembly.org/
@@ -19,6 +22,7 @@ todo
 
 - [Preface: Installing the `wasm-opt` bin with cargo]
 - [Preface: Installing the `wasm-opt` library from Rust]
+- [Summary]
 - [The Plan: Our bin strategy]
 - [The Plan: Our `cxx` lib strategy]
 - [`cxx` and Binaryen]
@@ -26,18 +30,24 @@ todo
   - [By-val `std::string`]
   - [`const`-correctness]
   - [Exceptions and `std::exception`]
+  - [Opinions about `cxx`]
 - [Binaryen-specific surprises]
   - [Colors]
   - [Some Binaryen APIs make assertions about how they are called]
   - [Binaryen early exits]
   - [Unicode paths don't work on Windows]
+  - [Thread safety]
 - [A Rusty API]
-- [Toolchain integration]
-- [Opinions about `cxx`]
+- [Toolchain integration via `Command`-based API]
+- [Testing for maintainability]
 - [Unexpected obstacles]
   - todo
 - [Future plans]
-- [Thanks]
+- [Appendix: The w3f grant experience]
+
+
+
+
 
 
 ## Preface: Installing the `wasm-opt` bin with cargo
@@ -65,6 +75,15 @@ todo
 The API documentation...
 
 These bindings are new and you may encounter bugs.
+
+
+
+
+
+## Summary
+
+
+We ended up duplicating a bunch of Binaryen's logic todo.
 
 
 
@@ -204,14 +223,35 @@ imposing another atomic flag check that should always succeed.
 
 
 
-## `ParseException` doesn't implement `std::exception`
+
+## Opinions about `cxx`
+
+When you define a Rust binding to C++ code,
+`cxx` will emit static checks that the types of the Rust declarations
+match the types of the C++ declarations.
+This is a great feature,
+and gives me confidence about the maintainability of the bindings.
+
+The errors that are emitted when there is a declaration mismatch
+are emitted by the C++ compiler,
+and are quite challending to understand &mdash;
+
+
+todo example
+
+
+
+
+## Binaryen-specific surprises
+
+### `ParseException` doesn't implement `std::exception`
 
 `cxx` can translate exceptions to Rust as long as they implement
 `std::exception`, but `ParseException` does not.
 
 
 
-## Colors
+### Colors
 
 
 
@@ -225,7 +265,7 @@ todo
 
 
 
-## Binaryen calls `exit` on failure to open a file
+### Binaryen calls `exit` on failure to open a file
 
 While testing whether our handling of unicode paths works correctly on Windows (it doesn't)
 we discovered that Binaryen's internal file reading and writing
@@ -251,7 +291,8 @@ and it's going to take a number of hours to resolve.
 
 
 
-## Unicode paths don't work on Windows.
+
+### Unicode paths don't work on Windows.
 
 We don't know why yet,
 but when we use paths with extended unicode characters
@@ -297,20 +338,16 @@ todo example
 
 
 
-## Opinions about `cxx`
-
-When you define a Rust binding to C++ code,
-`cxx` will emit static checks that the types of the Rust declarations
-match the types of the C++ declarations.
-This is a great feature,
-and gives me confidence about the maintainability of the bindings.
-
-The errors that are emitted when there is a declaration mismatch
-are emitted by the C++ compiler,
-and are quite challending to understand &mdash;
+## Toolchain integration via `Command`-based API
 
 
-todo example
+
+
+## Testing for maintainability
+
+
+
+
 
 
 
@@ -333,9 +370,19 @@ todo example
 
 
 
+
+
+## Appendix: The w3f grant experience
+
+
+
+
 ## TODO topics
 
 - talking to the stakeholders
 - integration into cargo-contract
   - Command-api
   - planning for reversion
+- thread safety
+- cost-effectiveness
+- testing for maintainability
