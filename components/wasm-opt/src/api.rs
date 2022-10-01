@@ -74,20 +74,41 @@ pub enum FileType {
 /// Options related to inlining.
 #[derive(Copy, Clone, Debug)]
 pub struct InliningOptions {
+    /// Function size at which we always inline.
+    ///
+    /// Default: `2`.
     pub always_inline_max_size: u32,
+    /// Function size which we inline when there is only one caller.
+    ///
+    /// Default: `u32::MAX`.
     pub one_caller_inline_max_size: u32,
+    /// Function size above which we generally never inline.
+    ///
+    /// Default: `20`.
     pub flexible_inline_max_size: u32,
+    /// Functions with loops are usually not inlined.
+    ///
+    /// Default: `false`.
     pub allow_functions_with_loops: bool,
+    /// The number of `if`s to allow partial inlining of their conditions.
+    ///
+    /// Default: `0`.
     pub partial_inlining_ifs: u32,
 }
 
 /// Options that affect how optimization passes behave.
+///
+/// The Binaryen source code has more extensive documentation of these options
+/// than is reproduced here.
 #[derive(Clone, Debug)]
 pub struct PassOptions {
     /// Validate both the unoptimized module and the optimized module.
     ///
     /// Default: `true`.
     pub validate: bool,
+    /// Validate globally, not just locally.
+    ///
+    /// Default: `true`.
     pub validate_globally: bool,
     /// The amount of optimization to apply.
     ///
@@ -97,11 +118,27 @@ pub struct PassOptions {
     ///
     /// The default depends on how [`OptimizationOptions`] is constructed.
     pub shrink_level: ShrinkLevel,
+    /// Assume traps never happen at runtime.
+    ///
+    /// Default: `false`.
     pub traps_never_happen: bool,
+    /// Assume that the low 1K of memory is not valid for application use.
+    ///
+    /// Default: `false`.
     pub low_memory_unused: bool,
+    /// Do faster floating point math by breaking official IEEE semantics.
+    ///
+    /// Default: `false`.
     pub fast_math: bool,
+    /// Assume imported memory is zeroed.
+    ///
+    /// Default: `false`.
     pub zero_filled_memory: bool,
+    /// Preserve debug info.
+    ///
+    /// Default: `false`.
     pub debug_info: bool,
+    /// Additional pass-specific arguments.
     pub arguments: HashMap<String, String>,
 }
 
