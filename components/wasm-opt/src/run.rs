@@ -131,7 +131,7 @@ impl OptimizationOptions {
             self.create_and_run_pass_runner(&mut m);
 
             if self.converge {
-                self.keep_running_pass_runner(&mut m)
+                self.run_until_convergence(&mut m)
                     .map_err(|e| OptimizationError::Write {
                         source: Box::from(e),
                     })?;
@@ -177,8 +177,7 @@ impl OptimizationOptions {
     fn create_and_run_pass_runner(&self, m: &mut Module) {
         let passopts = self.translate_pass_options();
 
-        let mut m = &mut *m;
-        let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
+        let mut pass_runner = PassRunner::new_with_options(m, passopts);
 
         if self.passes.add_default_passes {
             pass_runner.add_default_optimization_passes();
@@ -192,14 +191,14 @@ impl OptimizationOptions {
         pass_runner.run();
     }
 
-    fn keep_running_pass_runner(&self, m: &mut Module) -> anyhow::Result<()> {
-        let mut m = &mut *m;
-
-        let mut last_size = self.get_file_size(&mut m)?;
+    fn run_until_convergence(&self, m: &mut Module) -> anyhow::Result<()> {
+        let mut last_size = Self::get_module_size(m)?;
         let mut current_size;
 
         loop {
-            current_size = self.get_file_size(&mut m)?;
+            self.create_and_run_pass_runner(m);
+
+            current_size = Self::get_module_size(m)?;
 
             if current_size >= last_size {
                 break;
@@ -211,17 +210,14 @@ impl OptimizationOptions {
         Ok(())
     }
 
-    fn get_file_size(&self, m: &mut Module) -> anyhow::Result<usize> {
+    fn get_module_size(m: &mut Module) -> anyhow::Result<usize> {
         let tempdir = tempfile::tempdir()?;
         let temp_outfile = tempdir.path().join("wasm_opt_temp_outfile.wasm");
 
-        self.create_and_run_pass_runner(m);
-
-        let mut m = &mut *m;
         let mut writer = ModuleWriter::new();
-        writer.write_binary(&mut m, &temp_outfile)?;
+        writer.write_binary(m, &temp_outfile)?;
 
-        let file_size = fs::read(&temp_outfile).expect("read file").len();
+        let file_size = fs::read(&temp_outfile)?.len();
 
         Ok(file_size)
     }
