@@ -190,6 +190,8 @@ pub mod wasm {
         fn checkInliningOptionsDefaults(inlining_options: UniquePtr<InliningOptions>) -> bool;
 
         fn checkPassOptionsDefaults(pass_options: UniquePtr<PassOptions>) -> bool;
+
+        fn checkPassOptionsDefaultsOs(pass_options: UniquePtr<PassOptions>) -> bool;
     }
 }
 

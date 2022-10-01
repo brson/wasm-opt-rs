@@ -337,8 +337,7 @@ namespace wasm_shims {
     return isEqual;
   }
 
-  bool checkPassOptionsDefaults(std::unique_ptr<PassOptions> passOptions) {
-    auto passOptionsDefaults = wasm::PassOptions::getWithDefaultOptimizationOptions();
+  bool checkPassOptions(std::unique_ptr<PassOptions> passOptions, wasm::PassOptions passOptionsDefaults) {
 
     // The size assertion will fail when `PassOptions` or `InliningOptions` fields change.
     // We need to update the test when the size assertion failed.
@@ -365,6 +364,18 @@ namespace wasm_shims {
       && (passOptions->inner.inlining.partialInliningIfs == passOptionsDefaults.inlining.partialInliningIfs);
    
     return isEqual;
+  }
+
+  bool checkPassOptionsDefaults(std::unique_ptr<PassOptions> passOptions) {
+    auto passOptionsDefaults = wasm::PassOptions::getWithoutOptimization();
+
+    return checkPassOptions(std::move(passOptions), passOptionsDefaults);
+  }
+
+  bool checkPassOptionsDefaultsOs(std::unique_ptr<PassOptions> passOptions) {
+    auto passOptionsDefaults = wasm::PassOptions::getWithDefaultOptimizationOptions();
+
+    return checkPassOptions(std::move(passOptions), passOptionsDefaults);
   }
 }
 

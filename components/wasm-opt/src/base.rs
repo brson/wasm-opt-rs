@@ -373,6 +373,10 @@ pub fn check_pass_options_defaults(pass_options: PassOptions) -> bool {
     wasm::checkPassOptionsDefaults(pass_options.0)
 }
 
+pub fn check_pass_options_defaults_os(pass_options: PassOptions) -> bool {
+    wasm::checkPassOptionsDefaultsOs(pass_options.0)
+}
+
 // FIXME binaryen unicode path handling is broken on windows
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]

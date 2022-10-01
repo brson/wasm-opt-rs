@@ -4,7 +4,7 @@ use wasm_opt::base::pass_registry;
 use wasm_opt::base::InliningOptions as BaseInliningOptions;
 use wasm_opt::base::PassOptions as BasePassOptions;
 use wasm_opt::base::{
-    check_inlining_options_defaults, check_pass_options_defaults, pass_registry::is_pass_hidden,
+    check_inlining_options_defaults, check_pass_options_defaults, check_pass_options_defaults_os, pass_registry::is_pass_hidden,
 };
 use wasm_opt::*;
 
@@ -91,7 +91,7 @@ fn test_optimization_options_os() -> anyhow::Result<()> {
     pass_options.set_zero_filled_memory(opts.passopts.zero_filled_memory);
     pass_options.set_debug_info(opts.passopts.debug_info);
 
-    assert_eq!(check_pass_options_defaults(pass_options), true);
+    assert_eq!(check_pass_options_defaults_os(pass_options), true);
 
     Ok(())
 }
