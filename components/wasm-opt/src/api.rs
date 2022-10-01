@@ -25,7 +25,7 @@ pub struct OptimizationOptions {
     pub passes: Passes,
     /// The set of wasm-features.
     pub features: Features,
-    /// Run passes to convergence, continuing while binary size decreases
+    /// Run passes to convergence, continuing while binary size decreases.
     pub converge: bool,
 }
 
