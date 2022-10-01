@@ -4,7 +4,8 @@ use wasm_opt::base::pass_registry;
 use wasm_opt::base::InliningOptions as BaseInliningOptions;
 use wasm_opt::base::PassOptions as BasePassOptions;
 use wasm_opt::base::{
-    check_inlining_options_defaults, check_pass_options_defaults, check_pass_options_defaults_os, pass_registry::is_pass_hidden,
+    check_inlining_options_defaults, check_pass_options_defaults, check_pass_options_defaults_os,
+    pass_registry::is_pass_hidden,
 };
 use wasm_opt::*;
 
