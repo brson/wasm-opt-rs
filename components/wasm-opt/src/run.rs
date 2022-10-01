@@ -194,11 +194,11 @@ impl OptimizationOptions {
 
     fn keep_running_pass_runner(&self, m: &mut Module) -> anyhow::Result<()> {
         let mut m = &mut *m;
+
         let mut last_size = self.get_file_size(&mut m)?;
         let mut current_size;
 
         loop {
-            let mut m = &mut *m;
             current_size = self.get_file_size(&mut m)?;
 
             if current_size >= last_size {
