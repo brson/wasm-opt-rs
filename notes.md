@@ -386,3 +386,5 @@ todo example
 - thread safety
 - cost-effectiveness
 - testing for maintainability
+- wasm-opt-sys vs wasm-opt-cxxsys
+  - linkage hack
