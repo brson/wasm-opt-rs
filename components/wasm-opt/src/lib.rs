@@ -105,9 +105,12 @@
 //!
 //! ## **A note on thread-safety**
 //!
-//! **Parts of the Binaryen API are not thought to be thread safe, and these
-//! bindings do not attempt to make Binaryen thread safe. It is strongly
-//! recommended to use this crate from within a single thread.**
+//! **It is probably a good precaution to use this crate from a single thread:
+//! parts of the Binaryen API are not thought to be thread safe, and these
+//! bindings do not attempt to make Binaryen thread safe. Despite the potential
+//! thread-unsafety, this crate's multi-threaded test suite does pass
+//! consistently. Still, it is probably a good precaution to use this crate from
+//! a single thread.**
 
 // Most of the API surface is exported here.
 //
