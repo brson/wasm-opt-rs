@@ -7,7 +7,7 @@ edition = "2018"
 documentation = "https://docs.rs/wasm-opt"
 repository = "https://github.com/brson/wasm-opt-rs"
 categories = ["wasm"]
-readme = "../../README.md"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.58"
