@@ -267,15 +267,16 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                 // todo parse enable/disable feature names
 
                 let mut is_pass = false;
-                Pass::iter().for_each(|item| {
-                    if arg.contains(&item.name().to_string()) {
-                        opts.add_pass(item);
+                for pass in Pass::iter() {
+                    if is_pass_argument(arg, &pass) {
+                        opts.add_pass(pass);
                         is_pass = true;
                     }
-                });
+                }
 
                 if !is_pass {
                     if arg.starts_with("-") && arg.len() > 1 {
+                        // Reject args that look like flags that we don't support.
                         unsupported.push(OsString::from(arg));
                     } else {
                         parse_infile_path(OsStr::new(arg), &mut input_file, &mut unsupported);
@@ -310,6 +311,13 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
         output_sourcemap,
         sourcemap_url,
     })
+}
+
+fn is_pass_argument(arg: &str, pass: &Pass) -> bool {
+    let pass_name = pass.name();
+    arg.starts_with("--")
+        && arg.contains(pass_name)
+        && arg.len() == 2 + pass_name.len()
 }
 
 fn parse_infile_path(
