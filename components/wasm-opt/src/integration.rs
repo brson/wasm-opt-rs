@@ -264,19 +264,22 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* fallthrough */
 
             _ => {
-                // todo parse pass names w/ pass args (--pass-name=key@value). I think this is something binaryen supports.
+                // todo parse pass names w/ pass args (--pass-name=value).
 
-                // parse enable/disable feature names
                 if arg.starts_with("--enable-") {
-                    let mut feature = arg.to_string();
-                    let feature: String = feature.drain(9..).collect();
-                    let feature = Feature::from_str(&feature).map_err(|_| { OptimizationError::ValidateWasmInput })?;
-                    opts.enable_feature(feature);
+                    let feature = &arg[9..];
+                    if let Ok(feature) = Feature::from_str(feature) {
+                        opts.enable_feature(feature);
+                    } else {
+                        unsupported.push(OsString::from(arg));
+                    }
                 } else if arg.starts_with("--disable-") {
-                    let mut feature = arg.to_string();
-                    let feature: String = feature.drain(10..).collect();
-                    let feature = Feature::from_str(&feature).map_err(|_| { OptimizationError::ValidateWasmInput })?;
-                    opts.disable_feature(feature);
+                    let feature = &arg[10..];
+                    if let Ok(feature) = Feature::from_str(feature) {
+                        opts.disable_feature(feature);
+                    } else {
+                        unsupported.push(OsString::from(arg));
+                    }
                 } else {
                     let mut is_pass = false;
                     for pass in Pass::iter() {
