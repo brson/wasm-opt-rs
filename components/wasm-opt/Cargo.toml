@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt"
-version = "0.0.1-preview.3"
+version = "0.110.0-beta.1"
 description = "wasm-opt bindings"
 license = "MIT / Apache-2.0"
 edition = "2018"
@@ -12,8 +12,8 @@ readme = "README.md"
 [dependencies]
 anyhow = "1.0.58"
 libc = "0.2.126"
-wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.0.1-preview.3" }
-wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.0.1-preview.3" }
+wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.110.0-beta.1" }
+wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.110.0-beta.1" }
 strum = "0.24"
 strum_macros = "0.24"
 thiserror = "1.0.32"

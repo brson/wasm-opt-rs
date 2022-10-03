@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# replacing version numbers:
+#     perl -p -i -e "s/0\.0\.1-preview\.3/0\.110\.0-beta\.1/g" components/*/*toml
+
 set -x -e
 
 RUST_MIN_VERSION=1.48.0
