@@ -26,5 +26,9 @@ rm -rf ./components/wasm-opt-cxx-sys/binaryen/third_party/googletest
 # cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml --dry-run
 
 cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml
+echo waiting
+sleep 10
 cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml
+echo waiting
+sleep 10
 cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml
