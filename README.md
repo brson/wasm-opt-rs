@@ -56,6 +56,18 @@ These are the earliest C++ compiler versions known to work:
 
 
 
+## Building from source
+
+```
+git clone https://github.com/brson/wasm-opt-rs
+cd wasm-opt-rs
+git submodule update --init --recursive
+cargo build && cargo test
+```
+
+
+
+
 ## Versioning
 
 Binaryen uses a single monotonically-increasing number for versions.
@@ -67,18 +79,6 @@ Since minor version bumps of crates earlier than `1.0.0` are considered breaking
 users need to explicitly upgrade versions of `wasm-opt` to get new Binaryen releases,
 and upgrades may have breaking API changes,
 though we don't anticipate significant changes.
-
-
-
-
-## Building from source
-
-```
-git clone https://github.com/brson/wasm-opt-rs
-cd wasm-opt-rs
-git submodule update --init --recursive
-cargo build && cargo test
-```
 
 
 
