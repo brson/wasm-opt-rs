@@ -102,15 +102,6 @@
 //! crate provides the [`integration`] module, which presents an API that is
 //! compatible with `std`s `Command`. This allows client code to use mostly the
 //! same code path for executing the `wasm-opt` CLI, and the crate-based API.
-//!
-//! ## **A note on thread-safety**
-//!
-//! **It is probably a good precaution to use this crate from a single thread:
-//! parts of the Binaryen API are not thought to be thread safe, and these
-//! bindings do not attempt to make Binaryen thread safe. Despite the potential
-//! thread-unsafety, this crate's multi-threaded test suite does pass
-//! consistently. Still, it is probably a good precaution to use this crate from
-//! a single thread.**
 
 // Most of the API surface is exported here.
 //
