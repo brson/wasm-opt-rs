@@ -56,7 +56,6 @@ namespace wasm_shims {
       inner.setDWARF(dwarf);
     }
 
-    // Wrapper to handle by-val string.
     void readText(const std::string& filename, Module& wasm) {
       try {
         inner.readText(std::string(filename), wasm);
@@ -66,8 +65,8 @@ namespace wasm_shims {
     }
 
     void readBinary(const std::string& filename,
-                                 Module& wasm,
-                                 const std::string& sourceMapFilename) {
+                    Module& wasm,
+                    const std::string& sourceMapFilename) {
       try {
         inner.readBinary(std::string(filename),
                          wasm,
