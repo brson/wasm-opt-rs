@@ -389,4 +389,4 @@ todo example
 - wasm-opt-sys vs wasm-opt-cxxsys
   - linkage hack
 - once_cell = ">= 1.9.0, < 1.15.0"
-
+- wasm-opt-sys build times with cc crate
