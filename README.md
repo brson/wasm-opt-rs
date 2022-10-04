@@ -17,8 +17,6 @@ This project provides a Rust crate that builds `wasm-opt` and:
 1) makes its command-line interface installable via `cargo install`,
 2) provides an API to access it programmatically.
 
-**This project is in development and not ready for use.**
-
 
 
 
