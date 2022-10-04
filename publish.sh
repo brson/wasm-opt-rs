@@ -1,14 +1,18 @@
 #!/bin/bash
 
 # replacing version numbers:
-#     perl -p -i -e "s/0\.0\.1-preview\.3/0\.110\.0-beta\.1/g" components/*/*toml
+#     perl -p -i -e "s/0\.110\.0-beta\.1/0\.110\.0-beta\.2/g" components/*/*toml
 
 set -x -e
 
+# The rust min version we (and cxx) "support" can no longer resolve the crate
+# graph correctly (it picks a once_cell that requires rust 2021), so we publish
+# with the first version of rust that supported 2021.
 RUST_MIN_VERSION=1.48.0
+RUST_DEPLOY_VERSION=1.56.0
 
 # This is just to make sure we've got the compiler.
-rustc +$RUST_MIN_VERSION --version
+rustc +$RUST_DEPLOY_VERSION --version
 
 rm -rf ./components/wasm-opt-sys/binaryen
 rm -rf ./components/wasm-opt-cxx-sys/binaryen
@@ -21,14 +25,14 @@ cp -r ./binaryen ./components/wasm-opt-cxx-sys/
 rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
 rm -rf ./components/wasm-opt-cxx-sys/binaryen/third_party/googletest
 
-# cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
-# cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run
-# cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml --dry-run
+# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
+# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run
+# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml --dry-run
 
-cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml
+cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml
 echo waiting
 sleep 10
-cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml
+cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml
 echo waiting
 sleep 10
-cargo +$RUST_MIN_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml
+cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml
