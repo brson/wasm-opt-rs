@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() -> anyhow::Result<()> {
+    check_cxx17_support()?;
+
     let output_dir = std::env::var("OUT_DIR")?;
     let output_dir = Path::new(&output_dir);
 
@@ -358,4 +360,22 @@ fn get_project_version_from_git() -> anyhow::Result<String> {
     let output = String::from_utf8(output.stdout)?.trim().to_string();
 
     Ok(output)
+}
+
+fn check_cxx17_support() -> anyhow::Result<()> {
+    let mut builder = cc::Build::new();
+    builder.cpp(true);
+
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
+    let cxx17_flag = if target_env != "msvc" {
+        "-std=c++17"
+    } else {
+        "/std:c++17"
+    };
+
+    if !builder.is_flag_supported(cxx17_flag)? {
+        return Err(anyhow::anyhow!("C++ compiler does not support `{}` flag", cxx17_flag));
+    }
+
+    Ok(())
 }
