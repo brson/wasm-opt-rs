@@ -1,30 +1,37 @@
 # Creating `wasm-opt` Rust bindings with `cxx`
 
-I have recently created a [`wasm-opt`] crate for Rust.
 `wasm-opt` is a component of the [Binaryen] toolkit,
 writtin in C++,
 that optimizes [WebAssembly] modules,
 and perhaps more importantly,
-it _shrinks_ WebAssembly modules.
+_shrinks_ WebAssembly modules.
+I have recently created a [`wasm-opt`] bindings crate for Rust
+(with the extensive help of [Aimeedeer]).
 The `wasm-opt` crate allows `wasm-opt` to be installed via cargo,
-and also includes an ideomatic Rust API to access `wasm-opt` programatically.
+and also includes an idiomatic Rust API to access `wasm-opt` programatically.
 
+This was a fun bite-sized project that involved several interesting topics:
+Rust FFI via the [`cxx`] crate,
+converting C++ abstractions to safe Rust abstractions,
+designing layered Rust abstractions,
+creating tests to catch upstream changes in C++ code,
+creating tests to verify conformance with upstream behavior,
+professional networking and grant writing.
+
+[Aimeedeer]: https://github.com/Aimeedeer
+[`wasm-opt`]: https://github.com/brson/wasm-opt-rs
 [Binaryen]: https://github.com/WebAssembly/binaryen
 [WebAssembly]: https://webassembly.org/
-
-`wasm-opt` is such a singularly important tool for wasm development that it is a
-dependency of (I think) every wasm-targetting toolchain I have ever used (though
-it seems like [`wasm-pack`] may have removed it at some point?).
-
-todo
+[`cxx`]: https://github.com/dtolnay/cxx
 
 ## Table of Contents
 
-- [Preface: Installing the `wasm-opt` bin with cargo]
-- [Preface: Installing the `wasm-opt` library from Rust]
+- [Preface: Installing and using the `wasm-opt` crate]
 - [Summary]
 - [The Plan: Our bin strategy]
 - [The Plan: Our `cxx` lib strategy]
+- [Building Binaryen without `cmake`]
+- [Calling C++ `main` from Rust]
 - [`cxx` and Binaryen]
   - [Constructors and `cxx`]
   - [By-val `std::string`]
@@ -39,6 +46,7 @@ todo
   - [Thread safety]
 - [A Rusty API]
 - [Toolchain integration via `Command`-based API]
+- [Six layers of abstraction]
 - [Testing for maintainability]
 - [Unexpected obstacles]
   - todo
@@ -50,49 +58,120 @@ todo
 
 
 
-## Preface: Installing the `wasm-opt` bin with cargo
+## Preface: Installing and using the `wasm-opt` crate
 
-To install `wasm-opt` using cargo:
+If you are interested in using this tool,
+to install `wasm-opt` via cargo:
 
 ```
 cargo install wasm-opt --locked
 ```
 
 Youll end up with a `wasm-opt` binary in `$CARGO_HOME/bin`,
-and it should work exactly the same as the `wasm-opt` you install from any other source.
+and it should work exactly the same as the `wasm-opt` you install from any other source:
 
-If you run into any problems,
-particularly with the C++ build,
-please [file a bug].
+```
+$ wasm-opt -Os infile.wasm -o outfile.wasm
+```
+
+To use `wasm-opt` as a library,
+follow [the API docs](https://docs.rs/wasm-opt).
+
+Basic usage looks like
+
+```rust
+use wasm_opt::OptimizationOptions;
+
+let infile = "hello_world.wasm";
+let outfile = "hello_world_optimized.wasm";
+
+OptimizationOptions::new_optimize_for_size()
+    .run(infile, outfile)?;
+```
 
 
-
-
-## Preface: Using the `wasm-opt` library from Rust
-
-todo
-
-The API documentation...
-
-These bindings are new and you may encounter bugs.
-
+todo caveats
 
 
 
 
 ## Summary
 
+We decided to build this after [a recent experience][arexp]
+with [`cargo-contract`], the tool for building [Ink!] programs,
+in which we had to go "outside" the Rust ecosystem to find and install `wasm-opt`.
+A minor inconvenience,
+but as a Rust programmer working with a Rust toolset I want to `cargo install` whenever I can.
 
-We ended up duplicating a bunch of Binaryen's logic todo.
+Many platforms that use WebAssembly as their VM end up creating their own
+tools for building and packaging their wasm programs,
+and many of those delegate to `wasm-opt` to shrink their output.
+
+So making `wasm-opt` available as a Rust crate seemed like
+an obviously useful thing to do for both [`cargo-contract`]
+and any Rust-based wasm-targetting tools.
+We proposed [a w3f grant] to build it,
+which was accepted gladly.
+
+As a grant application this project was a slam dunk:
+clear benefit, clear scope, low risk;
+and it worked out almost exactly as expected.
+
+We had the opportunity to use the [`cxx`] crate,
+which creates safe Rust bindings to C++ code,
+for the first time;
+and had to solve a bunch of minor problems,
+one of which required [upstream Binaryean changes][bchange].
+
+While leveraging Binaryen's optimization passes,
+we ended up duplicating the logic of the `wasm-opt` program itself in Rust,
+as `wasm-opt` is a command-line program not suitable to use as a library.
+This duplication necessitated writing carefully chosen tests to both
+help ensure that the crate's behavior matches the CLI's,
+but also that as Binaryen changes in the future,
+we notice those changes and adapt to them.
+
+In the end we had [six layers of Rust abstractions][sixabs]
+todo
+
+[arexp]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md#appendix-the-wasm-opt-installation-experience
+[`cargo-contract`]: https://github.com/paritytech/cargo-contract/
+[Ink!]: https://github.com/paritytech/ink
+[a w3f grant]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md
+[bchange]: https://github.com/WebAssembly/binaryen/pull/5087
 
 
 
 
+## The Plan: our bin strategy
 
-## The Plan: Our bin strategy
+The intent of this project was to make `wasm-opt` available to Rust programmers
+in two ways: as a command-line program via `cargo install`,
+and as a Rust library.
+
+When installing the CLI program the resulting binary must behave the same
+as the "native" Binaryen.
+
+The obvious way to do that is to just use cargo as a frontend to the existing
+Binaryen build system,
+building `wasm-opt` in the cargo build script,
+and installing `wasm-opt` during `cargo install`.
+
+This can't be done quite so simply though because there are no hooks into `cargo install`.
+cargo will install any Rust binaries it builds,
+but it can't be instructed to install arbitrary additional files.
+
+So to get cargo to install `wasm-opt`,
+we would Create a Rust crate called `wasm-opt` whose `main` function
+did nothing but call the C++ `main` function.
+
+There would be some minor wrinkles to this stategy,
+but this is the easy part of the project.
 
 
-## The Plan: Our `cxx` lib strategy
+
+
+## The Plan: our `cxx` lib strategy
 
 todo
 
@@ -113,6 +192,25 @@ of `cxx`.
 The next few sections will describe some of the problems
 we ran into binding binaryen APIs,
 and our solutions.
+
+
+
+## Building Binaryen without `cmake`
+
+We gave ourselves one extra challenge:
+do not use any build system external to cargo.
+We want to impose as few requirements on `wasm-opt` embedders as possible,
+and Binaryen is a relatively simple codebase,
+so we decided not to use Binaryen's build system (cmake-based) to build Binaryen.
+
+Instead we built binaryen in a cargo build script
+using the [`cc`] crate.
+
+todo
+
+
+[`cc`]: https://github.com/rust-lang/cc-rs
+
 
 
 ## `cxx` lessons
@@ -369,7 +467,12 @@ todo example
 ## Future plans
 
 
+### Maintenance grant
 
+- publish updates following binaryen releases
+- update dependencies
+- submit updated prs to cargo-contract and wasm-builder
+- fix unicode bug in binaryen
 
 
 ## Appendix: The w3f grant experience
