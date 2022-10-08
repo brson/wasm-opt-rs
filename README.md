@@ -101,6 +101,13 @@ though we don't anticipate significant changes.
 
 
 
+## Thanks
+
+This project was created thanks to a [grant from the Web3 Foundation](https://github.com/w3f/Grants-Program/pull/1070).
+
+
+
+
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE)
