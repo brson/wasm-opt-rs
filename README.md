@@ -74,9 +74,10 @@ These are the earliest C++ compiler versions known to work:
   recompilation is a limitation self-imposed by not using cmake or other
   external build system.
 - `wasm-opt` on Windows does not support extended unicode paths (probably
-  anything non-ASCII). This is a limitation of binaryen and not a regression of
-  the bindings. It may or may not be fixed in the future. The APIs will return
-  an error if this occurs.
+  anything non-ASCII). This is a [limitation of
+  binaryen](https://github.com/brson/wasm-opt-rs/issues/40) and not a regression
+  of the bindings. It may or may not be fixed in the future. The APIs will
+  return an error if this occurs.
 - `cargo tarpaulin` (code coverage) [segfaults running any `wasm-opt`
   crates](https://github.com/brson/wasm-opt-rs/issues/59), reason unknown. This
   behavior could infect other crates that link to `wasm-opt`. If you use
