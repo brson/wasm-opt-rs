@@ -68,7 +68,7 @@ These are the earliest C++ compiler versions known to work:
 
 ## Limitations
 
-- The `wasm-opt-sys` crate takes a non-negligible amount of time to build It
+- The `wasm-opt-sys` crate takes a non-negligible amount of time to build. It
   also does not do any incremental recompilation, so if the build is invalidated
   it will rebuild the C++ code from scratch. The lack of incremental
   recompilation is a limitation self-imposed by not using cmake or other
