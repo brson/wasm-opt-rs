@@ -40,6 +40,18 @@ See the [API documentation][api].
 
 
 
+## Building from source
+
+```
+git clone https://github.com/brson/wasm-opt-rs
+cd wasm-opt-rs
+git submodule update --init --recursive
+cargo build && cargo test
+```
+
+
+
+
 ## Toolchain requirements
 
 Requires Rust 1.48+ and a C++ compiler with C++17 support.
@@ -54,14 +66,21 @@ These are the earliest C++ compiler versions known to work:
 
 
 
-## Building from source
+## Limitations
 
-```
-git clone https://github.com/brson/wasm-opt-rs
-cd wasm-opt-rs
-git submodule update --init --recursive
-cargo build && cargo test
-```
+- The `wasm-opt-sys` crate takes a non-negligible amount of time to build It
+  also does not do any incremental recompilation, so if the build is invalidated
+  it will rebuild the C++ code from scratch. The lack of incremental
+  recompilation is a limitation self-imposed by not using cmake or other
+  external build system.
+- `wasm-opt` on Windows does not support extended unicode paths (probably
+  anything non-ASCII). This is a limitation of binaryen and not a regression of
+  the bindings. It may or may not be fixed in the future. The APIs will return
+  an error if this occurs.
+- `cargo tarpaulin` (code coverage) [segfaults running any `wasm-opt`
+  crates](https://github.com/brson/wasm-opt-rs/issues/59), reason unknown. This
+  behavior could infect other crates that link to `wasm-opt`. If you use
+  tarpaulin, you might verify it continues to work.
 
 
 
