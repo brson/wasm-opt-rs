@@ -26,12 +26,13 @@ professional networking and grant writing.
 
 ## Table of Contents
 
-- [Preface: Installing and using the `wasm-opt` crate]
-- [Summary]
-- [The Plan: Our bin strategy]
-- [The Plan: Our `cxx` lib strategy]
-- [Building Binaryen without `cmake`]
-- [Calling C++ `main` from Rust]
+- [Preface: Installing and using the `wasm-opt` crate](#user-content-preface-installing-and-using-the-wasm-opt-crate)
+- [Summary](#user-content-summary)
+- [The Plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
+- [The Plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
+- [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
+- [Calling C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
+- [The no-op `wasm_opt_sys::init` function]
 - [`cxx` and Binaryen]
   - [Constructors and `cxx`]
   - [By-val `std::string`]
@@ -44,13 +45,13 @@ professional networking and grant writing.
   - [Binaryen early exits]
   - [Unicode paths don't work on Windows]
   - [Thread safety]
-- [A Rusty API]
-- [Toolchain integration via `Command`-based API]
-- [Six layers of abstraction]
-- [Testing for maintainability]
+- [A Rusty API](#user-content-a-rusty-api)
+- [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
+- [Six layers of abstraction](#user-content-six-layers-of-abstraction)
+- [Testing for maintainability](#user-content-testing-for-maintainability)
 - [Unexpected obstacles]
   - todo
-- [Future plans]
+- [Future plans](#user-content-future-plans)
 - [Appendix: The w3f grant experience]
 
 
@@ -220,9 +221,14 @@ using the [`cc`] crate.
 [build-script]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/build.rs
 [`cc`]: https://github.com/rust-lang/cc-rs
 
-We suspected this would be doable,
-knew there would be unforseen challenges,
-and hoped they would be managable.
+The [`cc`] crate compiles C and C++ source files,
+packages them into an archive (`.a`) file,
+and emits the correct metadata to tell cargo
+how to link the archive to the final output binary.
+It is widely used in the Rust ecosystem and has a whole lot of platform-specific,
+toolchain-specefic knowledge about how to drive various parts of the C/C++ toolchain.
+But it is mostly intended for building small bits of code to supplement Rust crates,
+it is not a full build system.
 
 Writing our custom build script for Binaryen was our first task on the project.
 The build script ended up being more complex than I would prefer,
@@ -240,16 +246,204 @@ at which point the linker would emit many errors about missing symbols;
 grep the source for the likely source of a single symbol;
 add the new source, build again and repeat until there were no more linker errors.
 
+That strategy nearly worked completely,
+except for a few obstacles:
 
-todo - disambiguate_file
-todo - get_converted_wasm_intrinsics
-todo - project version and configure_file
+The first was an unexpected surprise:
+The `cc` crate,
+generally intended for building a handful of files,
+not entire applications,
+puts all of its output object files
+in the same directory (`cargo`'s `OUT_DIR` for that crate),
+regardless of the original source structure.
+This bit us because Binaryen has two source files called `intrinsics.cpp`,
+causing `cc` to want to create two object files in the same location called `intrinsics.o`.
+
+We created a hacky work around:
+for one of these two files we call a function, `disambiguate_file`,
+that copies a source file to location, giving it an unambiguous name:
+
+```rust
+    let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
+```
+
+Like the object files, the disambiguated source file gets put in `OUT_DIR`:
+
+```rust
+fn disambiguate_file(input_file: &Path, new_file_name: &str) -> anyhow::Result<PathBuf> {
+    let output_dir = std::env::var("OUT_DIR")?;
+    let output_dir = Path::new(&output_dir);
+    let output_file = output_dir.join(new_file_name);
+
+    fs::copy(input_file, &output_file)?;
+
+    Ok(output_file)
+}
+```
+
+The second and third obstacle were due to preprocessing done by Binaryen's build system.
+When configuring its build Binaryen creates a `config.h` file that contains Binaryen's version number.
+This number can either come from the `CMakeLists.txt` configuration file,
+or from parsing the output of `git`.
+Since we already knew one of our prospective clients was parsing the `wasm-opt` version,
+we decided to reproduce this behavior exactly,
+and our build script has two functions that pull the version number from each place
+and put them into `config.h`.
+
+Binaryen's build configuration also hex-encodes and embeds a binary called `wasm-intrinsics.wat` into its source code.
+So we again had to repruce that logic.
+
+Adapting our custom build process to Binaryen as it changes in the future will
+likely be the most difficult ongoing maintenance task on this project.
+We have already performed one upgrade, from version 109 to 110,
+and it involved resolving link errors and adding source files until everything linked again.
 
 
 
 
 ## Calling C++ `main` from Rust
 
+With a working build of all the source needed by `wasm-opt`,
+we had to write our Rust `main.rs` file and call the C++ `main` function.
+
+This is mostly straightforward,
+except that,
+compiled as a library,
+there is no symbol called `main` for the Rust code to call.
+
+There is a function in the C++ source code called `main`,
+but Rust can't just call it, for at least one reason,
+but perhaps more.
+
+`wasm-opt`'s `main` function is declared as:
+
+```c++
+int main(int argc, const char* argv[]) {
+```
+
+This is a C++ function,
+and Rust can only call C functions.
+
+To declare it a C function it needs to be:
+
+```c++
+extern "C" int main(int argc, const char* argv[]) {
+```
+
+At the least this will disable name mangling for the `main` function,
+so that the symbol `main` can be linked. I am not clear on whether
+it has any impact on the calling convention of the function.
+
+The above about name mangling is true generally,
+but may not be true for a function named `main`.
+In brief experiments,
+even without declaring `main` as `extern "C"`,
+I did see that the resulting object filed contained an unmangled
+function named `main`,
+that appeared to be this function
+on linux with `gcc`.
+So maybe `gcc` doesn't name-mangle the `main` function.
+
+Regardless,
+I want this function to be `extern "C"` because
+I need to rename it anyway:
+`rustc` _also_ wants to create an unmangled function named `main`,
+so I have to rename this one to something else.
+(The `main` function emitted by `rustc` is not the `main` function you write though &mdash;
+it is a synthetic function generated by the compiler that calls the standard library,
+which later calls your name-mangled `main` function).
+
+I want this main to be called `wasm_opt_main` and declared like:
+
+```c++
+extern "C" int wasm_opt_main(int argc, const char* argv[]) {
+```
+
+So that Rust code can declare it as an extern like
+
+```rust
+    extern "C" {
+        pub fn wasm_opt_main(argc: c_int, argv: *const *const c_char) -> c_int;
+    }
+```
+
+As part of our build script we wrote a function
+that reads the `wasm-opt.cpp` source file,
+replaces `int main` with `extern "C" int wasm_opt_main`,
+then outputs the modified source to `OUT_DIR`.
+We then build our modified `wasm-opt.cpp`.
+
+The [full source] of the Rust `main.rs` is simple,
+though ugly, just a bunch of raw FFI.
+
+[full source]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/main.rs
+
+It is interesting enough that I'll just
+list it all here for commentary:
+
+```rust
+fn main() -> anyhow::Result<()> {
+    wasm_opt_sys::init();
+
+    wasm_opt_main()
+}
+
+mod c {
+    use libc::{c_char, c_int};
+
+    extern "C" {
+        pub fn wasm_opt_main(argc: c_int, argv: *const *const c_char) -> c_int;
+    }
+}
+
+pub fn wasm_opt_main() -> anyhow::Result<()> {
+    use libc::{c_char, c_int};
+    use std::ffi::OsString;
+    #[cfg(unix)]
+    use std::os::unix::ffi::OsStrExt;
+
+    let args: Vec<OsString> = std::env::args_os().collect();
+
+    #[cfg(unix)]
+    let c_args: Result<Vec<std::ffi::CString>, _> = args
+        .into_iter()
+        .map(|s| std::ffi::CString::new(s.as_bytes()))
+        .collect();
+
+    #[cfg(windows)]
+    let c_args: Result<Vec<std::ffi::CString>, _> = args
+        .into_iter()
+        .map(|s| std::ffi::CString::new(s.to_str().expect("utf8").as_bytes()))
+        .collect();
+
+    let c_args = c_args?;
+    let c_ptrs: Vec<*const c_char> = c_args.iter().map(|s| s.as_ptr() as *const c_char).collect();
+
+    let argc = c_ptrs.len() as c_int;
+    let argv = c_ptrs.as_ptr();
+
+    let c_return;
+    unsafe {
+        c_return = c::wasm_opt_main(argc, argv);
+    }
+
+    drop(c_ptrs);
+    drop(c_args);
+
+    std::process::exit(c_return)
+}
+```
+
+todo
+
+
+
+
+
+# The no-op `wasm_opt_sys::init` function
+
+wasm-opt-sys/wasm-opt-cxx-sys/wasm-opt
+split wasm_opt_sys and wasm_opt_cxx_sys
 
 
 
@@ -574,3 +768,4 @@ and seem worth enumerating:
 - once_cell = ">= 1.9.0, < 1.15.0"
 - wasm-opt-sys build times with cc crate
 - check_cxx17_support
+- 1.48 compatibility
