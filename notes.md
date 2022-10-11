@@ -42,7 +42,7 @@ professional networking and grant writing.
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
 - [Outcome and future plans](#user-content-outcome-and-future-plans)
-- [Appendix: The w3f grant experience]
+- [Appendix: The W3F grant experience]
 
 
 
@@ -1071,14 +1071,14 @@ and seem worth enumerating:
 
 ## Outcome and future plans
 
-This was a great little project:
+This was a great bite-sized project:
 perfectly scoped to complete quickly and successfully,
 with many clear and distinct tasks to split between myself and my partner.
 Most hacking isn't so clearcut, so I am grateful we found this one.
 
 It has already been [integrated into the master branch of `cargo-contract`][ccmb],
 and &mdash; amazingly &mdash;
-somebody else took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
+somebody other than us took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
 
 [ccmb]: todo
 [sswb]: todo
@@ -1107,25 +1107,202 @@ which happen a few times a year.
 The Web3 Foundation, which funded this project,
 has another process for "maintenance grants",
 and we plan to apply for one.
+As part of that maintenance we would also upgrade crate dependencies,
+and submit `wasm-opt` updates to projects the W3F cares about,
+including Ink!'s `cargo-contract` and Substrate's `wasm-builder`.
 Assuming that is accepted,
 prospective integrators can be confident this crate will be maintained in the future.
 
-As part of that grant we may propose fixing Binaryen's Unicode support on Windows.
+We may also propose fixing Binaryen's Unicode support on Windows,
+if Binaryen maintainers want that.
+It would probably be a bunch of churn for Binaryen,
+but I am not too comfortable having a Rust crate that breaks in surprising ways on Windows.
 
-todo
+We are also interested in writing a pure-Rust wasm minifier,
+with much reduced scope compared to `wasm-opt`.
+Being pure Rust would fix all the aforementioned caveats about this crate as it stands today;
+and I have a few ideas for minification techniques that `wasm-opt` doesn't employ,
+though it could (shrinking symbol names, function outlining, profiling (TODO make sure binaryen doesn't do these)).
+Also, it would just be fun to write.
+But it's a big project,
+and justifying it in a grant is harder than this project.
 
 
 
-### Maintenance grant
 
-- publish updates following binaryen releases
-- update dependencies
-- submit updated prs to cargo-contract and wasm-builder
-- fix unicode bug in binaryen
+## Appendix: The W3F grant experience
 
+This project was funded by [a grant from the Web3 Foundation][w3fg].
+We are thankful for the support of the orginization and the individuals responsible for helping us secure the grant.
 
-## Appendix: The w3f grant experience
+[w3fg]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md
 
+The process for this particular grant went as smoothly as possible,
+for a number of reasons.
+I would not expect most grants to be as easy,
+but still I thought I would outline what we did for the sake of other prospective proposal writers.
+
+Some factors that made this project successful include:
+
+- The scope of this project and what success would look like was well-defined, and small:
+  bind `wasm-opt`, use it in `cargo-contract`.
+- The path to implement the project technically had few risks and unknowns.
+- The cost was modest: 30,000 USD. More about the cost below.
+
+But also:
+
+- I have a well-known history with Rust and the Rust blockchain industry,
+  and am more-or-less a recognized expert,
+  so it is easier to approve my proposal than someone unknown.
+- Though we had never worked together previously,
+  I have had professional contact for years with both Polkadot and W3F employees.
+  
+Networking and "building your brand" has a compounding beneficial effect over one's career.
+I am grateful to know so many people in the industry,
+and that many of them remain willing to work with me.
+
+As background,
+in 2020 I wrote [a series of blog posts][b1]
+in wich I explored [Ink!],
+the Rust DSL for smart contracts on [Substrate].
+I had some chats with one of the Ink! maintainers at the time.
+In 2021 I [wrote another][b2].
+So the Ink! maintainers were aware of me and my interest in their project.
+
+This year (2022) I participated in, but did not complete, the [Substrate hackathon][sht].
+I intended to blog about it again, but [did not achieve enough for it to be worthwhile][b3].
+
+I did note this time though that the experience of running [`cargo-contract`],
+Ink!'s build tool,
+was not as smooth as I would expect,
+one issue being that `wasm-opt` was not trivial to install.
+
+A solution to this little inconvenience was obvious to me,
+and it seemed a great candidate for a grant.
+
+So I pinged one of the Ink! maintainers whom by now I already knew and told them about my experience,
+and my idea for creating `wasm-opt` Rust bindings.
+The agreed with the idea and indicated that it would be an easy grant to approve;
+and though the Ink maintainers are not the ones responsible for approving a grant,
+it surely can only help to have the support of the maintainers of the project one is looking to improve when seeking funding for that project.
+
+Since this project was to create a binding to the 3rd-party Binaryen project,
+I _also_ pinged the author of that project,
+who I _also_ knew previously (we worked together at Mozilla).
+I was looking to see whether they approved or disapproved of the idea (they liked it),
+whether they knew of any obvious obstacles,
+and whether there were any prior efforts to bind Binaryen that I was not considering (there was).
+
+When building consensus for a proposal of any kind,
+having a sense ahead of time how that proposal is likely to proceed is helpful.
+Maintainers don't generally like to be surprised with big changes, even if the ideas are great.
+In this case I had been laying the groundwork to make a good proposal of this nature for years.
+
+Proposing a W3F grant requires filling out [a template] and submitting a pull request.
+The process is completely open on GitHub.
+For an open source hacker, this is awesome:
+I love working on GitHub, I love working in the open.
+
+[Our proposal] was pretty simple.
+I tried to make the deliverables precise and measurable.
+
+W3F grants are based on deliverables at milestones,
+each milestone receiving an agreed payout if the deliverables are completed as specified in the approved proposal.
+The W3F has three funding tiers that require progressively more approvals.
+The first tier is for proposals less than (TODO).
+This is a very small amount of compensation, and only suitable for tiny projects, or perhaps students looking to start their career.
+The second tier is the sweet spot,
+providing funding for up to 30,000 USD,
+and only requiring a modest number of approvals.
+The third tier requires many approvals.
+
+I was a little concerned about completing the work for a budget of 30,000 USD,
+but thought we could likely do it without going too far overbudget and undervaluing ourselves.
+In any case, even if we did go overbudget, I suspected we wouldn't go too far over budget,
+and having a solid success with the W3F would be good for our future prospects.
+
+So we asked for 30,000 USD.
+I didn't attempt to do any estimation of how many hours it would take besides looking at the deliverables we were proposing
+and thinking hard about whether we could do it within budget at our typical hourly rates.
+I don't have a lot of faith in software estimation.
+
+The W3F wants a grant to be divided into milestones,
+with payment at each,
+and has [a list of specifics items] they want at each milestone.
+I didn't really think this project was large enough for more than one milestone,
+but for the sake of getting paid at a reasonable interval,
+I split the project into two milestones,
+the first (M1) was to "prove the concept",
+in which we promised to get the bindings working end to end,
+with a rough sketch of a high-level API;
+the second (M2) was to do everything else.
+
+Fortunately, there were no high-risk setbacks discovered in the implementation of this project.
+In our [M1 deliverable] we made clear a few things we hadn't known or considered during the proposal:
+
+- The crate would require a Rust 1.48+ compiler
+- The crate would require a c++17 compiler
+- Binaryen [did not provide suitable error handling] in some cases,
+  and this would require an unexpected but doable upstream fix.
+- We discovered that [Binaryen did not handle Unicode correctly on Windows].
+- `wasm-opt` had fuzzing capabilities that we had not mentioned in the proposal,
+  and we did not intend to expose them to the Rust API.
+
+We communicated every negative we knew about the project as clearly as we could.
+
+We were asked to ammend the original proposal to indicate that fuzzing was out of scope,
+so that its omission could be evaluated in the final M2 delivery,
+and [we did so].
+
+We also published [a preview build of the crate] so the API and its docs could be evaluated.
+Although we spent a lot of thought on the design of the Rust API,
+nobody at any stage of the process actually commented on it one way or the other.
+And in practice, any one `wasm-opt` integrator is only going to use a small part of the total API surface.
+They reasonably just care that it works like `wasm-opt`.
+I am proud though of the API and its docs.
+
+The second milestone (M2) stretched out as we spent a lot of time
+identifying areas in need of polish and perfection.
+As we were nearing completion,
+we were delighted when someone we did not know
+produced [a pull request to Substrate's `wasm-builder`] integrating our bindings.
+Though they used the preview build of the crate which was broken in various ways,
+this gave us a lot of encouragement that other people were interested in using our work.
+
+What about the 30,000 USD budget? Did we go over it?
+I track my time precisely, and I performed about 20,000 USD worth of work on this project.
+My partner, whose time we charge less for, but whose time we did not track precisely,
+nevertheless _definitely_ put more hours into the project than I.
+So I think that we ended up almost perfectly on budget.
+
+I was pretty shocked by that,
+as the original estimate was a driven not by any real estimation,
+but just by a hunch that we could do it on the allocated budget.
+
+I still do not have much faith in software estimation.
+
+One of the deliverables W3F asks for every milestone is a blog post.
+I declined to offer a milestone (M1) blog post,
+but promised to deliver one for M2 &mdash; this one!
+I kept notes throughout the project, and snippets of text to inform the blog,
+so that when it came time to finish it I would remember what was important.
+
+This blog post was probably the single largest work item of the entire project,
+taking at least 10 hours of my time.
+I don't mind that at all though &mdash; I'm happy with how it turned out,
+lots of solid technical content,
+a strong addition to my website.
+
+And now that the blog post is published we can submit the M2 deliverables.
+How that turns out is yet to be determined.
+
+[b1]: todo
+[b2]: todo
+[Ink!]: todo
+[Substrate]: todo
+[sht]: todo
+[b3]: todo
+[`cargo-contract`]: todo
 
 
 
@@ -1155,5 +1332,5 @@ todo
   - [Binaryen early exits]
   - [Unicode paths don't work on Windows]
   - [Thread safety]
-
+- change grant link to the pull request
 
