@@ -355,7 +355,7 @@ so during development we don't need to sit through repeated complete builds of B
 # Linking to crates that contain no Rust code
 
 The decision to put no Rust code into `wasm-opt-sys` led to one big oddity.
-And it would be a difficult to understand and debug oddity if I wasn't already vagually aware of it.
+And it would be a difficult to understand and debug oddity if I wasn't already aware of it.
 
 After `cc` compiles all of its C and C++ (`.c` / `.cpp`) files into object (`.o`) files,
 it then packages them with the `ar` tool into an archive (`.a`) file,
@@ -415,7 +415,7 @@ to tell the compiler about a crate that is only used in some configurations (e.g
 With a working build of all the source needed by `wasm-opt`,
 we had to write our Rust `main.rs` file and call the C++ `main` function.
 For this we did not use `cxx` as the FFI was easy to do.
-The `wasm-opt` crate is calling the FFI directly,
+The `wasm-opt` crate's `main.rs` calls the FFI directly,
 bypassing the `cxx` layer and the `wasm-opt-cxx-sys` crate.
 
 This is mostly straightforward,
@@ -438,9 +438,11 @@ To declare it a C function it needs to be:
 extern "C" int main(int argc, const char* argv[]) {
 ```
 
-At the least this will disable name mangling for the `main` function,
+At the least this will disable [name mangling][nm] for the `main` function,
 so that the symbol `main` can be linked. I am not clear on whether
 it has any impact on the calling convention of the function.
+
+[nm]: https://en.wikipedia.org/wiki/Name_mangling
 
 The above about name mangling is true generally,
 but may not be true for a function named `main`.
@@ -553,8 +555,53 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
 }
 ```
 
-todo
+This file contains a `main` function that calls
+the previously-described `wasm_opt_sys::init`,
+that does nothing except fool `rustc` into linking
+the native code inside the `wasm-opt-sys` crate.
 
+The `wasm_opt_main` Rust function's only
+responsibilities are to translate Rust's command-line
+arguments, to C-compatible command-line arguments,
+call the C++ `wasm_opt_main`,
+and report its error code.
+
+It's basic strategy is to collect the arguments
+into a `Vec<OsString>`,
+convert those into a `Vec` of the type the C++ code wants,
+then collect another `Vec` of _pointers_ to those,
+then pass the length and pointer to that `Vec`'s buffer
+to the C++ `wasm_opt_main`.
+
+The string handling is a mess here because of the differences
+between strings on Unix and Windows,
+and it is still wrong:
+this code is passing a buffer of bytes to `wasm_opt_main`
+on Windows,
+and that _is_ what the Binaryen code is asking for,
+but Binaryen is then [not treating those bytes as Unicode][bb].
+
+[bb]: https://github.com/brson/wasm-opt-rs/issues/40
+
+The result of this is that paths with extended Unicode characters
+do not work with `wasm-opt` (either the bindings or the original CLI program).
+
+What _probably_ (based on my brief research of modern C++)
+should happen here is that on Windows,
+the Rust code should be calling [`OsStrExt::encode_wide`]
+to get (potentially ill-formed) UTF-16,
+and passing that to Binaryen;
+Binaryen then would need to be adapted to use "wide" (16-bit)
+`char`s on Windows, perhaps leveraging the C++ [`std::path`] type.
+
+[`OsStrExt::encode_wide`]: https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStrExt.html#tymethod.encode_wide
+[`std::filesystem::path`]: https://en.cppreference.com/w/cpp/filesystem/path
+
+The two calls to [`drop`] in this function are functionally useless;
+they are just a written reminder that we want to lose access to the raw pointers
+before losing access to the things they point to.
+
+[`drop`]: https://doc.rust-lang.org/std/mem/fn.drop.html
 
 
 
