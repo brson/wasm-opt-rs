@@ -31,21 +31,12 @@ professional networking and grant writing.
 - [The Plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
 - [The Plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
-- [Dividing the FFI between crates]
-- [Linking to crates that contain no Rust code]
+- [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
+- [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
 - [Calling the C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
-- [`cxx` and Binaryen]
-  - [Constructors and `cxx`]
-  - [By-val `std::string`]
-  - [`const`-correctness]
-  - [Exceptions and `std::exception`]
-  - [Opinions about `cxx`]
-- [Binaryen-specific surprises]
-  - [Colors]
-  - [Some Binaryen APIs make assertions about how they are called]
-  - [Binaryen early exits]
-  - [Unicode paths don't work on Windows]
-  - [Thread safety]
+- [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
+- [Our C++ shim layer](#user-content-our-c++-shim-layer)
+
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
@@ -185,8 +176,21 @@ but this is the easy part of the project.
 
 ## The Plan: our `cxx` lib strategy
 
-todo
+The hard part of this project would be
+wrapping Binaryen APIs in a Rust FFI,
+layering on top of that an idiomatic Rust API,
+capturing all the features of the underlying tool,
+and ensuring that they worked the same.
 
+We proposed to use the [`cxx`] crate for the FFI.
+Though we had never used it,
+and had no sense of how it worked or would work for our purpose,
+it is created by [`dtolnay`],
+who has designed many excellent Rust libraries,
+so we were enthusiastic to try it.
+
+[`cxx`]: http://docs.rs/cxx
+[`dtolnay`]: https://github.com/dtolnay
 
 In the end we ended up creating a
 [layer of `unique_ptr`-held shim wrappers and methods for every binaryen type][shims]
@@ -198,12 +202,7 @@ enough that it may be difficult to develop a C++ API that is
 both C++-idiomatic in a way C++ developers would be happy using
 and fully bindable wich `cxx`.
 These shims add a small maintenance burden,
-but I think it's a fine tradeoff to have the conveniences
-of `cxx`.
-
-The next few sections will describe some of the problems
-we ran into binding binaryen APIs,
-and our solutions.
+but I think it's a fine tradeoff for the conveniences of `cxx`.
 
 
 
@@ -348,6 +347,13 @@ Instead we settled on this division of responsibilities between crates:
 
 Editing either `wasm-opt-cxx-sys` or `wasm-opt-sys` does not invalidate `wasm-opt-sys`,
 so during development we don't need to sit through repeated complete builds of Binaryen.
+
+One awkward result of the division between `wasm-opt-sys` and `wasm-opt-cxx-sys` is
+that they both need identical copies of the Binaryen source code,
+as `cxx` generates C++ code that accesses Binaryen headers.
+This complicates our deploy process slightly,
+but also implies that we must be very careful about managing the version numbers
+of these two crates such that compatible versions always carry identical Binaryen source.
 
 
 
@@ -557,12 +563,12 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
 
 This file contains a `main` function that calls
 the previously-described `wasm_opt_sys::init`,
-that does nothing except fool `rustc` into linking
+which does nothing except fool `rustc` into linking
 the native code inside the `wasm-opt-sys` crate.
 
 The `wasm_opt_main` Rust function's only
 responsibilities are to translate Rust's command-line
-arguments, to C-compatible command-line arguments,
+arguments to C-compatible command-line arguments,
 call the C++ `wasm_opt_main`,
 and report its error code.
 
@@ -576,23 +582,24 @@ to the C++ `wasm_opt_main`.
 The string handling is a mess here because of the differences
 between strings on Unix and Windows,
 and it is still wrong:
-this code is passing a buffer of bytes to `wasm_opt_main`
-on Windows,
+this code is passing a buffer of bytes to `wasm_opt_main` on Windows,
 and that _is_ what the Binaryen code is asking for,
-but Binaryen is then [not treating those bytes as Unicode][bb].
+but Binaryen is then [not treating those bytes as Unicode][bb],
+at least when interpreting them as paths.
 
 [bb]: https://github.com/brson/wasm-opt-rs/issues/40
 
 The result of this is that paths with extended Unicode characters
-do not work with `wasm-opt` (either the bindings or the original CLI program).
+do not work with `wasm-opt` (either the bindings or the original CLI program) on Windows.
 
 What _probably_ (based on my brief research of modern C++)
 should happen here is that on Windows,
 the Rust code should be calling [`OsStrExt::encode_wide`]
 to get (potentially ill-formed) UTF-16,
 and passing that to Binaryen;
-Binaryen then would need to be adapted to use "wide" (16-bit)
+Binaryen then would need to be adapted to accept and process "wide" (16-bit)
 `char`s on Windows, perhaps leveraging the C++ [`std::path`] type.
+We left this large upstream task to future work.
 
 [`OsStrExt::encode_wide`]: https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStrExt.html#tymethod.encode_wide
 [`std::filesystem::path`]: https://en.cppreference.com/w/cpp/filesystem/path
@@ -606,10 +613,218 @@ before losing access to the things they point to.
 
 
 
-## `cxx` lessons
+## `cxx` and Binaryen
 
-### Constructors and `cxx`
+We dedicated the [`wasm-opt-cxx-sys`] to creating bindings with [`cxx`].
+We were happy with this decision. `cxx` was great and worked as advertised.
+We didn't have to think much about memory-safety across the FFI as `cxx` guided us to the safe solutions.
 
+We used `cxx` version `1.0.72`.
+There may be new versions by now with new features.
+
+The `cxx` docs are pretty great,
+with [good API docs](https://docs.rs/cxx/latest/cxx/),
+and [a book](https://cxx.rs/).
+
+The [table showing the correspondence between C++ and Rust types][cxxt] is invaluable.
+
+[cxxt]: https://cxx.rs/bindings.html
+
+The purpose of `cxx` is to make it possible to communicate between C++ and Rust using _safe_ Rust.
+As such, `cxx` is very opinionated about what the code on both sides of the FFI look like,
+and supports a relatively small set of types.
+
+This is great for projects that are in control of both the C++ and Rust APIs,
+and it probably will help the C++ side be disciplined about ownership and const-correctness.
+
+Binaryen was not designed for compatibility with with `cxx`,
+so we ended up creating a full C++ shim layer to adapt between Binaryen's APIs
+and APIs that were suitable for binding throug `cxx`.
+Fortunately Binaryen's API surface is reasonable and modern and easy to understand,
+so our shims are simple.
+
+`cxx` is capable of creating bindings in both directions of the FFI:
+to let Rust call C++, but also to let C++ call Rust.
+The former are done in macros containing [`extern "C++"] blocks;
+the latter [`extern "Rust"`] blocks.
+We only used the former, calling from Rust to C++.
+
+[`extern "C++"`]: https://cxx.rs/extern-c++.html
+[`extern "Rust"`]: https://cxx.rs/extern-rust.html
+
+This section will discuss our experience with `cxx`,
+but I want to stress that there is probably a lot we don't know about `cxx`
+and things I say may be incorrect:
+we learned enough `cxx` to get our bindings working acceptably,
+but there may be better patterns that we didn't discover.
+
+The next sections will discuss some of the obstacles
+we encountered creating `cxx` bindings,
+then we'll show what the final C++ shims look like.
+
+
+
+
+### Defining `cxx` bindings
+
+[Our `cxx` bindings][ourb].
+
+[ourb]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/lib.rs
+
+In `cxx` bindings are defined in a dedicated module annotated with `#[cxx::bridge]`.
+Within that module are any number of `extern "C++"` (or `extern "Rust"`) blocks.
+
+The pattern we followed used many `unsafe extern "C++"` blocks,
+one for each C++ class we wanted bindings for,
+each of those blocks then declared a single type,
+and one or more constructor functions and methods.
+
+Here is our bindings declaration for Binaryen's `ModuleReader`:
+
+```rust
+#[cxx::bridge(namespace = "wasm_shims")]
+pub mod wasm {
+    unsafe extern "C++" {
+        type ModuleReader;
+
+        fn newModuleReader() -> UniquePtr<ModuleReader>;
+
+        fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
+
+        fn setDwarf(self: Pin<&mut Self>, dwarf: bool);
+
+        fn readText(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
+
+        fn readBinary(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString,
+        ) -> Result<()>;
+
+        fn read(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+            sourceMapFilename: &CxxString,
+        ) -> Result<()>;
+    }
+}
+```
+
+This example includes the surrounding module,
+but omits many other `extern "C++"` blocks within that module.
+
+This is a [DSL] interpreted by a [proc macro].
+It looks a lot like Rust,
+but it is not quite Rust,
+and using `cxx` means learning what its syntax means.
+
+[DSL]: https://en.wikipedia.org/wiki/Domain-specific_language
+[proc macro]: https://doc.rust-lang.org/reference/procedural-macros.html
+
+Some things to notice here:
+
+- the `unsafe` keyword here is a declaration that using these bindings is
+  _safe_. Think of it the same as the use of `unsafe` around an expression.
+  It is possible to write `cxx` bindings that propagate unsafety as well by omitting `unsafe`.
+- the naming conventions are a mashup of Rust and C++:
+  function names necessarily come from C++;
+  the `UniquePtr` type is the Rust wrapper for the C++ `std::unique_ptr` type.
+- `newModule` is a free function. It is not a C++ constructor.
+  It doesn't appear that `cxx` handles C++ constructors directly,
+  so the C++ side must define extra constructor functions.
+- non-primitive types need to be passed as pointers,
+  mostly `UniquePtr` or references.
+- functions with an initial argument named `self` are interpreted
+  as methods of the single `type` declared in the block.
+- the `Result` type is a typedef of `std::Result` where the
+  error type is [`cxx::Exception`]. `cxx` will catch at the boundary
+  any exception that implements [`std::exception`] and return it as an error.
+- `&CxxString` is a `const` reference to a C++ `std::string`.
+
+[`std::exception`]: https://en.cppreference.com/w/cpp/error/exception
+
+The final thing to note is that the `self` type of
+these methods is `Pin<&mut Self>`.
+What this means is that the underlying method is non-`const`,
+it is declared such that it may mutate its fields.
+
+Access to mutable `C++` types from Rust is always through [`Pin`],
+to prevent the ability to move their underlying value.
+Move semantics in Rust and C++ are different.
+
+[`Pin`]: https://doc.rust-lang.org/std/pin/struct.Pin.html
+
+Binaryen's methods are not ["`const`-correct"][cc]:
+they are all declared non-`const`,
+even when they do no mutation.
+This could be worth fixing in Binaryen,
+but for our purposes we could easily hide this
+in higher-layers of our API.
+Our next layer up, the [`base` API],
+hides all the interaction with `Pin`,
+though it still exposes incorrect mutability,
+and high-still layers of API hide the `base` API from users,
+exposing only APIs with correct `mut` declarations.
+
+[cc]: https://isocpp.org/wiki/faq/const-correctness
+[`base` API]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/base.rs
+
+Naming these types correctly is not exactly easy,
+especially the difficult-to-understand `Pin` type,
+but `cxx` gives a lot of help,
+and in our experience did not let us
+write a bindings declaration that differed from
+the actual C++ declaration.
+
+When you define a Rust binding to C++ code,
+`cxx` will emit static checks that the types of the Rust declarations
+match the types of the C++ declarations.
+This is a great feature,
+and gives me confidence about the maintainability of the bindings.
+
+The errors that are emitted when there is a declaration mismatch
+are emitted by the C++ compiler,
+and are quite challending to understand,
+but at least they stop you from running the code with mismatched types.
+
+Here's an example of the error emitted when
+the above `read` method is declared to take an incorrect `&Self` self-parameter
+(slightly reformatted for slightly-better readability):
+
+```
+  cargo:warning=/home/brian/wasm-opt-rs/target/debug/build/wasm-opt-cxx-sys-5a105a63051bad83/out/cxxbridge/sources/wasm-opt-cxx-sys/src/lib.rs.cc:
+  In function ‘rust::cxxbridge1::{anonymous}::repr::PtrLen wasm_shims::wasm_shims$cxxbridge1$ModuleReader$read(const ModuleReader&, const string&, wasm_shims::Module&, const string&)’:
+
+  cargo:warning=/home/brian/wasm-opt-rs/target/debug/build/wasm-opt-cxx-sys-5a105a63051bad83/out/cxxbridge/sources/wasm-opt-cxx-sys/src/lib.rs.cc:145:152:
+  error: cannot convert ‘void (wasm_shims::ModuleReader::*)(const string&, wasm_shims::Module&, const string&)’ {aka ‘void (wasm_shims::ModuleReader::*)(const std::__cxx11::basic_string<char>&, wasm::Module&, const std::__cxx11::basic_string<char>&)’} to ‘void (wasm_shims::ModuleReader::*)(const string&, wasm_shims::Module&, const string&) const’ {aka ‘void (wasm_shims::ModuleReader::*)(const std::__cxx11::basic_string<char>&, wasm::Module&, const std::__cxx11::basic_string<char>&) const’} in initialization
+
+  cargo:warning=  145 |   void (::wasm_shims::ModuleReader::*read$)(const ::std::string &, ::wasm_shims::Module &, const ::std::string &) const = &::wasm_shims::ModuleReader::read;
+```
+
+I was able to figure these out at least.
+Mostly not from the text of the errors,
+but just by thinking about what I might have done wrong.
+
+
+
+
+## Our C++ shim layer
+
+
+
+
+
+
+
+
+
+todo
 
 ### By-val `std::string`
 
@@ -636,99 +851,10 @@ Gets a C++ shim:
 
 This incurs a copy of the string.
 
-### `const`-correctness
-
-Binaryen's APIs are not const-correct,
-and `cxx` expects const-correctness.
-
-The same `readText` method on `ModuleReader`:
-
-```c++
-  void readText(std::string filename, Module& wasm);
-```
-
-does not actually mutate the receiver `ModuleReader`
-so could more correctly be declared
-
-```
-  void readText(std::string filename, Module& wasm) const;
-```
-
-So our wrapper:
-
-```c++
-  void ModuleReader_readText(ModuleReader& reader,
-                             const std::string& filename,
-                             Module& wasm) {
-    reader.readText(std::string(filename), wasm);
-  }
-```
-
-can`t declare `const ModuleReader& reader`,
-and our Rust declaration:
-
-```rust
-        fn ModuleReader_readText(
-            reader: Pin<&mut ModuleReader>,
-            filename: &CxxString,
-            wasm: Pin<&mut Module>,
-        );
-```
-
-must accept a `Pin<&mut ModuleReader>` instead
-of `&ModuleReader`,
-and this leaks into our Rust API,
-where the receiver again must take a `&mut self`:
-
-```rust
-pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
-
-impl ModuleReader {
-    // FIXME would rather take &self here but the C++ method is not const-correct
-    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
-        // FIXME need to support non-utf8 paths. Does this work on windows?
-        let path = convert_path_to_u8(path)?;
-        let_cxx_string!(path = path);
-
-        let this = self.0.pin_mut();
-        this.readText(&path, wasm.0.pin_mut())
-    }
-}
-```
-
-To work around the missing C++ const declaration
-and present an idiomatic non-mut Rust receiver
-will require using interior mutability, e.g.
-
-```rust
-pub struct ModuleReader(RefCell<cxx::UniquePtr<wasm::ModuleReader>>);
-```
-
-This would allow `ModuleReader` to present `&self` as it logically should,
-by quietly mutably borrowing its interior value.
-This imposes an extra flag check that should always succeed.
-Of course the use of `RefCell` makes `ModuleReader` surprisingly
-non-`Sync`.
-To fix _that_ we could wrap the `RefCell` in a `Mutex`,
-imposing another atomic flag check that should always succeed.
 
 
 
 
-## Opinions about `cxx`
-
-When you define a Rust binding to C++ code,
-`cxx` will emit static checks that the types of the Rust declarations
-match the types of the C++ declarations.
-This is a great feature,
-and gives me confidence about the maintainability of the bindings.
-
-The errors that are emitted when there is a declaration mismatch
-are emitted by the C++ compiler,
-and are quite challending to understand &mdash;
-
-
-todo example
 
 
 
@@ -779,25 +905,6 @@ We [filed an issue against Binaryen][fileissue] asking if we could modify this b
 
 This is the first big obstacle we've run into,
 and it's going to take a number of hours to resolve.
-
-
-
-
-### Unicode paths don't work on Windows.
-
-We don't know why yet,
-but when we use paths with extended unicode characters
-Binaryen fails to open them on Windows.
-We are currently encoding those paths as UTF-8 before passing them to Binaryen.
-Perhaps UCS-16 is expected,
-or perhaps we need to pass different compiler flags
-to configure MSVC's standard library,
-or perhaps Binaryen is broken in this case.
-
-This is the second big obstacle we've run into.
-
-TODO
-
 
 
 
@@ -927,3 +1034,93 @@ and seem worth enumerating:
 - wasm-opt-sys build times with cc crate
 - check_cxx17_support
 - 1.48 compatibility
+- cxx
+  - [Constructors and `cxx`]
+  - [By-val `std::string`]
+  - [`const`-correctness]
+  - [Exceptions and `std::exception`]
+- [Binaryen-specific surprises]
+  - [Colors]
+  - [Some Binaryen APIs make assertions about how they are called]
+  - [Binaryen early exits]
+  - [Unicode paths don't work on Windows]
+  - [Thread safety]
+
+
+## old content
+
+### `const`-correctness
+
+Binaryen's APIs are not const-correct,
+and `cxx` expects const-correctness.
+
+The same `readText` method on `ModuleReader`:
+
+```c++
+  void readText(std::string filename, Module& wasm);
+```
+
+does not actually mutate the receiver `ModuleReader`
+so could more correctly be declared
+
+```
+  void readText(std::string filename, Module& wasm) const;
+```
+
+So our wrapper:
+
+```c++
+  void ModuleReader_readText(ModuleReader& reader,
+                             const std::string& filename,
+                             Module& wasm) {
+    reader.readText(std::string(filename), wasm);
+  }
+```
+
+can`t declare `const ModuleReader& reader`,
+and our Rust declaration:
+
+```rust
+        fn ModuleReader_readText(
+            reader: Pin<&mut ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        );
+```
+
+must accept a `Pin<&mut ModuleReader>` instead
+of `&ModuleReader`,
+and this leaks into our Rust API,
+where the receiver again must take a `&mut self`:
+
+```rust
+pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
+
+impl ModuleReader {
+    // FIXME would rather take &self here but the C++ method is not const-correct
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
+        // FIXME need to support non-utf8 paths. Does this work on windows?
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
+
+        let this = self.0.pin_mut();
+        this.readText(&path, wasm.0.pin_mut())
+    }
+}
+```
+
+To work around the missing C++ const declaration
+and present an idiomatic non-mut Rust receiver
+will require using interior mutability, e.g.
+
+```rust
+pub struct ModuleReader(RefCell<cxx::UniquePtr<wasm::ModuleReader>>);
+```
+
+This would allow `ModuleReader` to present `&self` as it logically should,
+by quietly mutably borrowing its interior value.
+This imposes an extra flag check that should always succeed.
+Of course the use of `RefCell` makes `ModuleReader` surprisingly
+non-`Sync`.
+To fix _that_ we could wrap the `RefCell` in a `Mutex`,
+imposing another atomic flag check that should always succeed.
