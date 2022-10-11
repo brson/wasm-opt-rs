@@ -36,13 +36,10 @@ professional networking and grant writing.
 - [Calling the C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Our C++ shim layer](#user-content-our-c++-shim-layer)
-
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
-- [Unexpected obstacles]
-  - todo
 - [Future plans](#user-content-future-plans)
 - [Appendix: The w3f grant experience]
 
@@ -859,54 +856,6 @@ This incurs a copy of the string.
 
 
 
-## Binaryen-specific surprises
-
-### `ParseException` doesn't implement `std::exception`
-
-`cxx` can translate exceptions to Rust as long as they implement
-`std::exception`, but `ParseException` does not.
-
-
-
-### Colors
-
-
-
-## Some binaryen APIs make assertions about how they are called
-
-These abort if they are triggered.
-
-PassRegistry::getPassDescription
-
-todo
-
-
-
-### Binaryen calls `exit` on failure to open a file
-
-While testing whether our handling of unicode paths works correctly on Windows (it doesn't)
-we discovered that Binaryen's internal file reading and writing
-routines call `exit` explicitly in several locations, as in:
-
-```c++
-  if (!infile.is_open()) {
-    std::cerr << "Failed opening '" << filename << "'" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-```
-
-This is a problem for our API that is insurmountable without modifying binaryen,
-so we're going to have to submit a patch upstream to propagate
-an exception instead.
-
-We [filed an issue against Binaryen][fileissue] asking if we could modify this behavior.
-
-[fileissue]: https://github.com/WebAssembly/binaryen/issues/4938
-
-This is the first big obstacle we've run into,
-and it's going to take a number of hours to resolve.
-
-
 
 
 ## A Rusty API
@@ -1124,3 +1073,52 @@ Of course the use of `RefCell` makes `ModuleReader` surprisingly
 non-`Sync`.
 To fix _that_ we could wrap the `RefCell` in a `Mutex`,
 imposing another atomic flag check that should always succeed.
+
+
+## Binaryen-specific surprises
+
+### `ParseException` doesn't implement `std::exception`
+
+`cxx` can translate exceptions to Rust as long as they implement
+`std::exception`, but `ParseException` does not.
+
+
+
+### Colors
+
+
+
+## Some binaryen APIs make assertions about how they are called
+
+These abort if they are triggered.
+
+PassRegistry::getPassDescription
+
+todo
+
+
+
+### Binaryen calls `exit` on failure to open a file
+
+While testing whether our handling of unicode paths works correctly on Windows (it doesn't)
+we discovered that Binaryen's internal file reading and writing
+routines call `exit` explicitly in several locations, as in:
+
+```c++
+  if (!infile.is_open()) {
+    std::cerr << "Failed opening '" << filename << "'" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+```
+
+This is a problem for our API that is insurmountable without modifying binaryen,
+so we're going to have to submit a patch upstream to propagate
+an exception instead.
+
+We [filed an issue against Binaryen][fileissue] asking if we could modify this behavior.
+
+[fileissue]: https://github.com/WebAssembly/binaryen/issues/4938
+
+This is the first big obstacle we've run into,
+and it's going to take a number of hours to resolve.
+
