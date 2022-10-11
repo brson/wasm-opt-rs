@@ -3,20 +3,18 @@
 `wasm-opt` is a component of the [Binaryen] toolkit,
 writtin in C++,
 that optimizes [WebAssembly] modules,
-and perhaps more importantly,
-_shrinks_ WebAssembly modules.
 I have recently created a [`wasm-opt`] bindings crate for Rust
-(with the extensive help of [Aimeedeer]).
+(with the extensive help of my partner [Aimeedeer]).
 The `wasm-opt` crate allows `wasm-opt` to be installed via `cargo`,
 and also includes an idiomatic Rust API to access `wasm-opt` programatically.
 
 This was a fun bite-sized project that involved several interesting topics:
 Rust FFI via the [`cxx`] crate,
-converting C++ abstractions to safe Rust abstractions,
-designing layered Rust abstractions,
+converting C++ abstractions to Rust abstractions,
+designing Rust APIs,
 creating tests to catch upstream changes in C++ code,
 creating tests to verify conformance with upstream behavior,
-professional networking and grant writing.
+professional networking and grant proposal writing.
 
 [Aimeedeer]: https://github.com/Aimeedeer
 [`wasm-opt`]: https://github.com/brson/wasm-opt-rs
@@ -42,9 +40,7 @@ professional networking and grant writing.
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
 - [Outcome and future plans](#user-content-outcome-and-future-plans)
-- [Appendix: The W3F grant experience]
-
-
+- [Appendix: The W3F grant experience](#user-content-appendix-the-w3f-grant-experience)
 
 
 
@@ -1051,24 +1047,6 @@ and seem worth enumerating:
 
 
 
-
-
-
-## Unexpected obstacles
-
-### Obstacle: C++17
-
-### Obstacle: MSRV
-
-### Obstacle: The `cc` crate and rebuild times
-
-### Obstacle: GitHub actions and ARM workers
-
-### Obstacle: binaryen console assumptions
-
-### Obstacle: the binaryen fuzzing features
-
-
 ## Outcome and future plans
 
 This was a great bite-sized project:
@@ -1269,6 +1247,13 @@ produced [a pull request to Substrate's `wasm-builder`] integrating our bindings
 Though they used the preview build of the crate which was broken in various ways,
 this gave us a lot of encouragement that other people were interested in using our work.
 
+Throughout the project we used the [GitHub issue tracker]
+to track work items,
+and assigned issues to GitHub milestones,
+either M1, M2, or none.
+This project was thankfully amenable to subdivision into small tasks,
+which my junior partner could often complete on her own without my oversight.
+
 What about the 30,000 USD budget? Did we go over it?
 I track my time precisely, and I performed about 20,000 USD worth of work on this project.
 My partner, whose time we charge less for, but whose time we did not track precisely,
@@ -1277,9 +1262,9 @@ So I think that we ended up almost perfectly on budget.
 
 I was pretty shocked by that,
 as the original estimate was a driven not by any real estimation,
-but just by a hunch that we could do it on the allocated budget.
+but just by a hunch that we could do it within the allocated budget.
 
-I still do not have much faith in software estimation.
+I still do not believe in software estimation.
 
 One of the deliverables W3F asks for every milestone is a blog post.
 I declined to offer a milestone (M1) blog post,
@@ -1333,4 +1318,4 @@ How that turns out is yet to be determined.
   - [Unicode paths don't work on Windows]
   - [Thread safety]
 - change grant link to the pull request
-
+- arm
