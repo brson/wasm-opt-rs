@@ -376,7 +376,7 @@ then outputs the modified source to `OUT_DIR`.
 We then build our modified `wasm-opt.cpp`.
 
 The obvious alternative would be to carry a patch on a fork of Binaryen
-that makes that changes and commits it to git.
+that makes that change and commits it to git.
 We needed to be able to build `wasm-opt` normally though for testing,
 and preferred not to maintain a fork,
 so preferred this little dynamic rewrite.
