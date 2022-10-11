@@ -31,8 +31,9 @@ professional networking and grant writing.
 - [The Plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
 - [The Plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
-- [Calling C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
-- [The no-op `wasm_opt_sys::init` function]
+- [Dividing the FFI between crates]
+- [Linking to crates that contain no Rust code]
+- [Calling the C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
 - [`cxx` and Binaryen]
   - [Constructors and `cxx`]
   - [By-val `std::string`]
@@ -217,9 +218,13 @@ so we decided not to use Binaryen's build system (CMake-based) to build Binaryen
 
 Instead we built binaryen in [a `cargo` build script][build-script]
 using the [`cc`] crate.
+This build script lived in the [`wasm-opt-sys` crate][wos].
+[`-sys` crates][sc] are special cargo convention for managing access to native libraries.
 
 [build-script]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/build.rs
 [`cc`]: https://github.com/rust-lang/cc-rs
+[wos]: https://github.com/brson/wasm-opt-rs/tree/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys
+[sc]: https://doc.rust-lang.org/cargo/reference/build-scripts.html?highlight=sys#-sys-packages
 
 The [`cc`] crate compiles C and C++ source files,
 packages them into an archive (`.a`) file,
@@ -301,11 +306,117 @@ and it involved resolving link errors and adding source files until everything l
 
 
 
-## Calling C++ `main` from Rust
+## Dividing the FFI between crates
+
+From our experience getting the `wasm-opt-sys` crate to build
+we knew that rebuilding that crate took a long time,
+multiple minutes on my underpowered laptop.
+
+This is because the `cc` crate doesn't support any kind of incremental recompliation:
+any time the `wasm-opt-sys` crate needs to rebuild, it compiles every C++ file in the project.
+The lack of incremental recompilation is a concscious decision &mdash;
+`cc` is not a build system.
+
+We could of course just use an external `CMake`,
+and we also considered adding a basic, if imperfect, caching layer on top of `cc`
+that would make development faster.
+But we still did not want to introduce an external build tool,
+and while creating our sounded fun,
+it did also seem out of scope for our grant.
+
+Instead we decided to create a division of responsibilities between
+the crates in our project that would minimize the amount of rebuilding
+we needed to do during development:
+we put no essentially no Rust code in the `wasm-opt-sys` crate,
+no Rust bindings at all.
+
+That way, once we were done figuring out how to successfully build Binaryen,
+we wouldn't continually invalidate the Binaryen build while hacking on Rust code.
+
+This is not how `-sys` crates typically work.
+They usually include the lowest level of Rust bindings.
+But we just used `wasm-opt-sys` to build and link our native code.
+
+Instead we settled on this division of responsibilities between crates:
+
+- `wasm-opt-sys` - Just build the native library.
+- `wasm-opt-cxx-sys` - Create the Rust bindings to the native library via `cxx`.
+  `cxx` emits both Rust and C++ at build time, so this crate is also performing
+  a native build. In typical bindings this crate would be part of `wasm-opt-sys`.
+- `wasm-opt` - The library and binary, with both a `lib.rs` and `main.rs`,
+  calling Binaryen code via `wasm-opt-cxx-sys`.
+
+Editing either `wasm-opt-cxx-sys` or `wasm-opt-sys` does not invalidate `wasm-opt-sys`,
+so during development we don't need to sit through repeated complete builds of Binaryen.
+
+
+
+
+# Linking to crates that contain no Rust code
+
+The decision to put no Rust code into `wasm-opt-sys` led to one big oddity.
+And it would be a difficult to understand and debug oddity if I wasn't already vagually aware of it.
+
+After `cc` compiles all of its C and C++ (`.c` / `.cpp`) files into object (`.o`) files,
+it then packages them with the `ar` tool into an archive (`.a`) file,
+and then instructions `cargo` to package that archive into the `.rlib` file
+that represents the compiled Rust library for the crate being built.
+
+Later, `rustc` will link all of the code inside the `.rlib` into the final executable.
+
+What isn't obvious though is that `rustc` doesn't actually attempt to link every crate it is told to:
+it will notice when no Rust code ever calls into a crate,
+decide that crate is not used,
+and quietly not link it.
+
+This manifests as linker errors with many missing C++ symbols.
+
+With our decision to put the FFI bindings in a separate crate from `wasm-opt-sys`,
+`rustc` did not actually link to our native libarary.
+
+The way we solved this was to add this function to `wasm-opt-sys`'s `lib.rs`:
+
+```rust
+#[doc(hidden)]
+pub fn init() {}
+```
+
+with [a big comment][abc] explaining its existence.
+
+[abc]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/src/lib.rs#L12-L26
+
+Both the `wasm-opt` and `wasm-opt-cxx-sys` crate then each call this function once,
+`wasm-opt-sys` from another `doc(hidden)` `pub fn`,
+and `wasm-opt` from its `main` function.
+
+`rustc` then thinks that `wasm-opt-sys` is used and links it.
+
+There is another clever pattern that accomplishes this same thing,
+that we only learned of after implementing the no-op `init` function.
+
+Unnamed imports:
+
+```rust
+use wasm_opt_sys as _;
+```
+
+Looks useless,
+but this is an idiomatic way to tell the compiler that a crate is used even though it otherwise looks unused.
+This is also useful when activating the [`unused_crate_dependencies`] lint,
+to tell the compiler about a crate that is only used in some configurations (e.g. Windows-only), but not all.
+
+[`unused_crate_dependencies`]: https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unused-crate-dependencies
+
+
+
+
+## Calling the C++ `main` from Rust
 
 With a working build of all the source needed by `wasm-opt`,
 we had to write our Rust `main.rs` file and call the C++ `main` function.
 For this we did not use `cxx` as the FFI was easy to do.
+The `wasm-opt` crate is calling the FFI directly,
+bypassing the `cxx` layer and the `wasm-opt-cxx-sys` crate.
 
 This is mostly straightforward,
 except that we can't simply call the existing `main` function from Rust,
@@ -444,14 +555,6 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
 
 todo
 
-
-
-
-
-# The no-op `wasm_opt_sys::init` function
-
-wasm-opt-sys/wasm-opt-cxx-sys/wasm-opt
-split wasm_opt_sys and wasm_opt_cxx_sys
 
 
 
