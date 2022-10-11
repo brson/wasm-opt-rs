@@ -305,15 +305,12 @@ and it involved resolving link errors and adding source files until everything l
 
 With a working build of all the source needed by `wasm-opt`,
 we had to write our Rust `main.rs` file and call the C++ `main` function.
+For this we did not use `cxx` as the FFI was easy to do.
 
 This is mostly straightforward,
-except that,
-compiled as a library,
-there is no symbol called `main` for the Rust code to call.
-
-There is a function in the C++ source code called `main`,
-but Rust can't just call it, for at least one reason,
-but perhaps more.
+except that we can't simply call the existing `main` function from Rust,
+for at least one reason,
+possibly several.
 
 `wasm-opt`'s `main` function is declared as:
 
@@ -344,8 +341,13 @@ that appeared to be this function
 on linux with `gcc`.
 So maybe `gcc` doesn't name-mangle the `main` function.
 
+I don't know how msvc treats `main` on Windows.
+
+But to be sure,
+it's probably best to declare this function we want to call `extern "C"`.
+
 Regardless,
-I want this function to be `extern "C"` because
+I need this function to be `extern "C"` because
 I need to rename it anyway:
 `rustc` _also_ wants to create an unmangled function named `main`,
 so I have to rename this one to something else.
@@ -373,12 +375,18 @@ replaces `int main` with `extern "C" int wasm_opt_main`,
 then outputs the modified source to `OUT_DIR`.
 We then build our modified `wasm-opt.cpp`.
 
+The obvious alternative would be to carry a patch on a fork of Binaryen
+that makes that changes and commits it to git.
+We needed to be able to build `wasm-opt` normally though for testing,
+and preferred not to maintain a fork,
+so preferred this little dynamic rewrite.
+
 The [full source] of the Rust `main.rs` is simple,
 though ugly, just a bunch of raw FFI.
 
 [full source]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/main.rs
 
-It is interesting enough that I'll just
+It is small and interesting enough that I'll just
 list it all here for commentary:
 
 ```rust
