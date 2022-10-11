@@ -41,7 +41,7 @@ professional networking and grant writing.
 - [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
-- [Future plans](#user-content-future-plans)
+- [Outcome and future plans](#user-content-outcome-and-future-plans)
 - [Appendix: The w3f grant experience]
 
 
@@ -1069,7 +1069,51 @@ and seem worth enumerating:
 ### Obstacle: the binaryen fuzzing features
 
 
-## Future plans
+## Outcome and future plans
+
+This was a great little project:
+perfectly scoped to complete quickly and successfully,
+with many clear and distinct tasks to split between myself and my partner.
+Most hacking isn't so clearcut, so I am grateful we found this one.
+
+It has already been [integrated into the master branch of `cargo-contract`][ccmb],
+and &mdash; amazingly &mdash;
+somebody else took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
+
+[ccmb]: todo
+[sswb]: todo
+
+The final crate has a few caveats for prospective integrators to consider:
+
+- The `wasm-opt-sys` crate takes a non-negligible amount of time to build. It
+  also does not do any incremental recompilation, so if the build is invalidated
+  it will rebuild the C++ code from scratch. The lack of incremental
+  recompilation is a limitation self-imposed by not using cmake or other
+  external build system.
+- `wasm-opt` on Windows does not support extended unicode paths (probably
+  anything non-ASCII). This is a [limitation of
+  binaryen](https://github.com/brson/wasm-opt-rs/issues/40) and not a regression
+  of the bindings. It may or may not be fixed in the future. The APIs will
+  return an error if this occurs.
+- `cargo tarpaulin` (code coverage) [segfaults running any `wasm-opt`
+  crates](https://github.com/brson/wasm-opt-rs/issues/59), reason unknown. This
+  behavior could infect other crates that link to `wasm-opt`. If you use
+  tarpaulin, you might verify it continues to work.
+
+These are mentioned in the project readme.
+
+This crate will need light maintenance over time to keep up with Binaryen releases,
+which happen a few times a year.
+The Web3 Foundation, which funded this project,
+has another process for "maintenance grants",
+and we plan to apply for one.
+Assuming that is accepted,
+prospective integrators can be confident this crate will be maintained in the future.
+
+As part of that grant we may propose fixing Binaryen's Unicode support on Windows.
+
+todo
+
 
 
 ### Maintenance grant
@@ -1112,130 +1156,4 @@ and seem worth enumerating:
   - [Unicode paths don't work on Windows]
   - [Thread safety]
 
-
-## old content
-
-### `const`-correctness
-
-Binaryen's APIs are not const-correct,
-and `cxx` expects const-correctness.
-
-The same `readText` method on `ModuleReader`:
-
-```c++
-  void readText(std::string filename, Module& wasm);
-```
-
-does not actually mutate the receiver `ModuleReader`
-so could more correctly be declared
-
-```
-  void readText(std::string filename, Module& wasm) const;
-```
-
-So our wrapper:
-
-```c++
-  void ModuleReader_readText(ModuleReader& reader,
-                             const std::string& filename,
-                             Module& wasm) {
-    reader.readText(std::string(filename), wasm);
-  }
-```
-
-can`t declare `const ModuleReader& reader`,
-and our Rust declaration:
-
-```rust
-        fn ModuleReader_readText(
-            reader: Pin<&mut ModuleReader>,
-            filename: &CxxString,
-            wasm: Pin<&mut Module>,
-        );
-```
-
-must accept a `Pin<&mut ModuleReader>` instead
-of `&ModuleReader`,
-and this leaks into our Rust API,
-where the receiver again must take a `&mut self`:
-
-```rust
-pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
-
-impl ModuleReader {
-    // FIXME would rather take &self here but the C++ method is not const-correct
-    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
-        // FIXME need to support non-utf8 paths. Does this work on windows?
-        let path = convert_path_to_u8(path)?;
-        let_cxx_string!(path = path);
-
-        let this = self.0.pin_mut();
-        this.readText(&path, wasm.0.pin_mut())
-    }
-}
-```
-
-To work around the missing C++ const declaration
-and present an idiomatic non-mut Rust receiver
-will require using interior mutability, e.g.
-
-```rust
-pub struct ModuleReader(RefCell<cxx::UniquePtr<wasm::ModuleReader>>);
-```
-
-This would allow `ModuleReader` to present `&self` as it logically should,
-by quietly mutably borrowing its interior value.
-This imposes an extra flag check that should always succeed.
-Of course the use of `RefCell` makes `ModuleReader` surprisingly
-non-`Sync`.
-To fix _that_ we could wrap the `RefCell` in a `Mutex`,
-imposing another atomic flag check that should always succeed.
-
-
-## Binaryen-specific surprises
-
-### `ParseException` doesn't implement `std::exception`
-
-`cxx` can translate exceptions to Rust as long as they implement
-`std::exception`, but `ParseException` does not.
-
-
-
-### Colors
-
-
-
-## Some binaryen APIs make assertions about how they are called
-
-These abort if they are triggered.
-
-PassRegistry::getPassDescription
-
-todo
-
-
-
-### Binaryen calls `exit` on failure to open a file
-
-While testing whether our handling of unicode paths works correctly on Windows (it doesn't)
-we discovered that Binaryen's internal file reading and writing
-routines call `exit` explicitly in several locations, as in:
-
-```c++
-  if (!infile.is_open()) {
-    std::cerr << "Failed opening '" << filename << "'" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-```
-
-This is a problem for our API that is insurmountable without modifying binaryen,
-so we're going to have to submit a patch upstream to propagate
-an exception instead.
-
-We [filed an issue against Binaryen][fileissue] asking if we could modify this behavior.
-
-[fileissue]: https://github.com/WebAssembly/binaryen/issues/4938
-
-This is the first big obstacle we've run into,
-and it's going to take a number of hours to resolve.
 
