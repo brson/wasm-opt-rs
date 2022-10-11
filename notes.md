@@ -36,6 +36,7 @@ professional networking and grant writing.
 - [Calling the C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Our C++ shim layer](#user-content-our-c++-shim-layer)
+- [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
 - [Six layers of abstraction](#user-content-six-layers-of-abstraction)
@@ -726,20 +727,22 @@ and using `cxx` means learning what its syntax means.
 
 Some things to notice here:
 
-- the `unsafe` keyword here is a declaration that using these bindings is
+- The `unsafe` keyword here is a declaration that using these bindings is
   _safe_. Think of it the same as the use of `unsafe` around an expression.
   It is possible to write `cxx` bindings that propagate unsafety as well by omitting `unsafe`.
-- the naming conventions are a mashup of Rust and C++:
+- The naming conventions are a mashup of Rust and C++:
   function names necessarily come from C++;
   the `UniquePtr` type is the Rust wrapper for the C++ `std::unique_ptr` type.
 - `newModule` is a free function. It is not a C++ constructor.
   It doesn't appear that `cxx` handles C++ constructors directly,
   so the C++ side must define extra constructor functions.
-- non-primitive types need to be passed as pointers,
+- Non-primitive types need to be passed as pointers,
   mostly `UniquePtr` or references.
-- functions with an initial argument named `self` are interpreted
+- Functions with an initial argument named `self` are interpreted
   as methods of the single `type` declared in the block.
-- the `Result` type is a typedef of `std::Result` where the
+  This intepretation of `self` necessitates multiple `extern` blocks,
+  since each must define the single type to associate with methods.
+- The `Result` type is a typedef of `std::Result` where the
   error type is [`cxx::Exception`]. `cxx` will catch at the boundary
   any exception that implements [`std::exception`] and return it as an error.
 - `&CxxString` is a `const` reference to a C++ `std::string`.
@@ -813,46 +816,160 @@ but just by thinking about what I might have done wrong.
 
 ## Our C++ shim layer
 
+To give the Binaryen C++ API a shape that fit the `cxx` model,
+we created a ["shim" C++ layer][shims] the lightly wraps everything
+we want to call from Rust.
+These shims aren't strictly necessary in all instances,
+but following a consistent pattern is valuable for maintainability,
+so all our library calls go through `shims.h`,
+which lives in the `wasm-opt-cxx-sys` crate with the `cxx` bindings.
 
+[shims]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/shims.h
 
+It has been many years since I programmed in C++ regularly.
+If the C++ shim code linked above can be improved, pull requests are welcome.
 
+The structure of `shims.h` mostly mirrors the structure of our `cxx` bindings,
+with the major exception that C++ requires items that reference each other
+to be ordered such that items being referred to lexically proceed items doing the referring,
+so some of our C++ shims are ordered differently than our Rust declarations.
 
+Binaryen mostly puts its definitions in the C++ `wasm` namespace,
+and we put our shims in their own `wasm_shims` namespace.
 
+Like the previously-described `cxx` bindings,
+our shims are organized such that within a single block
+we define a C++ `struct` containing an inner Binaryen type,
+methods on that struct that present an interface `cxx` can work with,
+and which transform their arguments to the arguments expected by the
+underlying Binaryen APIs,
+and free-standing constructor functions as required by `cxx`
+(since `cxx` can't call constructors).
 
-
-
-todo
-
-### By-val `std::string`
-
-Binaryen's `ModuleReader` etc. methods take
-`std::string` by value,
-but `cxx` can't pass `std:::string` by value.
-All methods that take `std::string` need a shim.
-
-So this C++ method:
+Here is the shim declaration that corresponds to the previous `ModuleReader` `cxx` bindings:
 
 ```c++
-  void readText(std::string filename, Module& wasm);
-```
+namespace wasm_shims {
+  struct ModuleReader {
+    wasm::ModuleReader inner;
 
-Gets a C++ shim:
+    void setDebugInfo(bool debug) {
+      inner.setDebugInfo(debug);
+    }
 
-```c++
-  void ModuleReader_readText(ModuleReader& reader,
-                             const std::string& filename,
-                             Module& wasm) {
-    reader.readText(std::string(filename), wasm);
+    void setDwarf(bool dwarf) {
+      inner.setDWARF(dwarf);
+    }
+
+    void readText(const std::string& filename, Module& wasm) {
+      try {
+        inner.readText(std::string(filename), wasm);
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      }
+    }
+
+    void readBinary(const std::string& filename,
+                    Module& wasm,
+                    const std::string& sourceMapFilename) {
+      try {
+        inner.readBinary(std::string(filename),
+                         wasm,
+                         std::string(sourceMapFilename));
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      } catch (const wasm::MapParseException &e) {
+        throw map_parse_exception_to_runtime_error(e);
+      }
+    }
+
+    void read(const std::string& filename,
+              Module& wasm,
+              const std::string& sourceMapFilename) {
+      try {
+        inner.read(std::string(filename),
+                   wasm,
+                   std::string(sourceMapFilename));
+      } catch (const wasm::ParseException &e) {
+        throw parse_exception_to_runtime_error(e);
+      } catch (const wasm::MapParseException &e) {
+        throw map_parse_exception_to_runtime_error(e);
+      }
+    }
+  };
+
+  std::unique_ptr<ModuleReader> newModuleReader() {
+    return std::make_unique<ModuleReader>();
   }
+}
 ```
 
-This incurs a copy of the string.
+Although unnecessary,
+for organizational purposes,
+and to mirror the many `unsafe extern "C++"` block of the bindings,
+we use many `namespace wasm_shims { ... }` blocks to group related declarations.
+We could also just surround every shim type in a single `namespace wasm_shims` block.
+
+Some things to notice about these shims:
+
+- Many of the Binaryen APIs take `std::string` by value.
+  It is not though possible to pass `std::string` by value across
+  the FFI boundary.
+  These shims instead accept a `const` reference to `std::string`,
+  then make a full copy of the string to pass to the inner method.
+  For our purposes this is fine, others' might want to avoid the copy.
+- While `cxx` automatically catches exceptions that implement `std::exception`
+  and return them as Rust errors, Binaryen's `wasm::ParseException` and
+  `wasm::MapParseException` do not implement `std::exception`,
+  so these shims have to handle those cases explicitly.
+- `newModuleReader` is a free function that constructs a `std::unique_ptr`
+  by deferring to `std::make_unique`, which eventually calls the actual constructor.
 
 
 
 
+## What about lifetimes in `cxx`?
 
+`cxx` is also able to express methods that return types containing lifetimes,
+adding extra safety that the original C++ types can't express.
 
+In our case the Binaryen `PassRunner`,
+the type responsible for running optimization passes to transform a wasm `Module`,
+holds a pointer to a `Module` and mutates the value it points to.
+
+In the C++ code this is expressed with raw pointers.
+Here are the shims:
+
+```c++
+namespace wasm_shims {
+  struct PassRunner {
+    wasm::PassRunner inner;
+
+    PassRunner(Module* wasm) : inner(wasm::PassRunner(wasm)) {}
+
+    ...
+
+    void run() {
+      inner.run();
+    }
+}
+```
+
+In the Rust bindings we add some extra lifetimes,
+and this ensures that no other code can touch the contained
+`Module` as long as the `PassRunner` is live:
+
+```rust
+    unsafe extern "C++" {
+        type PassRunner<'wasm>;
+
+        fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
+
+        ...
+
+        fn run(self: Pin<&mut Self>);
+    }
+```
 
 
 
