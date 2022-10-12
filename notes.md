@@ -31,7 +31,7 @@ professional networking and grant proposal writing.
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
-- [Calling the C++ `main` from Rust](#user-content-calling-c++-main-from-rust)
+- [Calling the C++ `main` function from Rust](#user-content-calling-c++-main-function-from-rust)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Our C++ shim layer](#user-content-our-c++-shim-layer)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
@@ -404,11 +404,12 @@ to tell the compiler about a crate that is only used in some configurations (e.g
 
 
 
-## Calling the C++ `main` from Rust
+## Calling the C++ `main` function from Rust
 
 With a working build of all the source needed by `wasm-opt`,
 we had to write our Rust `main.rs` file and call the C++ `main` function.
-For this we did not use `cxx` as the FFI was easy to do.
+For this we did not use `cxx` as the FFI was easy to write by hand
+(and `cxx` wouldn't have helped us much with the `argc` and `argv` parameters anyway).
 The `wasm-opt` crate's `main.rs` calls the FFI directly,
 bypassing the `cxx` layer and the `wasm-opt-cxx-sys` crate.
 
@@ -442,16 +443,15 @@ The above about name mangling is true generally,
 but may not be true for a function named `main`.
 In brief experiments,
 even without declaring `main` as `extern "C"`,
-I did see that the resulting object filed contained an unmangled
+I did see that the resulting object file contained an unmangled
 function named `main`,
-that appeared to be this function
-on linux with `gcc`.
+that appeared to be this function.
+This on linux with `gcc`.
 So maybe `gcc` doesn't name-mangle the `main` function.
 
-I don't know how msvc treats `main` on Windows.
+I don't know how MSVC treats `main` on Windows.
 
-But to be sure,
-it's probably best to declare this function we want to call `extern "C"`.
+But it's probably best to declare this function we want to call `extern "C"`.
 
 Regardless,
 I need this function to be `extern "C"` because
@@ -490,11 +490,10 @@ so preferred this little dynamic rewrite.
 
 The [full source] of the Rust `main.rs` is simple,
 though ugly, just a bunch of raw FFI.
-
-[full source]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/main.rs
-
 It is small and interesting enough that I'll just
 list it all here for commentary:
+
+[full source]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/main.rs
 
 ```rust
 fn main() -> anyhow::Result<()> {
@@ -560,7 +559,7 @@ arguments to C-compatible command-line arguments,
 call the C++ `wasm_opt_main`,
 and report its error code.
 
-It's basic strategy is to collect the arguments
+Its basic strategy is to collect the arguments
 into a `Vec<OsString>`,
 convert those into a `Vec` of the type the C++ code wants,
 then collect another `Vec` of _pointers_ to those,
@@ -1314,3 +1313,4 @@ How that turns out is yet to be determined.
 - change grant link to the pull request
 - arm
 - todo confirm cc puts archives into the rlib
+- file issue about catching exceptions in main
