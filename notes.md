@@ -26,8 +26,8 @@ professional networking and grant proposal writing.
 
 - [Preface: Installing and using the `wasm-opt` crate](#user-content-preface-installing-and-using-the-wasm-opt-crate)
 - [Summary](#user-content-summary)
-- [The Plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
-- [The Plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
+- [The plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
+- [The plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
@@ -54,7 +54,7 @@ to install `wasm-opt` via `cargo`:
 cargo install wasm-opt --locked
 ```
 
-You'll end up with a `wasm-opt` binary in `$CARGO_HOME/bin`,
+You'll end up with a `wasm-opt` binary in [`$CARGO_HOME/bin`],
 and it should work exactly the same as the `wasm-opt` you install from any other source:
 
 ```
@@ -92,12 +92,12 @@ Many platforms that use wasm as their VM end up creating their own
 tools for building and packaging their wasm programs,
 and many of those delegate to `wasm-opt` to shrink their output.
 So making `wasm-opt` available as a Rust crate seemed like
-an obviously useful thing to do for both [`cargo-contract`]
-and any Rust-based wasm-targetting tools.
+an obviously useful thing to do for both `cargo-contract`
+and all Rust-based wasm-targetting tools.
 
-We proposed [a w3f grant] to build it,
+We proposed [a W3F grant] to build it,
 which was accepted gladly.
-As a grant application this project was a slam dunk:
+This was a perfect subject for a grant:
 clear benefit, clear scope, low risk.
 And it worked out almost exactly as expected.
 
@@ -105,7 +105,7 @@ We had the opportunity to use the [`cxx`] crate,
 which creates safe Rust bindings to C++ code,
 for the first time;
 and had to solve a bunch of minor problems,
-one of which required [upstream Binaryean changes][bchange].
+one of which required [upstream Binaryen changes][bchange].
 
 While leveraging Binaryen's module readers / writers and optimization passes,
 we ended up duplicating the application-level logic of the `wasm-opt` program itself in Rust,
@@ -116,9 +116,12 @@ but also that as Binaryen changes in the future
 we notice those changes and adapt to them.
 
 In the end we had [six layers of Rust abstractions][sixabs],
-which sounds like a large number for such a small project,
-but they all have a clear role in the stack.
-Several layers are doing simple transformations around the FFI boundary.
+including C++ shims for all the C++ APIs we needed,
+a Rust-style builder API,
+and a nearly-complete reimplementation of `wasm-opt`s own CLI argument parsing on top of the builder.
+This feels like overkill for such a small project,
+but they all have a clear role in the stack,
+and several layers are doing simple transformations around the FFI boundary.
 
 The next sections discuss our objectives at the outset of the project,
 then the bulk of this post is about our experience attempting to fulfill them.
@@ -128,7 +131,7 @@ Links to `wasm-opt-rs` point to
 corresponding to version `0.110.0`.
 Links to Binaryen point to
 [commit c74d5eb6](https://github.com/WebAssembly/binaryen/tree/c74d5eb62e13e11da4352693a76eec405fccd565),
-corresponding to version `110.
+corresponding to version `110`.
 
 [arexp]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md#appendix-the-wasm-opt-installation-experience
 [`cargo-contract`]: https://github.com/paritytech/cargo-contract/
@@ -140,7 +143,7 @@ corresponding to version `110.
 
 
 
-## The Plan: our bin strategy
+## The plan: Our bin strategy
 
 The intent of this project was to make `wasm-opt` available to Rust programmers
 in two ways: as a command-line program via `cargo install`,
@@ -159,7 +162,7 @@ This can't be done quite so simply though because there are no programmable hook
 but it can't be instructed to install arbitrary additional files.
 
 So to get `cargo` to install `wasm-opt`,
-we would Create a Rust crate called `wasm-opt` whose `main` function
+we would create a Rust crate called `wasm-opt` whose `main` function
 did nothing but call the C++ `main` function.
 
 There would be some minor wrinkles to this stategy,
@@ -168,7 +171,7 @@ but this is the easy part of the project.
 
 
 
-## The Plan: our `cxx` lib strategy
+## The plan: Our `cxx` lib strategy
 
 The hard part of this project would be
 wrapping Binaryen APIs in a Rust FFI,
@@ -186,17 +189,8 @@ so we were enthusiastic to try it.
 [`cxx`]: http://docs.rs/cxx
 [`dtolnay`]: https://github.com/dtolnay
 
-In the end we ended up creating a
-[layer of `unique_ptr`-held shim wrappers and methods for every binaryen type][shims]
-we needed to instantiate.
-A shim layer may not be required if one was developing
-the C++ API at the same time as the Rust `cxx` bindings,
-but then again, the requirements imposed by `cxx` are strict
-enough that it may be difficult to develop a C++ API that is
-both C++-idiomatic in a way C++ developers would be happy using
-and fully bindable wich `cxx`.
-These shims add a small maintenance burden,
-but I think it's a fine tradeoff for the conveniences of `cxx`.
+On top of the `cxx` API we would layer an idiomatic Rust API,
+though we did not know at the outside the form it would take.
 
 
 
@@ -209,10 +203,10 @@ We want to impose as few requirements on `wasm-opt` embedders as possible,
 and Binaryen is a relatively simple codebase,
 so we decided not to use Binaryen's build system (CMake-based) to build Binaryen.
 
-Instead we built binaryen in [a `cargo` build script][build-script]
+Instead we built Binaryen in [a `cargo` build script][build-script]
 using the [`cc`] crate.
-This build script lived in the [`wasm-opt-sys` crate][wos].
-[`-sys` crates][sc] are special cargo convention for managing access to native libraries.
+This build script lives in the [`wasm-opt-sys` crate][wos],
+[`*-sys` crates][sc] being special cargo convention for managing access to native libraries.
 
 [build-script]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/build.rs
 [`cc`]: https://github.com/rust-lang/cc-rs
@@ -222,18 +216,19 @@ This build script lived in the [`wasm-opt-sys` crate][wos].
 The [`cc`] crate compiles C and C++ source files,
 packages them into an archive (`.a`) file,
 and emits the correct metadata to tell cargo
-how to link the archive to the final output binary.
+to include the archive in the crate's library (`.rlib`) file,
+and subsequently in the final executable.
 It is widely used in the Rust ecosystem and has a whole lot of platform-specific,
-toolchain-specefic knowledge about how to drive various parts of the C/C++ toolchain.
-But it is mostly intended for building small bits of code to supplement Rust crates,
-it is not a full build system.
+toolchain-specific knowledge about how to drive various parts of the C/C++ toolchain.
+But it is mostly intended for building small bits of code to supplement Rust crates.
+It is not a full build system.
 
-Writing our custom build script for Binaryen was our first task on the project.
+Writing our custom build script for Binaryen was the first step of the project.
 The build script ended up being more complex than I would prefer,
 and will present more debugging challenges when upgrading Binaryen in the future,
 but it was all implementable without great difficulty.
 
-The first task was to simply discover all
+The initial task was to simply discover all
 the `.cpp` files that needed to be compiled into `wasm-opt` &mdash;
 Binaryen encompasses multiple tools
 and not all of them require all of the source files.
@@ -257,9 +252,9 @@ regardless of the original source structure.
 This bit us because Binaryen has two source files called `intrinsics.cpp`,
 causing `cc` to want to create two object files in the same location called `intrinsics.o`.
 
-We created a hacky work around:
+We created a hacky workaround:
 for one of these two files we call a function, `disambiguate_file`,
-that copies a source file to location, giving it an unambiguous name:
+that copies a source file to a new location while giving it an unambiguous name:
 
 ```rust
     let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
@@ -286,7 +281,7 @@ or from parsing the output of `git`.
 Since we already knew one of our prospective clients was parsing the `wasm-opt` version,
 we decided to reproduce this behavior exactly,
 and our build script has two functions that pull the version number from each place
-and put them into `config.h`.
+and put them into `config.h` as appropriate.
 
 Binaryen's build configuration also hex-encodes and embeds a binary called `wasm-intrinsics.wat` into its source code.
 So we again had to repruce that logic.
@@ -307,15 +302,15 @@ multiple minutes on my underpowered laptop.
 
 This is because the `cc` crate doesn't support any kind of incremental recompliation:
 any time the `wasm-opt-sys` crate needs to rebuild, it compiles every C++ file in the project.
-The lack of incremental recompilation is a concscious decision &mdash;
-`cc` is not a build system.
+The lack of incremental recompilation is intentional &mdash;
+`cc` is not a full build system.
 
-We could of course just use an external `CMake`,
+We could just use an external `CMake`,
 and we also considered adding a basic, if imperfect, caching layer on top of `cc`
 that would make development faster.
 But we still did not want to introduce an external build tool,
-and while creating our sounded fun,
-it did also seem out of scope for our grant.
+and while creating that caching build system sounded fun,
+it seemed out of scope for our grant.
 
 Instead we decided to create a division of responsibilities between
 the crates in our project that would minimize the amount of rebuilding
@@ -346,7 +341,7 @@ One awkward result of the division between `wasm-opt-sys` and `wasm-opt-cxx-sys`
 that they both need identical copies of the Binaryen source code,
 as `cxx` generates C++ code that accesses Binaryen headers.
 This complicates our deploy process slightly,
-but also implies that we must be very careful about managing the version numbers
+and also implies that we must be careful about managing the version numbers
 of these two crates such that compatible versions always carry identical Binaryen source.
 
 
@@ -355,11 +350,11 @@ of these two crates such that compatible versions always carry identical Binarye
 # Linking to crates that contain no Rust code
 
 The decision to put no Rust code into `wasm-opt-sys` led to one big oddity.
-And it would be a difficult to understand and debug oddity if I wasn't already aware of it.
+And it would be difficult to understand and debug if I wasn't previously aware of it.
 
 After `cc` compiles all of its C and C++ (`.c` / `.cpp`) files into object (`.o`) files,
 it then packages them with the `ar` tool into an archive (`.a`) file,
-and then instructions `cargo` to package that archive into the `.rlib` file
+and then instructs `cargo` to package that archive into the `.rlib` file
 that represents the compiled Rust library for the crate being built.
 
 Later, `rustc` will link all of the code inside the `.rlib` into the final executable.
@@ -392,15 +387,14 @@ and `wasm-opt` from its `main` function.
 `rustc` then thinks that `wasm-opt-sys` is used and links it.
 
 There is another clever pattern that accomplishes this same thing,
-that we only learned of after implementing the no-op `init` function.
-
-Unnamed imports:
+that we only learned of after implementing the no-op `init` function:
+unnamed imports. For example:
 
 ```rust
 use wasm_opt_sys as _;
 ```
 
-Looks useless,
+It looks useless,
 but this is an idiomatic way to tell the compiler that a crate is used even though it otherwise looks unused.
 This is also useful when activating the [`unused_crate_dependencies`] lint,
 to tell the compiler about a crate that is only used in some configurations (e.g. Windows-only), but not all.
@@ -1319,3 +1313,4 @@ How that turns out is yet to be determined.
   - [Thread safety]
 - change grant link to the pull request
 - arm
+- todo confirm cc puts archives into the rlib
