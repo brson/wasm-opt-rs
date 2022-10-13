@@ -22,6 +22,10 @@ fn main() -> anyhow::Result<()> {
 
     let wasm_intrinsics_src = get_converted_wasm_intrinsics_cpp(&src_dir)?;
 
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let wasm_opt_main_shim = manifest_dir.join("src/wasm-opt-main-shim.cpp");
+
     create_config_header()?;
 
     let mut builder = cc::Build::new();
@@ -45,6 +49,7 @@ fn main() -> anyhow::Result<()> {
         .include(src_dir)
         .include(tools_dir)
         .include(output_dir)
+        .file(wasm_opt_main_shim)
         .files(src_files)
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
@@ -85,6 +90,9 @@ fn get_binaryen_dir() -> anyhow::Result<PathBuf> {
     }
 }
 
+/// Replaces the `main` declaration with a C ABI and a different name.
+///
+/// It can be called from Rust and doesn't clash with Rust's `main`.
 fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
     let wasm_opt_file = File::open(src_dir)?;
     let reader = BufReader::new(wasm_opt_file);
@@ -100,7 +108,7 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
         let mut line = line?;
 
         if line.contains("int main") {
-            line = line.replace("int main", "extern \"C\" int wasm_opt_main");
+            line = line.replace("int main", "extern \"C\" int wasm_opt_main_actual");
         }
 
         writer.write_all(line.as_bytes())?;
@@ -374,7 +382,10 @@ fn check_cxx17_support() -> anyhow::Result<()> {
     };
 
     if !builder.is_flag_supported(cxx17_flag)? {
-        return Err(anyhow::anyhow!("C++ compiler does not support `{}` flag", cxx17_flag));
+        return Err(anyhow::anyhow!(
+            "C++ compiler does not support `{}` flag",
+            cxx17_flag
+        ));
     }
 
     Ok(())

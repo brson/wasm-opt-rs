@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, Context};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -41,6 +41,10 @@ struct TestArgs {
 struct TestOut {
     outfile: PathBuf,
     outfile_sourcemap: Option<PathBuf>,
+    /// Indicates the run succeeded.
+    success: bool,
+    /// For the binaries, they include the typical command output.
+    proc_output: Option<std::process::Output>,
 }
 
 fn run_test(args: TestArgs) -> Result<()> {
@@ -57,14 +61,25 @@ fn run_test(args: TestArgs) -> Result<()> {
     let rust_out = run_test_rust(&args, &rust_tempdir)?;
     let api_out = run_test_api(&args, &api_tempdir)?;
 
-    let binaryen_out_file = fs::read(binaryen_out.outfile)?;
-    let rust_out_file = fs::read(rust_out.outfile)?;
+    assert_eq!(binaryen_out.success, rust_out.success);
+    assert_eq!(binaryen_out.success, api_out.success);
 
-    assert_eq!(binaryen_out_file, rust_out_file);
+    assert_eq!(binaryen_out.proc_output, rust_out.proc_output);
 
-    let api_out_file = fs::read(api_out.outfile)?;
+    let has_output = binaryen_out.outfile.exists();
+    if has_output {
+        let binaryen_out_file = fs::read(binaryen_out.outfile)?;
+        let rust_out_file = fs::read(rust_out.outfile)?;
+
+        assert_eq!(binaryen_out_file, rust_out_file);
+
+        let api_out_file = fs::read(api_out.outfile)?;
         
-    assert_eq!(api_out_file, rust_out_file);
+        assert_eq!(api_out_file, rust_out_file);
+    } else {
+        assert!(!rust_out.outfile.exists());
+        assert!(!api_out.outfile.exists());
+    }
 
     match (
         binaryen_out.outfile_sourcemap,
@@ -73,12 +88,18 @@ fn run_test(args: TestArgs) -> Result<()> {
     ) {
         (None, None, None) => {}
         (Some(binaryen_out), Some(rust_out), Some(api_out)) => {
-            let binaryen_out_sourcemap = fs::read(binaryen_out)?;
-            let rust_out_sourcemap = fs::read(rust_out)?;
-            assert_eq!(binaryen_out_sourcemap, rust_out_sourcemap);
+            let has_sourcemap_output = binaryen_out.exists();
+            if has_sourcemap_output {
+                let binaryen_out_sourcemap = fs::read(binaryen_out)?;
+                let rust_out_sourcemap = fs::read(rust_out)?;
+                assert_eq!(binaryen_out_sourcemap, rust_out_sourcemap);
 
-            let api_out_sourcemap = fs::read(api_out)?;
-            assert_eq!(api_out_sourcemap, rust_out_sourcemap);
+                let api_out_sourcemap = fs::read(api_out)?;
+                assert_eq!(api_out_sourcemap, rust_out_sourcemap);
+            } else {
+                assert!(!rust_out.exists());
+                assert!(!api_out.exists());
+            }
         }
         _ => anyhow::bail!("output_sourcemap test failed"),
     }
@@ -123,13 +144,15 @@ fn run_test_binaryen(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         });
     }
 
-    if !cmd.status()?.success() {
-        anyhow::bail!("run binaryen failed");
-    }
+    let proc_output = cmd.output().context("run binaryen failed")?;
+    let success = proc_output.status.success();
+    let proc_output = Some(proc_output);
 
     Ok(TestOut {
         outfile,
         outfile_sourcemap,
+        success,
+        proc_output,
     })
 }
 
@@ -164,13 +187,15 @@ fn run_test_rust(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         });
     }
 
-    if !cmd.status()?.success() {
-        anyhow::bail!("run rust wasm-opt failed");
-    }
+    let proc_output = cmd.output().context("run rust wasm-opt failed")?;
+    let success = proc_output.status.success();
+    let proc_output = Some(proc_output);
 
     Ok(TestOut {
         outfile,
         outfile_sourcemap,
+        success,
+        proc_output,
     })
 }
 
@@ -207,11 +232,13 @@ fn run_test_api(args: &TestArgs, tempdir: &Path) -> Result<TestOut> {
         });
     }
 
-    integration::run_from_command_args(cmd)?;
+    let success = integration::run_from_command_args(cmd).is_ok();
 
     Ok(TestOut {
         outfile,
         outfile_sourcemap,
+        success,
+        proc_output: None,
     })
 }
 
@@ -801,6 +828,25 @@ fn wasm_to_wasm_converge() -> Result<()> {
 
     let args = vec!["-Os", "--converge"];
     
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn input_file_does_not_exist() -> Result<()> {
+    let infile = PathBuf::from("bogus.wasm");
+    let outfile = PathBuf::from("bogus-out.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec![];
+
     run_test(TestArgs {
         infile,
         infile_sourcemap,
