@@ -7,10 +7,13 @@ edition = "2018"
 documentation = "https://docs.rs/wasm-opt-sys"
 repository = "https://github.com/brson/wasm-opt-rs"
 readme = "README.md"
+links = "binaryen"
 
 [build-dependencies]
 anyhow = "1.0.58"
 cc = { version = "1.0.73", features = ["parallel"] }
+cxx-build = "1.0.72"
 regex = "1.6.0"
 
 [dependencies]
+cxx = "1.0.72"
