@@ -1,7 +1,7 @@
 # Creating `wasm-opt` Rust bindings with `cxx`
 
 `wasm-opt` is a component of the [Binaryen] toolkit,
-writtin in C++,
+written in C++,
 that optimizes [WebAssembly] modules,
 I have recently created a [`wasm-opt`] bindings crate for Rust
 (with the extensive help of my partner [Aimeedeer]).
@@ -31,9 +31,9 @@ professional networking and grant proposal writing.
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
-- [Calling the C++ `main` function from Rust](#user-content-calling-c++-main-function-from-rust)
+- [Calling the C++ `main` function from Rust](#user-content-calling-the-c-main-function-from-rust)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
-- [Our C++ shim layer](#user-content-our-c++-shim-layer)
+- [Our C++ shim layer](#user-content-our-c-shim-layer)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration considerations and a `Command`-based API](#user-content-toolchain-integration-considerations-and-a-command-based-api)
@@ -286,7 +286,7 @@ and our build script has two functions that pull the version number from each pl
 and put them into `config.h` as appropriate.
 
 Binaryen's build configuration also hex-encodes and embeds a binary called `wasm-intrinsics.wat` into its source code.
-So we again had to repruce that logic.
+So we again had to reproduce that logic.
 
 Adapting our custom build process to Binaryen as it changes in the future will
 likely be the most difficult ongoing maintenance task on this project.
@@ -317,7 +317,7 @@ it seemed out of scope for our grant.
 Instead we decided to create a division of responsibilities between
 the crates in our project that would minimize the amount of rebuilding
 we needed to do during development:
-we put no essentially no Rust code in the `wasm-opt-sys` crate,
+we put essentially no Rust code in the `wasm-opt-sys` crate,
 no Rust bindings at all.
 
 That way, once we were done figuring out how to successfully build Binaryen,
@@ -336,7 +336,7 @@ Instead we settled on this division of responsibilities between crates:
 - `wasm-opt` - The library and binary, with both a `lib.rs` and `main.rs`,
   calling Binaryen code via `wasm-opt-cxx-sys`.
 
-Editing either `wasm-opt-cxx-sys` or `wasm-opt-sys` does not invalidate `wasm-opt-sys`,
+Editing either `wasm-opt-cxx-sys` or `wasm-opt` does not invalidate `wasm-opt-sys`,
 so during development we don't need to sit through repeated complete builds of Binaryen.
 
 One awkward result of the division between `wasm-opt-sys` and `wasm-opt-cxx-sys` is
@@ -369,7 +369,7 @@ and quietly not link it.
 This manifests as linker errors with many missing C++ symbols.
 
 With our decision to put the FFI bindings in a separate crate from `wasm-opt-sys`,
-`rustc` did not actually link to our native libarary.
+`rustc` did not actually link to our native library.
 
 The way we solved this was to add this function to `wasm-opt-sys`'s `lib.rs`:
 
@@ -448,7 +448,7 @@ even without declaring `main` as `extern "C"`,
 I did see that the resulting object file contained an unmangled
 function named `main`,
 that appeared to be this function.
-This on linux with `gcc`.
+This is on linux with `gcc`.
 So maybe `gcc` doesn't name-mangle the `main` function.
 
 I don't know how MSVC treats `main` on Windows.
@@ -634,7 +634,7 @@ so our shims are simple.
 
 `cxx` is capable of creating bindings in both directions of the FFI:
 to let Rust call C++, but also to let C++ call Rust.
-The former are done in macros containing [`extern "C++"] blocks;
+The former are done in macros containing [`extern "C++"`] blocks;
 the latter [`extern "Rust"`] blocks.
 We only used the former, calling from Rust to C++.
 
@@ -724,7 +724,7 @@ Some things to notice here:
 - The naming conventions are a mashup of Rust and C++:
   function names necessarily come from C++;
   the `UniquePtr` type is the Rust wrapper for the C++ `std::unique_ptr` type.
-- `newModule` is a free function. It is not a C++ constructor.
+- `newModuleReader` is a free function. It is not a C++ constructor.
   It doesn't appear that `cxx` handles C++ constructors directly,
   so the C++ side must define extra constructor functions.
 - Non-primitive types need to be passed as pointers,
@@ -1145,7 +1145,7 @@ Some of them are imposed by the nature of FFI,
 and seem worth enumerating:
 
 - [The C++ shims](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/shims.h).
-  I tiny layer of types and methods that wrap the Binaryen types,
+  A tiny layer of types and methods that wrap the Binaryen types,
   but present an interface that is easy to call via `cxx` bindings.
 - [The `cxx` declarations](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/lib.rs).
   The declarations used to auto-generate safe Rust types and C++ glue.
