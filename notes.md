@@ -36,9 +36,9 @@ professional networking and grant proposal writing.
 - [Our C++ shim layer](#user-content-our-c++-shim-layer)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [A Rusty API](#user-content-a-rusty-api)
-- [Toolchain integration via `Command`-based API](#user-content-toolchain-integration-via-command-based-api)
-- [Six layers of abstraction](#user-content-six-layers-of-abstraction)
+- [Toolchain integration considerations and a `Command`-based API](#user-content-toolchain-integration-considerations-and-a-command-based-api)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
+- [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Outcome and future plans](#user-content-outcome-and-future-plans)
 - [Appendix: The W3F grant experience](#user-content-appendix-the-w3f-grant-experience)
 
@@ -233,11 +233,13 @@ the `.cpp` files that needed to be compiled into `wasm-opt` &mdash;
 Binaryen encompasses multiple tools
 and not all of them require all of the source files.
 We did this the brute-force way:
-write a build script that compiled only [`wasm-opt.cpp`](https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/tools/wasm-opt.cpp);
+write a build script that compiled only [`wasm-opt.cpp`],
 run the build until the link step,
 at which point the linker would emit many errors about missing symbols;
 grep the source for the likely source of a single symbol;
 add the new source, build again and repeat until there were no more linker errors.
+
+[`wasm-opt.cpp`]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/tools/wasm-opt.cpp
 
 That strategy nearly worked completely,
 except for a few obstacles:
@@ -966,32 +968,170 @@ and this ensures that no other code can touch the contained
 
 ## A Rusty API
 
+We went into the project without a preconception of what the Rust API would be.
+
 While creating the bindings we soon realized that the binaryen API
 was not quite suitable for presenting to Rust users directly.
-The API is good, but doesn't translate directly to ideomatic Rust,
+The API is clean, but doesn't translate directly to idiomatic Rust,
 particularly with all its methods being mutable,
-and requiring a fair bit of boilerplate to set up the way `wasm-opt` does.
+and requiring a fair bit of boilerplate to set up in the way `wasm-opt` does.
 
-We decided to put the direct bindings,
-which could still be usable if somebody wanted low level access,
-in a `base` module,
+We decided to put the direct bindings in a `base` module,
+and hide it from callers,
 and add a builder-style API on top.
 
-With the builder, one sets up all the configuration declaratively,
-then runs a single `run` method that performs the work of reading
+With the builder, one sets up a declarative configuration,
+then calls a single `run` method that performs the work of reading
 the module, setting up the `PassRunner`, running the passes,
 and writing the module back to disk.
 
 Configuring the builder is like passing the command line arguments
 to `wasm-opt`, and the `run` method contains essentially the same
 logic as the `wasm-opt` binary. The details of how to drive the
-binaryen APIs are hidden.
+underlying binaryen APIs are hidden:
 
-todo example
+```rust
+use wasm_opt::OptimizationOptions;
+
+let infile = "hello_world.wasm";
+let outfile = "hello_world_optimized.wasm";
+
+OptimizationOptions::new_optimize_for_size_aggressively()
+    .debug_info(true)
+    .zero_filled_memory(true)
+    .run(infile, outfile)?;
+```
+
+The [`run` method] is essentially reproducing the logic of Binaryen's [`wasm-opt.cpp`].
+This was necessary because,
+while the core optimization functionality of Binaryen is factored into reusable types,
+the various drivers of those passes, of which `wasm-opt` is one,
+are written as CLI applications,
+and not suitable for reuse as libraries.
+
+[`run` method]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/run.rs#L88
+
+Rewriting so much logic in Rust necessitated more testing than we originally anticipated.
+
+We factored the `OptimizationOptions` type across multiple modules
+for organizational purposes but reexported everything at the crate root.
+Rust allows a lot of organizational flexibility,
+and its fun playing with new patterns.
+
+Here's how our modules are organized,
+as [declared in `lib.rs`][lrs]:
+
+[`lib.rs`]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/lib.rs#L99
+
+```rust
+// Most of the API surface is exported here.
+//
+// Many public methods are defined in other non-pub modules.
+pub use api::*;
+
+// Returned by the `run` method.
+pub use run::OptimizationError;
+
+// The "base" API.
+//
+// This API hides the `cxx` types,
+// but otherwise sticks closely to the Binaryen API.
+//
+// This is hidden because we don't need to commit to these low-level APIs,
+// but want to keep testing them from the `tests` folder.
+#[doc(hidden)]
+pub mod base;
+
+// Types and constructors used in the API.
+mod api;
+
+// A builder interface for `OptimizationOptions`.
+mod builder;
+
+// The list of optimization passes.
+mod passes;
+
+// Definitions of -O1, -O2, etc.
+mod profiles;
+
+// The list of wasm features.
+mod features;
+
+// The `run` method that re-implements the logic from `wasm-opt.cpp`
+// on top of `OptimizationOptions`.
+mod run;
+```
 
 
 
-## Toolchain integration via `Command`-based API
+
+## Toolchain integration considerations and a `Command`-based API
+
+The builder might have been the final API,
+but as we started looking at [integrating the `wasm-opt` crate into `cargo-contract`][cci],
+and thinking about how to make the decision as easy as possible for `cargo-contract`'s maintainers,
+we came up with new considerations.
+
+[cci]: https://github.com/paritytech/cargo-contract/issues/733
+
+We were particularly concerned that,
+given these bindings were new and untested and likely to contain unknown bugs,
+and that the crate imposed new compile-time requirements (a C++17 compiler),
+client crates might need to quickly backtrack on their adoption of the crate,
+at least for a period of time while the bugs are shaken out.
+
+So we gave ourselves some additional requirements:
+
+- It should be easy to use either the `wasm-opt` binary or the API.
+- Switching between the two should be doable at either compile-time or runtime.
+- It should be easy to completely revert the code that integrates the `wasm-opt` crate.
+
+We did a survey of a few projects that use `wasm-opt`,
+and they all launched it via the standard [`Command`] API,
+so it was obvious that the way to make our crate most compatible with existing code
+was to be compatible with `Command`.
+This would mean parsing command-line arguments the way `wasm-opt` does.
+We also discovered that some prospective clients allowed passing arbitrary arguments to `wasm-opt`,
+which would mean parsing _all_ command-line arguments the `wasm-opt` does.
+
+[`Command`]: https://doc.rust-lang.org/std/process/struct.Command.html
+
+So we added a CLI-style [argument parser][cliarg],
+that accepted an existing `Command`,
+parsed its arguments,
+and called all the appropriate builder methods.
+
+[cliarg]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/integration.rs#L116
+
+This felt a little "wrong" &mdash; it was precariously close to a `wasm-opt` rewrite.
+
+We documented it as "best-effort",
+providing parsing necessary for integration,
+but not necessarily with full fidelity to whatever `wasm-opt` actually does.
+
+With enough of the CLI parser implemented for `cargo-contract`'s needs,
+we [produced a patch series against `cargo-contract`][ccpatch] for discussion that was super-clean,
+showing how to progressively go through all of the options for integration:
+
+[ccpatch]: https://github.com/brson/cargo-contract/commits/wasm-opt-rs
+
+- The first patch just added a help suggestion to `cargo install wasm-opt --locked`.
+- The second patch used the `Command` API to allow the library and binary to coexist.
+- The third patch removed usage of the `Command` API completely and used just the builder API.
+
+In the end the developers accepted the full patch series,
+not retaining any compatibility with the binary,
+and relying entirely on the library.
+So we didn't actually need this big chunk of compatibility code for our main client.
+
+But that was fine,
+because the most valuable purpose of this CLI parser ended up being testing.
+
+
+
+
+## Testing for maintainability
+
 
 
 
@@ -1035,11 +1175,6 @@ and seem worth enumerating:
 
 
 
-## Testing for maintainability
-
-
-
-
 ## Outcome and future plans
 
 This was a great bite-sized project:
@@ -1051,8 +1186,8 @@ It has already been [integrated into the master branch of `cargo-contract`][ccmb
 and &mdash; amazingly &mdash;
 somebody other than us took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
 
-[ccmb]: todo
-[sswb]: todo
+[ccmb]: https://github.com/paritytech/cargo-contract/pull/766
+[sswb]: https://github.com/paritytech/substrate/pull/12280
 
 The final crate has a few caveats for prospective integrators to consider:
 
@@ -1091,9 +1226,8 @@ but I am not too comfortable having a Rust crate that breaks in surprising ways 
 
 We are also interested in writing a pure-Rust wasm minifier,
 with much reduced scope compared to `wasm-opt`.
-Being pure Rust would fix all the aforementioned caveats about this crate as it stands today;
-and I have a few ideas for minification techniques that `wasm-opt` doesn't employ,
-though it could (shrinking symbol names, function outlining, profiling (TODO make sure binaryen doesn't do these)).
+Being pure Rust would fix all the aforementioned caveats about this crate as it stands today,
+and there may be techniques Binaryen doesn't implement that we could pursue.
 Also, it would just be fun to write.
 But it's a big project,
 and justifying it in a grant is harder than this project.
@@ -1140,7 +1274,7 @@ I had some chats with one of the Ink! maintainers at the time.
 In 2021 I [wrote another][b2].
 So the Ink! maintainers were aware of me and my interest in their project.
 
-This year (2022) I participated in, but did not complete, the [Substrate hackathon][sht].
+This year (2022) I participated in, but did not complete, a Substrate hackathon.
 I intended to blog about it again, but [did not achieve enough for it to be worthwhile][b3].
 
 I did note this time though that the experience of running [`cargo-contract`],
@@ -1180,7 +1314,7 @@ I tried to make the deliverables precise and measurable.
 W3F grants are based on deliverables at milestones,
 each milestone receiving an agreed payout if the deliverables are completed as specified in the approved proposal.
 The W3F has three funding tiers that require progressively more approvals.
-The first tier is for proposals less than (TODO).
+The first tier is for proposals less than 10,000 USD.
 This is a very small amount of compensation, and only suitable for tiny projects, or perhaps students looking to start their career.
 The second tier is the sweet spot,
 providing funding for up to 30,000 USD,
@@ -1232,6 +1366,15 @@ And in practice, any one `wasm-opt` integrator is only going to use a small part
 They reasonably just care that it works like `wasm-opt`.
 I am proud though of the API and its docs.
 
+With M1 done,
+and the API already in shape (if not actually functioning),
+our plan was to file [an issue against `cargo-contract`][cci] early,
+explaining our plan,
+laying out the options for integrating the crate,
+and soliciting feedback.
+As with our work prior to submitting the proposal,
+we wanted to lay the groundwork early for the end of the project.
+
 The second milestone (M2) stretched out as we spent a lot of time
 identifying areas in need of polish and perfection.
 As we were nearing completion,
@@ -1274,43 +1417,21 @@ a strong addition to my website.
 And now that the blog post is published we can submit the M2 deliverables.
 How that turns out is yet to be determined.
 
-[b1]: todo
-[b2]: todo
-[Ink!]: todo
-[Substrate]: todo
-[sht]: todo
-[b3]: todo
-[`cargo-contract`]: todo
+[b1]: https://brson.github.io/2020/12/03/substrate-and-ink-part-1
+[b2]: https://brson.github.io/2020/12/03/substrate-and-ink-part-2
+[Ink!]: https://github.com/paritytech/ink
+[Substrate]: https://github.com/paritytech/substrate
+[b3]: https://github.com/kris524/Polkadot-Hackathon-North-America-Edition/blob/master/docs/blog.md
+
 
 
 
 ## TODO topics
 
-- talking to the stakeholders
-- integration into cargo-contract
-  - Command-api
-  - planning for reversion
-- thread safety
-- cost-effectiveness
-- testing for maintainability
-- wasm-opt-sys vs wasm-opt-cxxsys
-  - linkage hack
 - once_cell = ">= 1.9.0, < 1.15.0"
-- wasm-opt-sys build times with cc crate
 - check_cxx17_support
 - 1.48 compatibility
-- cxx
-  - [Constructors and `cxx`]
-  - [By-val `std::string`]
-  - [`const`-correctness]
-  - [Exceptions and `std::exception`]
-- [Binaryen-specific surprises]
-  - [Colors]
-  - [Some Binaryen APIs make assertions about how they are called]
-  - [Binaryen early exits]
-  - [Unicode paths don't work on Windows]
-  - [Thread safety]
 - change grant link to the pull request
 - arm
 - todo confirm cc puts archives into the rlib
-- file issue about catching exceptions in main
+- exception handling and Fatal
