@@ -1,6 +1,6 @@
-fn main() -> anyhow::Result<()> {
-    wasm_opt_sys::init();
+extern crate wasm_opt_sys;
 
+fn main() -> anyhow::Result<()> {
     wasm_opt_main()
 }
 
