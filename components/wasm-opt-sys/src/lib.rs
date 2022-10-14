@@ -8,3 +8,7 @@
 //!
 //! [`wasm-opt-cxx-sys`]: https//docs.rs/wasm-opt-cxx-sys
 //! [`wasm-opt`]: https://docs.rs/wasm-opt
+
+// FIXME remove this during next major version bump
+#[doc(hidden)]
+pub fn init() {}
