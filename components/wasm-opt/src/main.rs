@@ -1,3 +1,4 @@
+// Establish linking with wasm_opt_sys, which contains no Rust code.
 extern crate wasm_opt_sys;
 
 fn main() -> anyhow::Result<()> {

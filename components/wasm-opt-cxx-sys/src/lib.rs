@@ -18,22 +18,7 @@
 
 pub use cxx;
 
-/// Hack to establish linkage to wasm-opt-sys.
-///
-/// It is a hack, possibly temporary, to convince rustc that the `wasm-opt`
-/// crate is actually using the `wasm-opt-sys` crate.
-///
-/// If `rustc` sees that Rust code in `wasm-opt-cxx-sys` does not directly
-/// reference any Rust code in `wasm-opt-sys`, then it won't even attempt to
-/// link it, which will lead the linker to not link in the necessary C++ code.
-///
-/// This is only a problem because all of the external function definitions for
-/// `wasm-opt` live inside the `wasm-opt-cxx-sys` crate, when they would
-/// normally live in `wasm-opt-sys` crate.
-///
-/// We have the external definitions living in the "wrong" crate to avoid the
-/// huge rebuild times during development that `wasm-opt-sys` currently suffers
-/// from.
+// Establish linking with wasm_opt_sys, which contains no Rust code.
 extern crate wasm_opt_sys;
 
 #[cxx::bridge(namespace = "Colors")]
