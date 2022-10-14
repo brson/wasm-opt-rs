@@ -14,7 +14,7 @@ converting C++ abstractions to Rust abstractions,
 designing Rust APIs,
 creating tests to catch upstream changes in C++ code,
 creating tests to verify conformance with upstream behavior,
-professional networking and grant proposal writing.
+and the experience of writing and fulfilling a grant proposal.
 
 [Aimeedeer]: https://github.com/Aimeedeer
 [`wasm-opt`]: https://github.com/brson/wasm-opt-rs
@@ -33,6 +33,7 @@ professional networking and grant proposal writing.
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
 - [Calling the C++ `main` function from Rust](#user-content-calling-the-c-main-function-from-rust)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
+- [Defining `cxx` bindings](#user-content-defining-cxx-bindings)
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [A Rusty API](#user-content-a-rusty-api)
@@ -654,7 +655,7 @@ then we'll show what the final C++ shims look like.
 
 
 
-### Defining `cxx` bindings
+## Defining `cxx` bindings
 
 [Our `cxx` bindings][ourb].
 
@@ -664,8 +665,8 @@ In `cxx` bindings are defined in a dedicated module annotated with `#[cxx::bridg
 Within that module are any number of `extern "C++"` (or `extern "Rust"`) blocks.
 
 The pattern we followed used many `unsafe extern "C++"` blocks,
-one for each C++ class we wanted bindings for,
-each of those blocks then declared a single type,
+one for each C++ class we wanted bindings for.
+Each of those blocks then declared a single type,
 and one or more constructor functions and methods.
 
 Here is our bindings declaration for Binaryen's `ModuleReader`:
@@ -742,7 +743,7 @@ Some things to notice here:
 
 The final thing to note is that the `self` type of
 these methods is `Pin<&mut Self>`.
-What this means is that the underlying method is non-`const`,
+What this means is that the underlying method is non-`const`:
 it is declared such that it may mutate its fields.
 
 Access to mutable `C++` types from Rust is always through [`Pin`],
@@ -801,6 +802,8 @@ the above `read` method is declared to take an incorrect `&Self` self-parameter
 I was able to figure these out at least.
 Mostly not from the text of the errors,
 but just by thinking about what I might have done wrong.
+Making only small incremental changes before recompiling kept
+the errors from getting overwhelming.
 
 
 
@@ -908,7 +911,7 @@ Some things to notice about these shims:
   the FFI boundary.
   These shims instead accept a `const` reference to `std::string`,
   then make a full copy of the string to pass to the inner method.
-  For our purposes this is fine, others' might want to avoid the copy.
+  For our purposes this is fine, others might want to avoid the copy.
 - While `cxx` automatically catches exceptions that implement `std::exception`
   and return them as Rust errors, Binaryen's `wasm::ParseException` and
   `wasm::MapParseException` do not implement `std::exception`,
@@ -924,8 +927,8 @@ Some things to notice about these shims:
 `cxx` is also able to express methods that return types containing lifetimes,
 adding extra safety that the original C++ types can't express.
 
-In our case the Binaryen `PassRunner`,
-the type responsible for running optimization passes to transform a wasm `Module`,
+In our case, the Binaryen `PassRunner` &mdash;
+the type responsible for running optimization passes to transform a wasm `Module` &mdash;
 holds a pointer to a `Module` and mutates the value it points to.
 
 In the C++ code this is expressed with raw pointers.
@@ -943,10 +946,15 @@ namespace wasm_shims {
     void run() {
       inner.run();
     }
+  }
+
+  std::unique_ptr<PassRunner> newPassRunner(Module& wasm) {
+    return std::make_unique<PassRunner>(&wasm);
+  }
 }
 ```
 
-In the Rust bindings we add some extra lifetimes,
+In the Rust bindings we add some lifetime annotations,
 and this ensures that no other code can touch the contained
 `Module` as long as the `PassRunner` is live:
 
@@ -970,14 +978,13 @@ and this ensures that no other code can touch the contained
 
 We went into the project without a preconception of what the Rust API would be.
 
-While creating the bindings we soon realized that the binaryen API
-was not quite suitable for presenting to Rust users directly.
+While creating the bindings we quickly recognized that the Binaryen API
+was not quite suitable for presenting to Rust `wasm-opt` users as-is.
 The API is clean, but doesn't translate directly to idiomatic Rust,
 particularly with all its methods being mutable,
 and requiring a fair bit of boilerplate to set up in the way `wasm-opt` does.
 
-We decided to put the direct bindings in a `base` module,
-and hide it from callers,
+We decided to hide the direct API from callers,
 and add a builder-style API on top.
 
 With the builder, one sets up a declarative configuration,
@@ -988,7 +995,7 @@ and writing the module back to disk.
 Configuring the builder is like passing the command line arguments
 to `wasm-opt`, and the `run` method contains essentially the same
 logic as the `wasm-opt` binary. The details of how to drive the
-underlying binaryen APIs are hidden:
+underlying Binaryen APIs are hidden:
 
 ```rust
 use wasm_opt::OptimizationOptions;
@@ -1004,19 +1011,19 @@ OptimizationOptions::new_optimize_for_size_aggressively()
 
 The [`run` method] is essentially reproducing the logic of Binaryen's [`wasm-opt.cpp`].
 This was necessary because,
-while the core optimization functionality of Binaryen is factored into reusable types,
+while the core optimization functionality of Binaryen is factored into reusable types and optimization passes,
 the various drivers of those passes, of which `wasm-opt` is one,
 are written as CLI applications,
 and not suitable for reuse as libraries.
 
 [`run` method]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/run.rs#L88
 
-Rewriting so much logic in Rust necessitated more testing than we originally anticipated.
+Duplicating so much logic in Rust necessitated more testing than we originally anticipated.
 
 We factored the `OptimizationOptions` type across multiple modules
 for organizational purposes but reexported everything at the crate root.
 Rust allows a lot of organizational flexibility,
-and its fun playing with new patterns.
+and it is fun playing with new patterns.
 
 Here's how our modules are organized,
 as [declared in `lib.rs`][lrs]:
@@ -1078,7 +1085,7 @@ We were particularly concerned that,
 given these bindings were new and untested and likely to contain unknown bugs,
 and that the crate imposed new compile-time requirements (a C++17 compiler),
 client crates might need to quickly backtrack on their adoption of the crate,
-at least for a period of time while the bugs are shaken out.
+at least for a period of time while bugs are resolved.
 
 So we gave ourselves some additional requirements:
 
@@ -1092,7 +1099,7 @@ so it was obvious that the way to make our crate most compatible with existing c
 was to be compatible with `Command`.
 This would mean parsing command-line arguments the way `wasm-opt` does.
 We also discovered that some prospective clients allowed passing arbitrary arguments to `wasm-opt`,
-which would mean parsing _all_ command-line arguments the `wasm-opt` does.
+which would mean parsing _all_ command-line arguments the way `wasm-opt` does.
 
 [`Command`]: https://doc.rust-lang.org/std/process/struct.Command.html
 
@@ -1103,7 +1110,7 @@ and called all the appropriate builder methods.
 
 [cliarg]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/integration.rs#L116
 
-This felt a little "wrong" &mdash; it was precariously close to a `wasm-opt` rewrite.
+This felt a little "wrong" &mdash; now we were rewriting an ever larger amount of Binaryen code.
 
 We documented it as "best-effort",
 providing parsing necessary for integration,
@@ -1119,7 +1126,7 @@ showing how to progressively go through all of the options for integration:
 - The second patch used the `Command` API to allow the library and binary to coexist.
 - The third patch removed usage of the `Command` API completely and used just the builder API.
 
-In the end the developers accepted the full patch series,
+In the end the `cargo-contract` developers accepted the full patch series,
 not retaining any compatibility with the binary,
 and relying entirely on the library.
 So we didn't actually need this big chunk of compatibility code for our main client.
