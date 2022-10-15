@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # replacing version numbers:
-#     perl -p -i -e "s/0\.110\.0-beta\.1/0\.110\.0-beta\.2/g" components/*/*toml
+#     perl -p -i -e "s/0\.110\.0/0\.110\.1/g" components/*/*toml
 
 set -x -e
 
