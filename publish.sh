@@ -22,6 +22,9 @@ cp -r ./binaryen ./components/wasm-opt-sys/
 # Not needed by our build.
 rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
 
+# Don't publish the large Binaryen test suite.
+rm -rf ./components/wasm-opt-sys/binaryen/test
+
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml --dry-run
@@ -32,7 +35,7 @@ rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
 cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --allow-dirty
 echo waiting
 sleep 10
-cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --allow-dirty
+cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml
 echo waiting
 sleep 10
 cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml
