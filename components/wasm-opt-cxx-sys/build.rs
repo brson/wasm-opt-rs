@@ -15,9 +15,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    builder
-        .include("src")
-        .compile("wasm-opt-cxx");
+    builder.include("src").compile("wasm-opt-cxx");
 
     Ok(())
 }
