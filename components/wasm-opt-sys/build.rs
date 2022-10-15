@@ -69,12 +69,7 @@ fn main() -> anyhow::Result<()> {
 ///
 /// The packaged subdirectories are put in place by `publish.sh`.
 ///
-/// This complex arrangement exists because both `wasm-opt-sys` and
-/// `wasm-opt-cxx-sys` need access to the source; I don't want two identical
-/// submodules; and symlinking a single submodule doesn't appear to work
-/// correctly on windows.
-///
-/// This function is duplicated in `wasm-opt-cxx-sys`.
+/// The packaged source is pre-processed to remove Binaryen's large test suite.
 fn get_binaryen_dir() -> anyhow::Result<PathBuf> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = Path::new(&manifest_dir);
