@@ -10,9 +10,9 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.58"
-cxx = "1.0.72"
+cxx = "1.0.79"
 wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.110.1" }
 
 [build-dependencies]
 anyhow = "1.0.58"
-cxx-build = { version = "1.0.72", features = ["parallel"] }
+cxx-build = { version = "1.0.79", features = ["parallel"] }
