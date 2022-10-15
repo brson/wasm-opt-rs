@@ -719,6 +719,12 @@ and using `cxx` means learning what its syntax means.
 
 Some things to notice here:
 
+- The `unsafe` keyword indicates that we have thought real hard about these
+  functions and determine that calling them from Rust will preserve Rust's
+  memory safety promises; callers don't need to use `unsafe` to call them.
+  If we could not guarantee memory safety, then we could leave off `unsafe`,
+  and it would be up to the caller to call these bindings safely within
+  an `unsafe` block.
 - The `unsafe` keyword here is a declaration that using these bindings is
   _safe_. Think of it the same as the use of `unsafe` around an expression.
   It is possible to write `cxx` bindings that propagate unsafety as well by omitting `unsafe`.
@@ -730,10 +736,12 @@ Some things to notice here:
   so the C++ side must define extra constructor functions.
 - Non-primitive types need to be passed as pointers,
   mostly `UniquePtr` or references.
-- Functions with an initial argument named `self` are interpreted
-  as methods of the single `type` declared in the block.
-  This intepretation of `self` necessitates multiple `extern` blocks,
-  since each must define the single type to associate with methods.
+- Functions with an initial argument named `self`,
+  and with the `Self` type,
+  are interpreted  as methods of the single `type` declared in the block.
+  With this interpretation of `Self` it is cleanest to put each type
+  in its own `extern` block, though it is possible to put all types into
+  a single extern block by naming the self-type explicitly (e.g. `Pin<&mut ModuleReader>`).
 - The `Result` type is a typedef of `std::Result` where the
   error type is [`cxx::Exception`]. `cxx` will catch at the boundary
   any exception that implements [`std::exception`] and return it as an error.
