@@ -1,3 +1,4 @@
+use cxx_build::CFG;
 use regex::Regex;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
@@ -28,7 +29,13 @@ fn main() -> anyhow::Result<()> {
 
     create_config_header()?;
 
-    let mut builder = cc::Build::new();
+    // Set up cxx's include path so that wasm-opt-cxx-sys's C++ header can
+    // include from these same dirs.
+    CFG.exported_header_dirs.push(&src_dir);
+    CFG.exported_header_dirs.push(&tools_dir);
+    CFG.exported_header_dirs.push(&output_dir);
+
+    let mut builder = cxx_build::bridge("src/lib.rs");
 
     {
         let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
@@ -45,10 +52,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     builder
-        .cpp(true)
-        .include(src_dir)
-        .include(tools_dir)
-        .include(output_dir)
         .file(wasm_opt_main_shim)
         .files(src_files)
         .file(wasm_opt_src)

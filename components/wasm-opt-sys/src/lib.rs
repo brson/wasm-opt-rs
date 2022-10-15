@@ -12,3 +12,9 @@
 // FIXME remove this during next major version bump
 #[doc(hidden)]
 pub fn init() {}
+
+/// Just here so that cxx-build becomes willing to manage the set of include
+/// directories from this crate for downstream crates to include from. Perhaps
+/// cxx-build should stop making it necessary to put this.
+#[cxx::bridge]
+mod dummy {}

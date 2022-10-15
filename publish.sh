@@ -15,15 +15,12 @@ RUST_DEPLOY_VERSION=1.56.0
 rustc +$RUST_DEPLOY_VERSION --version
 
 rm -rf ./components/wasm-opt-sys/binaryen
-rm -rf ./components/wasm-opt-cxx-sys/binaryen
 
 cp -r ./binaryen ./components/wasm-opt-sys/
-cp -r ./binaryen ./components/wasm-opt-cxx-sys/
 
 # Make sure we don't publish this recursive submodule.
 # Not needed by our build.
 rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
-rm -rf ./components/wasm-opt-cxx-sys/binaryen/third_party/googletest
 
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run

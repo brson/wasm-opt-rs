@@ -332,6 +332,8 @@ version = "0.110.0"
 dependencies = [
  "anyhow",
  "cc",
+ "cxx",
+ "cxx-build",
  "regex",
 ]
 
