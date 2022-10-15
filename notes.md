@@ -1450,3 +1450,6 @@ How that turns out is yet to be determined.
 - arm
 - todo confirm cc puts archives into the rlib
 - exception handling and Fatal
+- update section on main
+- update section on wasm_opt_sys::init
+- add text about cxx_build?
