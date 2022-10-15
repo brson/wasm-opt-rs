@@ -89,6 +89,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Checkout submodule
-        run: git submodule update --init --recursive
       - run: cargo fmt --check
