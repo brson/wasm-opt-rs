@@ -23,7 +23,7 @@ cp -r ./binaryen ./components/wasm-opt-sys/
 rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
 
 # Don't publish the large Binaryen test suite.
-rm -rf ./components/wasm-opt-sys/binaryen/test
+rm -r ./components/wasm-opt-sys/binaryen/test
 
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
 # cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run
