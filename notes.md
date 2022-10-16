@@ -1453,3 +1453,4 @@ How that turns out is yet to be determined.
 - update section on main
 - update section on wasm_opt_sys::init
 - add text about cxx_build?
+- update section on catching exceptions with cxx
