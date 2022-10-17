@@ -10,23 +10,22 @@
 #include <stdexcept> // runtime_error
 #include <memory> // unique_ptr
 
-namespace wasm_shims {
-  std::runtime_error parse_exception_to_runtime_error(const wasm::ParseException& e) {
+namespace rust::behavior {
+  template <typename Try, typename Fail>
+  static void trycatch(Try&& func, Fail&& fail) noexcept try {
+    func();
+  } catch (const std::exception& e) {
+    fail(e.what());
+  } catch (const wasm::ParseException& e) {
     Colors::setEnabled(false);
-
     std::ostringstream buf;
     e.dump(buf);
-    
-    return std::runtime_error(buf.str());
-  }
-
-  std::runtime_error map_parse_exception_to_runtime_error(const wasm::MapParseException& e) {
+    fail(buf.str());
+  } catch (const wasm::MapParseException& e) {
     Colors::setEnabled(false);
-
     std::ostringstream buf;
     e.dump(buf);
-    
-    return std::runtime_error(buf.str());
+    fail(buf.str());
   }
 }
 
@@ -57,39 +56,23 @@ namespace wasm_shims {
     }
 
     void readText(const std::string& filename, Module& wasm) {
-      try {
-        inner.readText(std::string(filename), wasm);
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      }
+      inner.readText(std::string(filename), wasm);
     }
 
     void readBinary(const std::string& filename,
                     Module& wasm,
                     const std::string& sourceMapFilename) {
-      try {
-        inner.readBinary(std::string(filename),
-                         wasm,
-                         std::string(sourceMapFilename));
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      } catch (const wasm::MapParseException &e) {
-        throw map_parse_exception_to_runtime_error(e);
-      }
+      inner.readBinary(std::string(filename),
+                       wasm,
+                       std::string(sourceMapFilename));
     }
 
     void read(const std::string& filename,
               Module& wasm,
               const std::string& sourceMapFilename) {
-      try {
-        inner.read(std::string(filename),
-                   wasm,
-                   std::string(sourceMapFilename));
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      } catch (const wasm::MapParseException &e) {
-        throw map_parse_exception_to_runtime_error(e);
-      }
+      inner.read(std::string(filename),
+                 wasm,
+                 std::string(sourceMapFilename));
     }
   };
 

@@ -12,8 +12,8 @@ links = "binaryen"
 [build-dependencies]
 anyhow = "1.0.58"
 cc = { version = "1.0.73", features = ["parallel"] }
-cxx-build = "1.0.72"
+cxx-build = "1.0.79"
 regex = "1.6.0"
 
 [dependencies]
-cxx = "1.0.72"
+cxx = "1.0.79"
