@@ -130,8 +130,7 @@ The next sections discuss our objectives at the outset of the project,
 then the bulk of this post is about our experience attempting to fulfill them.
 
 Links to `wasm-opt-rs` point to
-[commit 11dfc725](https://github.com/brson/wasm-opt-rs/tree/11dfc7252c92be3000cbfede5f7b0e36c45ba976)
-corresponding to version `0.110.0`.
+[commit bae78101](https://github.com/brson/wasm-opt-rs/tree/bae781010f6a2a7d774adc05d251cdf7608bc271).
 Links to Binaryen point to
 [commit c74d5eb6](https://github.com/WebAssembly/binaryen/tree/c74d5eb62e13e11da4352693a76eec405fccd565),
 corresponding to version `110`.
@@ -211,9 +210,9 @@ using the [`cc`] crate.
 This build script lives in the [`wasm-opt-sys` crate][wos],
 [`*-sys` crates][sc] being special cargo convention for managing access to native libraries.
 
-[build-script]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/build.rs
+[build-script]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-sys/build.rs
 [`cc`]: https://github.com/rust-lang/cc-rs
-[wos]: https://github.com/brson/wasm-opt-rs/tree/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys
+[wos]: https://github.com/brson/wasm-opt-rs/tree/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-sys
 [sc]: https://doc.rust-lang.org/cargo/reference/build-scripts.html?highlight=sys#-sys-packages
 
 The [`cc`] crate compiles C and C++ source files,
@@ -385,8 +384,6 @@ pub fn init() {}
 
 with [a big comment][abc] explaining its existence.
 
-[abc]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-sys/src/lib.rs#L12-L26
-
 Both the `wasm-opt` and `wasm-opt-cxx-sys` crate then each call this function once,
 `wasm-opt-sys` from another `doc(hidden)` `pub fn`,
 and `wasm-opt` from its `main` function.
@@ -501,7 +498,7 @@ though ugly, just a bunch of raw FFI.
 It is small and interesting enough that I'll just
 list it all here for commentary:
 
-[full source]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/main.rs
+[full source]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/main.rs
 
 ```rust
 fn main() -> anyhow::Result<()> {
@@ -664,7 +661,7 @@ then we'll show what the final C++ shims look like.
 
 [Our `cxx` bindings][ourb].
 
-[ourb]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/lib.rs
+[ourb]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs
 
 In `cxx` bindings are defined in a dedicated module annotated with `#[cxx::bridge]`.
 Within that module are any number of `extern "C++"` (or `extern "Rust"`) blocks.
@@ -778,7 +775,7 @@ and high-still layers of API hide the `base` API from users,
 exposing only APIs with correct `mut` declarations.
 
 [cc]: https://isocpp.org/wiki/faq/const-correctness
-[`base` API]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/base.rs
+[`base` API]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs
 
 Naming these types correctly is not exactly easy,
 especially the difficult-to-understand `Pin` type,
@@ -831,7 +828,7 @@ but following a consistent pattern is valuable for maintainability,
 so all our library calls go through `shims.h`,
 which lives in the `wasm-opt-cxx-sys` crate with the `cxx` bindings.
 
-[shims]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/shims.h
+[shims]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h
 
 It has been many years since I programmed in C++ regularly.
 If the C++ shim code linked above can be improved, pull requests are welcome.
@@ -1042,7 +1039,7 @@ the various drivers of those passes, of which `wasm-opt` is one,
 are written as CLI applications,
 and not suitable for reuse as libraries.
 
-[`run` method]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/run.rs#L88
+[`run` method]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/run.rs#L88
 
 Duplicating so much logic in Rust necessitated more testing than we originally anticipated.
 
@@ -1054,7 +1051,7 @@ and it is fun playing with new patterns.
 Here's how our modules are organized,
 as [declared in `lib.rs`][lrs]:
 
-[`lib.rs`]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/lib.rs#L99
+[`lib.rs`]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/lib.rs#L99
 
 ```rust
 // Most of the API surface is exported here.
@@ -1134,7 +1131,7 @@ that accepted an existing `Command`,
 parsed its arguments,
 and called all the appropriate builder methods.
 
-[cliarg]: https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/integration.rs#L116
+[cliarg]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/integration.rs#L116
 
 This felt a little "wrong" &mdash; now we were rewriting an ever larger amount of Binaryen code.
 
@@ -1177,26 +1174,26 @@ but on examination I don't want to get rid of any of them.
 Some of them are imposed by the nature of FFI,
 and seem worth enumerating:
 
-- [The C++ shims](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/shims.h).
+- [The C++ shims](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h).
   A tiny layer of types and methods that wrap the Binaryen types,
   but present an interface that is easy to call via `cxx` bindings.
-- [The `cxx` declarations](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt-cxx-sys/src/lib.rs).
+- [The `cxx` declarations](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs).
   The declarations used to auto-generate safe Rust types and C++ glue.
-- [The `base` API](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/base.rs).
+- [The `base` API](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs).
   This layer does several bits of API cleanup so other modules don't have to deal with FFI issues:
   encapsulates `cxx::UniquePtr<SomeBinaryenType>` in a Rust struct,
   uses Rust naming conventions instead of Binaryen's C++ conventions,
   handles pinning as required by `cxx`,
   handles conversion of `Path` to platform-specific string types, etc.
-- [The `OptimizationOptions` configuration types](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/api.rs)
-  and [the `run` method](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/run.rs).
+- [The `OptimizationOptions` configuration types](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/api.rs)
+  and [the `run` method](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/run.rs).
   This is the heart of the Rust API: create `OptimizationOptions` and call `run`.
   The configuration types contained in `OptimizationOptions` closely mirror the `wasm-opt` command-line options.
   Their definitions spill across several modules but they all are reexported at the crate root.
   The `run` method duplicates the application-level logic of the `wasm-opt` binary in Rust.
-- [The `OptimizationOptions` builder methods](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/builder.rs).
+- [The `OptimizationOptions` builder methods](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/builder.rs).
   Overlaid onto `OptimizationOptions`. Most methods are obvious one-liners.
-- [The `Command` interpreter](https://github.com/brson/wasm-opt-rs/blob/11dfc7252c92be3000cbfede5f7b0e36c45ba976/components/wasm-opt/src/integration.rs).
+- [The `Command` interpreter](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/integration.rs).
   This constructs `OptimizationOptions` by interpreting the argsuments to Rust's `Command` type for launching processes.
   It's a bit of an extravagence: it essentially duplicates `wasm-opt`'s own command-line parser.
   Originally intended to make it easier for projects that already invoke the `wasm-opt` process
