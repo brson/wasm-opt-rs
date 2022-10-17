@@ -35,6 +35,7 @@ and the experience of writing and fulfilling a grant proposal.
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Defining `cxx` bindings](#user-content-defining-cxx-bindings)
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
+- [A better shim pattern for non-`const` methods](#user-content-a-better-shim-pattern-for-non-const-methods)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [(Custom) exception handling with `cxx`](#user-content-custom-exception-handling-in-cxx)
 - [Sharing C++ headers between crates with `cxx_build`](#user-content-sharing-c-headers-between-crates-with-cxx_build)
@@ -785,8 +786,18 @@ though it still exposes incorrect mutability,
 and high-still layers of API hide the `base` API from users,
 exposing only APIs with correct `mut` declarations.
 
+Papering over the missing `const`-correctness was easy in our case,
+but more complex or stateful APIs would cause bigger problems,
+that might require fixing the underlying declarations.
+
 [cc]: https://isocpp.org/wiki/faq/const-correctness
 [`base` API]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs
+
+We haven't tried it yet,
+but `cxx` author dtolnay offers [a preferred shim pattern][ncs] for
+dealing with non-const-correct methods.
+
+[ncs]: #user-content-a-better-shim-pattern-for-non-const-methods
 
 Naming these types correctly is not exactly easy,
 especially the difficult-to-understand `Pin` type,
@@ -939,6 +950,13 @@ Some things to notice about these shims:
   so these shims have to handle those cases explicitly.
 - `newModuleReader` is a free function that constructs a `std::unique_ptr`
   by deferring to `std::make_unique`, which eventually calls the actual constructor.
+
+
+
+
+## A better shim pattern for non-`const` methods
+
+todo
 
 
 
