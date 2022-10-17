@@ -31,11 +31,13 @@ and the experience of writing and fulfilling a grant proposal.
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
-- [Calling the C++ `main` function from Rust](#user-content-calling-the-c-main-function-from-rust)
+- [Linking a Rust bin to a non-Rust `main` function](#user-content-linking-a-rust-bin-to-a-non-rust-main-function)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Defining `cxx` bindings](#user-content-defining-cxx-bindings)
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
+- [(Custom) exception handling with `cxx`](#user-content-custom-exception-handling-in-cxx)
+- [Sharing C++ headers between crates with `cxx_build`](#user-content-sharing-c-headers-between-crates-with-cxx_build)
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration considerations and a `Command`-based API](#user-content-toolchain-integration-considerations-and-a-command-based-api)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
@@ -352,6 +354,8 @@ of these two crates such that compatible versions always carry identical Binarye
 
 # Linking to crates that contain no Rust code
 
+TODO update
+
 The decision to put no Rust code into `wasm-opt-sys` led to one big oddity.
 And it would be difficult to understand and debug if I wasn't previously aware of it.
 
@@ -406,8 +410,9 @@ to tell the compiler about a crate that is only used in some configurations (e.g
 
 
 
+## Linking a Rust bin to a non-Rust `main` function
 
-## Calling the C++ `main` function from Rust
+TODO rewrite
 
 With a working build of all the source needed by `wasm-opt`,
 we had to write our Rust `main.rs` file and call the C++ `main` function.
@@ -981,6 +986,19 @@ and this ensures that no other code can touch the contained
 
 
 
+## (Custom) exception handling with `cxx`
+
+TODO
+
+
+
+
+## Sharing C++ headers between crates with `cxx_build`
+
+TODO
+
+
+
 
 ## A Rusty API
 
@@ -1454,3 +1472,4 @@ How that turns out is yet to be determined.
 - update section on wasm_opt_sys::init
 - add text about cxx_build?
 - update section on catching exceptions with cxx
+- update wasm-opt-rs links to new commit
