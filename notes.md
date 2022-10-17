@@ -306,7 +306,7 @@ multiple minutes on my underpowered laptop.
 
 This is because the `cc` crate doesn't support any kind of incremental recompliation:
 any time the `wasm-opt-sys` crate needs to rebuild, it compiles every C++ file in the project.
-The lack of incremental recompilation is intentional &mdash;
+The lack of incremental recompilation within `cc` is intentional &mdash;
 `cc` is not a full build system.
 
 We could just use an external `CMake`,
@@ -342,11 +342,22 @@ Editing either `wasm-opt-cxx-sys` or `wasm-opt` does not invalidate `wasm-opt-sy
 so during development we don't need to sit through repeated complete builds of Binaryen.
 
 One awkward result of the division between `wasm-opt-sys` and `wasm-opt-cxx-sys` is
-that they both need identical copies of the Binaryen source code,
+that they both need access to the Binaryen source code,
 as `cxx` generates C++ code that accesses Binaryen headers.
 This complicates our deploy process slightly,
 and also implies that we must be careful about managing the version numbers
 of these two crates such that compatible versions always carry identical Binaryen source.
+
+We originally packaged the full Binaryen source code
+with both `wasm-opt-sys` and `wasm-opt-cxx-sys`,
+and this amounted to _72 MB of C++ source code_.
+
+After review, `cxx` author dtolnay clued us in that
+
+1) We don't need to package the 26 MB Binaryen test suite, and
+2) [`cxx_build` has a solution to sharing headers between crates][cxxshare]
+
+[cxxshare]: #user-content-sharing-c-headers-between-crates-with-cxx_build
 
 
 
@@ -985,14 +996,96 @@ and this ensures that no other code can touch the contained
 
 ## (Custom) exception handling with `cxx`
 
-TODO
+Any FFI bindings to C++ have to consider what happens if the C++ throws an exception:
+tt is undefined behavior to unwind the stack from C++ into Rust.
+
+The `cxx` crate provides a lot of help with this
+by [automatically converting a C++ `std::exception` to a Rust `cxx::Exception`][ex].
+All that one needs to do is declare a C++ function as returning `Result<T, cxx::Exception>`.
+And `cxx` bridge modules automatically import a [type alias][ta] that makes `Result<T>` a `Result<T, cxx::Exception>`.
+
+For example, the Binaryen `ModuleReader` has a `readText` method that might throw,
+and we declare it as:
+
+```rust
+    unsafe extern "C++" {
+        type ModuleReader;
+
+        fn readText(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
+    }
+```
+
+In C++ `readText` has a `void` return type,
+but by declaring it as `Result<()>`,
+`cxx` will generate bindings that catch any `std::exception`
+and convert it to a Rust error.
+
+[ex]: https://cxx.rs/binding/result.html#returning-result-from-c-to-rust
+[ta]: https://doc.rust-lang.org/book/ch19-04-advanced-types.html#creating-type-synonyms-with-type-aliases
+
+This is awesome ... if your exceptions inherit from `std::exception`.
+If not then the process will probably abort if the exception is raised.
+
+Binaryen has two custom exception types that `readText` might throw,
+`ParseException` and `MapParseException`,
+but that do not inherit from `std::exception`.
+
+`cxx` includes a mechanism for customizing which exceptions are caught by its bindings.
+It requires defining a template function, `rust::behavior::trycatch`,
+and this is what the default implementation looks like:
+
+```c++
+namespace rust::behavior {
+  template <typename Try, typename Fail>
+  static void trycatch(Try &&func, Fail &&fail) noexcept try {
+    func();
+  } catch (const std::exception &e) {
+    fail(e.what());
+  }
+}
+```
+
+Exactly how this works I can only guess.
+My C++ knowledge is not advanced enough
+(why are `Try` and `Fail` double-indirected?!).
+
+But here is our implementation (that `cxx` author dtolnay wrote for us!):
+
+```c++
+namespace rust::behavior {
+  template <typename Try, typename Fail>
+  static void trycatch(Try&& func, Fail&& fail) noexcept try {
+    func();
+  } catch (const std::exception& e) {
+    fail(e.what());
+  } catch (const wasm::ParseException& e) {
+    Colors::setEnabled(false);
+    std::ostringstream buf;
+    e.dump(buf);
+    fail(buf.str());
+  } catch (const wasm::MapParseException& e) {
+    Colors::setEnabled(false);
+    std::ostringstream buf;
+    e.dump(buf);
+    fail(buf.str());
+  }
+}
+```
+
+It just adds some extra arms for the Binaryen exception types,
+pulls out an explanatory string,
+and calls `fail`.
+(The `Colors::setEnabled(false)` calls are telling Binaryen not to emit ANSI terminal color escape sequences).
+
 
 
 
 
 ## Sharing C++ headers between crates with `cxx_build`
-
-TODO
 
 
 
