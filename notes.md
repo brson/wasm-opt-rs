@@ -31,7 +31,7 @@ and the experience of writing and fulfilling a grant proposal.
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
-- [Linking a Rust bin to a non-Rust `main` function](#user-content-linking-a-rust-bin-to-a-non-rust-main-function)
+- [Creating a Rust bin with a C++ `main` function](#user-content-creating-a-rust-bin-with-a-c-main-fuction)
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Defining `cxx` bindings](#user-content-defining-cxx-bindings)
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
@@ -169,6 +169,8 @@ we would create a Rust crate called `wasm-opt` whose `main` function
 did nothing but call the C++ `main` function.
 
 There would be some minor wrinkles to this stategy,
+and it turns out that there is a much simpler way to use a C++ `main` function
+than calling it from Rust,
 but this is the easy part of the project.
 
 
@@ -194,6 +196,9 @@ so we were enthusiastic to try it.
 
 On top of the `cxx` API we would layer an idiomatic Rust API,
 though we did not know at the outside the form it would take.
+
+Both the lib and bin would live in the same `wasm-opt` crate,
+a decision with tradeoffs.
 
 
 
@@ -365,8 +370,6 @@ After review, `cxx` author dtolnay clued us in that
 
 # Linking to crates that contain no Rust code
 
-TODO update
-
 The decision to put no Rust code into `wasm-opt-sys` led to one big oddity.
 And it would be difficult to understand and debug if I wasn't previously aware of it.
 
@@ -387,43 +390,75 @@ This manifests as linker errors with many missing C++ symbols.
 With our decision to put the FFI bindings in a separate crate from `wasm-opt-sys`,
 `rustc` did not actually link to our native library.
 
-The way we solved this was to add this function to `wasm-opt-sys`'s `lib.rs`:
+The way to solve this is to "fool" rustc into thinking the crate in question is used.
+
+There are multiple ways to do so,
+but the recommended way is to just mention it in an `extern crate` declaration.
+So for us, both the `wasm-opt` lib and `wasm-opt-cxx-sys` crates contain
 
 ```rust
-#[doc(hidden)]
-pub fn init() {}
+extern crate wasm_opt_sys;
 ```
 
-with [a big comment][abc] explaining its existence.
+And otherwise do nothing with the crate.
 
-Both the `wasm-opt` and `wasm-opt-cxx-sys` crate then each call this function once,
-`wasm-opt-sys` from another `doc(hidden)` `pub fn`,
-and `wasm-opt` from its `main` function.
+This is also useful when activating the [`unused_crate_dependencies`] lint,
+to tell the compiler about a crate that is only used in some configurations (e.g. Windows-only).
 
-`rustc` then thinks that `wasm-opt-sys` is used and links it.
+[`unused_crate_dependencies`]: https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unused-crate-dependencies
 
-There is another clever pattern that accomplishes this same thing,
-that we only learned of after implementing the no-op `init` function:
-unnamed imports. For example:
+I have also seen crates use unnamed imports for this:
 
 ```rust
 use wasm_opt_sys as _;
 ```
 
-It looks useless,
-but this is an idiomatic way to tell the compiler that a crate is used even though it otherwise looks unused.
-This is also useful when activating the [`unused_crate_dependencies`] lint,
-to tell the compiler about a crate that is only used in some configurations (e.g. Windows-only), but not all.
-
-[`unused_crate_dependencies`]: https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unused-crate-dependencies
+It's not clear to me if there is any meaningful difference between these two patterns.
 
 
 
-## Linking a Rust bin to a non-Rust `main` function
 
-TODO rewrite
+## Creating a Rust bin with a non-Rust `main` function
 
 With a working build of all the source needed by `wasm-opt`,
+we needed to create a `main.rs` file that would delegate to the C++ `main` function.
+
+Firstly, I'll describe the easy, and arguably _right_, way to do it.
+Then I'll describe how we did it!
+
+The easy way is to have `cc` compile the source containing the main function
+just as you would any other source;
+then create a `main.rs` that contains
+
+```rust
+// Use a foreign main function.
+#![no_main]
+
+// Make sure to link to it.
+extern crate wasm_opt_sys;
+```
+
+That's it. For just running a foreign `main` you don't need anything else.
+The Rust compiler won't look for a Rust `main` function,
+and it won't emit any startup code.
+It'll just assume you have set everything up correctly.
+
+We did not do that.
+We did not think to do that,
+but if we had it would have influenced our initial design.
+Instead we wrote a Rust `main` function that
+called the C++ `main` function,
+and the final design ended up
+_requiring_ us to do this unless we [split the `wasm-opt` library and binary into two different crates][split].
+
+[split]: https://github.com/brson/wasm-opt-rs/issues/93
+
+Note: if you are going to publish both library and binary forms
+of the same functionality,
+it is probably best to do it in two different crates.
+
+Anyway, what we did:
+
 we had to write our Rust `main.rs` file and call the C++ `main` function.
 For this we did not use `cxx` as the FFI was easy to write by hand
 (and `cxx` wouldn't have helped us much with the `argc` and `argv` parameters anyway).
@@ -499,12 +534,6 @@ replaces `int main` with `extern "C" int wasm_opt_main`,
 then outputs the modified source to `OUT_DIR`.
 We then build our modified `wasm-opt.cpp`.
 
-The obvious alternative would be to carry a patch on a fork of Binaryen
-that makes that change and commits it to git.
-We needed to be able to build `wasm-opt` normally though for testing,
-and preferred not to maintain a fork,
-so preferred this little dynamic rewrite.
-
 The [full source] of the Rust `main.rs` is simple,
 though ugly, just a bunch of raw FFI.
 It is small and interesting enough that I'll just
@@ -513,9 +542,10 @@ list it all here for commentary:
 [full source]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/main.rs
 
 ```rust
-fn main() -> anyhow::Result<()> {
-    wasm_opt_sys::init();
+// Establish linking with wasm_opt_sys, which contains no Rust code.
+extern crate wasm_opt_sys;
 
+fn main() -> anyhow::Result<()> {
     wasm_opt_main()
 }
 
