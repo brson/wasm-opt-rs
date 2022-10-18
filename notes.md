@@ -757,11 +757,14 @@ Some things to notice here:
   in its own `extern` block, though it is possible to put all types into
   a single extern block by naming the self-type explicitly (e.g. `Pin<&mut ModuleReader>`).
 - The `Result` type is a typedef of `std::Result` where the
-  error type is [`cxx::Exception`]. `cxx` will catch at the boundary
-  any exception that implements [`std::exception`] and return it as an error.
+  error type is [`cxx::Exception`]. `cxx` will by default catch at the boundary
+  any exception that implements [`std::exception`] and return it as an error,
+  and we [further augment this][fat] to catch some Binaryen exceptions that do
+  not implement `std::exception`.
 - `&CxxString` is a `const` reference to a C++ `std::string`.
 
 [`std::exception`]: https://en.cppreference.com/w/cpp/error/exception
+[fat]: #user-content-custom-exception-handling-in-cxx
 
 The final thing to note is that the `self` type of
 these methods is `Pin<&mut Self>`.
@@ -794,7 +797,7 @@ that might require fixing the underlying declarations.
 [`base` API]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs
 
 We haven't tried it yet,
-but `cxx` author dtolnay offers [a preferred shim pattern][ncs] for
+but `cxx` author dtolnay suggests [a preferred shim pattern][ncs] for
 dealing with non-const-correct methods.
 
 [ncs]: #user-content-a-better-shim-pattern-for-non-const-methods
@@ -888,39 +891,23 @@ namespace wasm_shims {
     }
 
     void readText(const std::string& filename, Module& wasm) {
-      try {
-        inner.readText(std::string(filename), wasm);
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      }
+      inner.readText(std::string(filename), wasm);
     }
 
     void readBinary(const std::string& filename,
                     Module& wasm,
                     const std::string& sourceMapFilename) {
-      try {
-        inner.readBinary(std::string(filename),
-                         wasm,
-                         std::string(sourceMapFilename));
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      } catch (const wasm::MapParseException &e) {
-        throw map_parse_exception_to_runtime_error(e);
-      }
+      inner.readBinary(std::string(filename),
+                       wasm,
+                       std::string(sourceMapFilename));
     }
 
     void read(const std::string& filename,
               Module& wasm,
               const std::string& sourceMapFilename) {
-      try {
-        inner.read(std::string(filename),
-                   wasm,
-                   std::string(sourceMapFilename));
-      } catch (const wasm::ParseException &e) {
-        throw parse_exception_to_runtime_error(e);
-      } catch (const wasm::MapParseException &e) {
-        throw map_parse_exception_to_runtime_error(e);
-      }
+      inner.read(std::string(filename),
+                 wasm,
+                 std::string(sourceMapFilename));
     }
   };
 
@@ -944,10 +931,7 @@ Some things to notice about these shims:
   These shims instead accept a `const` reference to `std::string`,
   then make a full copy of the string to pass to the inner method.
   For our purposes this is fine, others might want to avoid the copy.
-- While `cxx` automatically catches exceptions that implement `std::exception`
-  and return them as Rust errors, Binaryen's `wasm::ParseException` and
-  `wasm::MapParseException` do not implement `std::exception`,
-  so these shims have to handle those cases explicitly.
+- There is no exception handling. `cxx` does that for us.
 - `newModuleReader` is a free function that constructs a `std::unique_ptr`
   by deferring to `std::make_unique`, which eventually calls the actual constructor.
 
