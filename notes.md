@@ -1119,6 +1119,71 @@ and calls `fail`.
 
 ## Sharing C++ headers between crates with `cxx_build`
 
+We split our native build across two crates, `wasm-opt-sys`,
+and `wasm-opt-cxx-sys`,
+with the Binaryen build being performed in the former,
+and the `cxx` bindings in the latter.
+
+This arrangement requires `wasm-opt-sys` to access all of the Binaryen `.cpp` and `.h` files,
+and `wasm-opt-cxx-sys` to access all of the `.h` files.
+Our initial solution to this was to simply package the entire Binaryen
+code base twice, as part of each package.
+
+But `cxx` has a solution to this problem in the [`cxx_build]` crate.
+
+The `cxx_build` crate adds a layer atop the `cc` crate:
+when calling `cxx_build::bridge`,
+`cxx` does all of its code generation,
+creating a bunch of files in `$TARGET/cxxbridge`,
+then it returns a regular [`cc::Build`].
+
+One of the things this code generation step can do
+is export C++ header paths from one crate to another.
+So our `wasm-opt-sys` build script can tell `wasm-opt-cxx-sys`
+the set of directories that contain Binaryen C++ headers
+that will be needed for the bindings.
+
+To do this, we push include directories onto the `exported_Sheader_dirs`
+`Vec` on the global [`CFG`] value.
+
+[`cxx_build`]: https://docs.rs/cxx-build/latest/cxx_build/
+[`cc::Build`] https://docs.rs/cc/latest/cc/struct.Build.html
+[`CFG`]: https://docs.rs/cxx-build/latest/cxx_build/static.CFG.html
+
+Here's approximately how it looks in the [`wasm-opt-sys` build script][build-script]:
+
+```rust
+    // Set up cxx's include path so that wasm-opt-cxx-sys's C++ header can
+    // include from these same dirs.
+    CFG.exported_header_dirs.push(&src_dir);
+    CFG.exported_header_dirs.push(&tools_dir);
+    CFG.exported_header_dirs.push(&output_dir);
+
+    let mut builder = cxx_build::bridge("src/lib.rs");
+
+    builder
+        .files(src_files)
+        .file(wasm_opt_src)
+        .file(wasm_intrinsics_src);
+
+    builder.compile("wasm-opt-cc");
+```
+
+All the header files in `src_dir`, `tools_dir`, and `output_dir`
+are then available to instances of `cxx_build` in the `wasm-opt-cxx-sys` build script.
+The `wasm-opt-cxx-sys` crate doesn't
+need to do anything further in its build script:
+
+```rust
+    let mut builder = cxx_build::bridge("src/lib.rs");
+
+    builder.include("src").compile("wasm-opt-cxx");
+```
+
+I do not know what underlying mechanism `cxx_build` is using to make this possible,
+though I gave it a quick look.
+It's pretty magical!
+
 
 
 
@@ -1287,7 +1352,7 @@ because the most valuable purpose of this CLI parser ended up being testing.
 
 ## Testing for maintainability
 
-
+todo
 
 
 
