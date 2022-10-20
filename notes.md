@@ -1352,7 +1352,82 @@ because the most valuable purpose of this CLI parser ended up being testing.
 
 ## Testing for maintainability
 
-todo
+We entered this project expecting to make a thin layer
+of bindings atop Binaryen.
+But what we actually did was use Binayren's [`WasmReader`] and [`WasmWriter`]
+plus its [`PassManager`] to completely reimplement the logic of `wasm-opt`,
+as defined in [`wasm-opt.cpp`], along with several data structures.
+
+The Binaryen pieces we completely reimplemented, and their Rust counterparts:
+
+| C++ | Rust |
+|-----|------|
+| [`wasm-opt.cpp`] | [`OptimizationOptions::run`] |
+| [`InliningOptions`] | [`InliningOptions`] |
+| [`PassOptions`] | [`PassOptions`] |
+| [pass name strings] | [`Pass` enum] |
+| [`Feature` enum] | [`Feature` enum] |
+
+With all these reimplementations,
+we must:
+
+1) ensure they are identical to the original definitions,
+2) continue to be identical as Binaryen changes in the future.
+
+So we asked ourselves questions like:
+
+- "How can we guarantee the default value the Rust struct is the same as the C++ struct?"
+- "How can we detect if the field of a redefined C++ struct is added or removed?"
+- "How can we guarantee we guarantee that our `Pass` enum variants include all C++ pass name strings?"
+- "How can we guarantee that our redefined C++ enum variants have the same numerical values as C++?"
+- "How can we test that our Rust APIs behave the same as the real `wasm-opt` CLI?"
+
+And for each of these types of questions we figured out how to write a test case.
+Here are a few examples:
+
+
+
+
+### Checking that Rust enum variants match a set of C++ strings
+
+In Binaryen, passes are represented as string names.
+In Rust we made them variants of the `Pass` enum:
+
+```rust
+pub enum Pass {
+    /// Lower unaligned loads and stores to smaller aligned ones.
+    AlignmentLowering,
+    /// Async/await style transform, allowing pausing and resuming.
+    Asyncify,
+    ...
+}
+
+Binaryen maintains a global registry of passes that is [statically
+initialized][bsi], and has a function, [`PassRegistry::getRegisteredNames`]
+that returns the name of every pass.
+
+If we can call that function from Rust,
+and if we can iterate over the variants of `Pass`,
+and convert those passes to a string,
+then we can create a set of all the C++ pass names,
+and all the Rust pass names.
+
+[So we did that].
+
+
+
+
+### Checking that a Rust struct matches a C++ struct defintion
+
+Binaryen's [`InliningOptions`] is a simple plain-old-data struct.
+While it might have been possible to redeclare it in Rust exactly
+
+
+
+
+### Ensuring that the Rust API's `run` method behaves like `wasm-opt`
+
+
 
 
 
