@@ -23,9 +23,13 @@ and the experience of writing and fulfilling a grant proposal.
 [`cxx`]: https://github.com/dtolnay/cxx
 
 Thanks to
+Alon Zakai,
 David Tolnoy,
-TODO
-for their contributions and support.
+Marcin Górny,
+Michael Müller,
+and
+Robin Freyler
+for their contributions to and support of this work.
 
 Thanks to the [Web3 Foundation] for [funding this project].
 
@@ -45,6 +49,7 @@ Thanks to the [Web3 Foundation] for [funding this project].
 - [`cxx` and Binaryen](#user-content-cxx-and-binaryen)
 - [Defining `cxx` bindings](#user-content-defining-cxx-bindings)
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
+- [Moving owned strings across the FFI with `cxx`](#user-content-moving-owned-strings-across-the-ffi-with-cxx)
 - [A better shim pattern for non-`const` methods](#user-content-a-better-shim-pattern-for-non-const-methods)
 - [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
 - [(Custom) exception handling with `cxx`](#user-content-custom-exception-handling-in-cxx)
@@ -979,6 +984,145 @@ Some things to notice about these shims:
 - There is no exception handling. `cxx` does that for us.
 - `newModuleReader` is a free function that constructs a `std::unique_ptr`
   by deferring to `std::make_unique`, which eventually calls the actual constructor.
+
+
+
+
+## Moving owned strings across the FFI with `cxx`
+
+Above I said that it isn't possible to pass `std::string` by value from Rust to C++,
+and that because of this our bindings pass a reference and then make a copy.
+
+But even though it isn't possible to pass `std::string` by value,
+it _is_ possible to move them across the FFI.
+
+We didn't do this because by the time we learned about it,
+we had already published the crate and didn't want to break compatibility for it.
+
+Understanding how to move values from Rust across the FFI to C++ kinda requires
+understanding the move semantics of both Rust and C++, and the semantics of Rust's `Pin`,
+and I don't fully understand all three of these,
+but I'll show how it's done anyway.
+
+Recall our C++ `readText` method:
+
+```C++
+    void readText(const std::string& filename, Module& wasm) {
+      inner.readText(std::string(filename), wasm);
+    }
+```
+
+And its corresponding `cxx` binding:
+
+```rust
+        fn readText(
+            self: Pin<&mut Self>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
+```
+
+This is saying that Rust is letting C++ _look_ at the string `filename`,
+but it can't mutate it, and it can't move it,
+because it is a `const` reference.
+
+In C++, very unlike Rust,
+moves happen through non-const references,
+so if we instead define `readText` without the `const`,
+we can also call `std::move` on `filename`.
+
+```c++
+    void readText(std::string& filename, Module& wasm) {
+      inner.readText(std::move(filename), wasm);
+    }
+```
+
+C++ move semantics are very different from Rust.
+Moving in C++ invokes a _move constructor_,
+something that Rust doesn't know how to do.
+When an object is moved in C++,
+the original object _still exists_ and is still accessible,
+and is still in somke kind of valid state,
+but everything in that object has been transferred into the receiving object.
+
+Coming from Rust it seems weird and error-prone.
+
+The corresponding Rust bindings are now
+
+```rust
+        fn readText(
+            self: Pin<&mut Self>,
+            filename: Pin<& mut CxxString>,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
+```
+
+This means that Rust is allowing the string to be mutated from C++,
+and so it can call the move constructor.
+
+It suggests that there must be some cleverness going on
+in `cxx` to make this compatible with Rust.
+If C++ moves the value out,
+mutating the string,
+what is left of the string when the call to `readText` returns?
+
+I tested this by adjusting our call to `readText`:
+
+```rust
+    pub fn read_text(&mut self, path: &Path, wasm: &mut Module) -> Result<(), cxx::Exception> {
+        let path = convert_path_to_u8(path)?;
+        let_cxx_string!(path = path);
+
+        println!("before: {}", path);
+
+        let this = self.0.pin_mut();
+        this.readText(path, wasm.0.pin_mut())?
+
+        println!("after: {}", path);
+
+        Ok(())
+    }
+```
+
+[`let_cxx_string!`] is a `cxx` macro for creating C++ compatible strings.
+It returns a `Pin<&mut CxxString>`.
+
+[`let_cxx_string!`]: https://docs.rs/cxx/latest/cxx/macro.let_cxx_string.html
+
+Trying to run this fails:
+
+```
+error[E0382]: borrow of moved value: `path`
+  --> components/wasm-opt/src/base.rs:49:31
+   |
+42 |         let_cxx_string!(path = path);
+   |         ---------------------------- move occurs because `path` has type `Pin<&mut CxxString>`, which does not implement the `Copy` trait
+...
+47 |         this.readText2(path, wasm.0.pin_mut())?;
+   |                        ---- value moved here
+48 |
+49 |         println!("after: {}", path);
+   |                               ^^^^ value borrowed here after move
+   |
+   = note: this error originates in the macro `$crate::format_args_nl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0382`.
+error: could not compile `wasm-opt` due to previous error
+```
+
+It's obvious in retrospect:
+we have a `Pin<&mut CxxString>`,
+we pass it by value to the `readText` method,
+so _it_ can pass it by mutable reference to C++;
+and now the Rust side of the FFI no longer has access to that `Pin<&mut CxxString>`.
+
+So whatever C++ did to move the string,
+it is unobservable to Rust.
+
+I was expecting we would be stuck with an error-prone empty string,
+but `cxx` protected us from that.
+
+Pretty clever.
 
 
 
