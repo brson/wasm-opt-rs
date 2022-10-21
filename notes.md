@@ -1956,18 +1956,3 @@ How that turns out is yet to be determined.
 [Ink!]: https://github.com/paritytech/ink
 [Substrate]: https://github.com/paritytech/substrate
 [b3]: https://github.com/kris524/Polkadot-Hackathon-North-America-Edition/blob/master/docs/blog.md
-
-
-
-
-## TODO topics
-
-- once_cell = ">= 1.9.0, < 1.15.0"
-- check_cxx17_support
-- 1.48 compatibility
-- change grant link to the pull request
-- arm
-- todo confirm cc puts archives into the rlib
-- exception handling and Fatal
-- update section on main
-- update section on wasm_opt_sys::init
