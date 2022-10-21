@@ -51,7 +51,7 @@ Thanks to the [Web3 Foundation] for [funding this project].
 - [Our C++ shim layer](#user-content-our-c-shim-layer)
 - [Moving owned strings across the FFI with `cxx`](#user-content-moving-owned-strings-across-the-ffi-with-cxx)
 - [A better shim pattern for non-`const` methods](#user-content-a-better-shim-pattern-for-non-const-methods)
-- [What about lifetimes in `cxx`?](#user-content-what-about-lifetimes-in-cxx)
+- [Lifetimes in `cxx`](#user-content-lifetimes-in-cxx)
 - [(Custom) exception handling with `cxx`](#user-content-custom-exception-handling-in-cxx)
 - [Sharing C++ headers between crates with `cxx_build`](#user-content-sharing-c-headers-between-crates-with-cxx_build)
 - [A Rusty API](#user-content-a-rusty-api)
@@ -1026,7 +1026,7 @@ This is saying that Rust is letting C++ _look_ at the string `filename`,
 but it can't mutate it, and it can't move it,
 because it is a `const` reference.
 
-In C++, very unlike Rust,
+In C++, unlike Rust,
 moves happen through non-const references,
 so if we instead define `readText` without the `const`,
 we can also call `std::move` on `filename`.
@@ -1129,12 +1129,92 @@ Pretty clever.
 
 ## A better shim pattern for non-`const` methods
 
-todo
+I mentioned previously that Binaryen's methods are not `const`-correct:
+it has methods that do not mutate the reciever (the `this` pointer),
+but are also not declared `const`.
+
+Taking again our `readText` example, from our shims:
+
+```c++
+    void readText(const std::string& filename, Module& wasm) {
+      inner.readText(std::string(filename), wasm);
+    }
+```
+
+The inner method is a method on `ModuleReader` that does not mutate `ModuleReader`,
+and this is transitively true for the shim method shown.
+
+To make this `const`-correct we want it to be declared:
+
+```c++
+    void readText(const std::string& filename, Module& wasm) const {
+      inner.readText(std::string(filename), wasm);
+    }
+```
+
+Note the `const` on the right side of the method signature.
+
+In the absense of fixing the underlying API,
+Rust bindings need to work around this problem to avoid
+making the Rust APIs incorrectly mutable.
+
+Within `wasm-opt` this was easy because
+we don't expose any of the underlying Binaryen types,
+even indirectly,
+to the user-facing API:
+users call [`OptimizationOptions::run`] and that method does all the interaction with the C++ code.
+
+dtolnay's suggests handling this conversion within the C++ shim layer,
+by relying on `std::unique_ptr`'s [`operator ->()`][oparrow],
+which produces a non-`const` reference.
+
+[oparrow]: https://en.cppreference.com/w/cpp/memory/unique_ptr/operator*
+
+Adjusting our `readText` bindings to do this looks like
+
+```c++
+  void ModuleReader_readText(
+    const std::unique_ptr<ModuleReader> &reader,
+    const std::string& filename,
+    Module& wasm
+  ) {
+    reader->inner.readText(std::string(filename), wasm);
+  }
+```
+
+And Rust:
+
+```rust
+        fn ModuleReader_readText(
+            reader: &UniquePtr<ModuleReader>,
+            filename: &CxxString,
+            wasm: Pin<&mut Module>,
+        ) -> Result<()>;
+```
+
+Note that this is now a free function and not a method
+(hence the ugly naming choice).
+
+This binding can now be used from Rust without exposing
+unneeded mutable references.
+
+I again don't fully understand the consequences of this pattern.
+To my eye it looks real scary:
+on the Rust side `&UniquePtr` is promising no mutation,
+on the C++ side we're explicitly taking a mutable reference,
+but we also know that actually C++ is not going to mutate.
+Or at least we think we know that &mdash; we have to guarantees.
+
+This looks like a situation where you need to be familiar with
+the C++ code and confident there is no mutation.
+
+This is why `cxx` makes you put `unsafe` annotations around its safe bindings.
+As much as `cxx` helps, you still need to understand what is happening on the C++ side.
 
 
 
 
-## What about lifetimes in `cxx`?
+## Lifetimes in `cxx`
 
 `cxx` is also able to express methods that return types containing lifetimes,
 adding extra safety that the original C++ types can't express.
