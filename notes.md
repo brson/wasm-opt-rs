@@ -22,6 +22,16 @@ and the experience of writing and fulfilling a grant proposal.
 [WebAssembly]: https://webassembly.org/
 [`cxx`]: https://github.com/dtolnay/cxx
 
+Thanks to
+David Tolnoy,
+TODO
+for their contributions and support.
+
+Thanks to the [Web3 Foundation] for [funding this project].
+
+
+
+
 ## Table of Contents
 
 - [Preface: Installing and using the `wasm-opt` crate](#user-content-preface-installing-and-using-the-wasm-opt-crate)
@@ -126,6 +136,11 @@ and a nearly-complete reimplementation of `wasm-opt`s own CLI argument parsing o
 This feels like overkill for such a small project,
 but they all have a clear role in the stack,
 and several layers are doing simple transformations around the FFI boundary.
+
+Prior to publication of this blog post we asked David Tolnoy,
+the author of `cxx` to review our usage of his library.
+He made many insightful suggestions and contributions,
+some of which we hope to pass on here.
 
 The next sections discuss our objectives at the outset of the project,
 then the bulk of this post is about our experience attempting to fulfill them.
@@ -1557,12 +1572,11 @@ But also:
 - Though we had never worked together previously,
   I have had professional contact for years with both Polkadot and W3F employees.
   
-Networking and "building your brand" has a compounding beneficial effect over one's career.
-I am grateful to know so many people in the industry,
+Networking and brand-building has a compounding beneficial effect over one's career.
+I am grateful to know many people in the industry,
 and that many of them remain willing to work with me.
 
-As background,
-in 2020 I wrote [a series of blog posts][b1]
+In 2020 I wrote [a series of blog posts][b1]
 in wich I explored [Ink!],
 the Rust DSL for smart contracts on [Substrate].
 I had some chats with one of the Ink! maintainers at the time.
@@ -1582,8 +1596,8 @@ and it seemed a great candidate for a grant.
 
 So I pinged one of the Ink! maintainers whom by now I already knew and told them about my experience,
 and my idea for creating `wasm-opt` Rust bindings.
-The agreed with the idea and indicated that it would be an easy grant to approve;
-and though the Ink maintainers are not the ones responsible for approving a grant,
+They agreed with the idea and indicated that it would be an easy grant to approve;
+and though the Ink! maintainers are not the ones responsible for approving a grant,
 it surely can only help to have the support of the maintainers of the project one is looking to improve when seeking funding for that project.
 
 Since this project was to create a binding to the 3rd-party Binaryen project,
@@ -1596,12 +1610,13 @@ and whether there were any prior efforts to bind Binaryen that I was not conside
 When building consensus for a proposal of any kind,
 having a sense ahead of time how that proposal is likely to proceed is helpful.
 Maintainers don't generally like to be surprised with big changes, even if the ideas are great.
-In this case I had been laying the groundwork to make a good proposal of this nature for years.
+In this case I had been laying the groundwork to make a good proposal of this nature for years,
+mostly by exploring my own interests and meeting people.
 
 Proposing a W3F grant requires filling out [a template] and submitting a pull request.
 The process is completely open on GitHub.
 For an open source hacker, this is awesome:
-I love working on GitHub, I love working in the open.
+I love working on GitHub; I love working in the open.
 
 [Our proposal] was pretty simple.
 I tried to make the deliverables precise and measurable.
@@ -1611,7 +1626,7 @@ each milestone receiving an agreed payout if the deliverables are completed as s
 The W3F has three funding tiers that require progressively more approvals.
 The first tier is for proposals less than 10,000 USD.
 This is a very small amount of compensation, and only suitable for tiny projects, or perhaps students looking to start their career.
-The second tier is the sweet spot,
+The second tier is the sweet spot for a small project,
 providing funding for up to 30,000 USD,
 and only requiring a modest number of approvals.
 The third tier requires many approvals.
@@ -1619,7 +1634,7 @@ The third tier requires many approvals.
 I was a little concerned about completing the work for a budget of 30,000 USD,
 but thought we could likely do it without going too far overbudget and undervaluing ourselves.
 In any case, even if we did go overbudget, I suspected we wouldn't go too far over budget,
-and having a solid success with the W3F would be good for our future prospects.
+and having a solid success with the W3F would be valuable in the future.
 
 So we asked for 30,000 USD.
 I didn't attempt to do any estimation of how many hours it would take besides looking at the deliverables we were proposing
@@ -1732,6 +1747,3 @@ How that turns out is yet to be determined.
 - exception handling and Fatal
 - update section on main
 - update section on wasm_opt_sys::init
-- add text about cxx_build?
-- update section on catching exceptions with cxx
-- update wasm-opt-rs links to new commit
