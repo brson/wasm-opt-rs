@@ -60,7 +60,7 @@ It does not require CMake or other C++ build tools.
 These are the earliest C++ compiler versions known to work:
 
 - gcc 7
-- clang 3.9
+- clang 7
 - Visual Studio 2019
 
 
