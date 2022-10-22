@@ -16,7 +16,7 @@ jobs:
           name: Version information
           command: rustc --version; cargo --version; rustup --version
       - rust/test
-      - run: cargo test --manifest-path components/conformance-tests/Cargo.toml 
+#       - run: cargo test --manifest-path components/conformance-tests/Cargo.toml 
 
 workflows:
   wasm-opt-rs-workflow:
