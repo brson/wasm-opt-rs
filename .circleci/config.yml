@@ -1,0 +1,24 @@
+version: 2.1
+
+orbs:
+  rust: circleci/rust@1.6.0
+
+jobs:
+  build-and-tests:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.large
+    steps:  
+      - checkout
+      - run: git submodule update --init --recursive
+      - rust/install
+      - run:
+          name: Version information
+          command: rustc --version; cargo --version; rustup --version
+      - rust/test
+#       - run: cargo test --manifest-path components/conformance-tests/Cargo.toml 
+
+workflows:
+  wasm-opt-rs-workflow:
+    jobs:
+      - build-and-tests
