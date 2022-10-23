@@ -6,7 +6,7 @@ that optimizes [WebAssembly] modules,
 I have recently created a [`wasm-opt`] bindings crate for Rust
 (with the extensive help of my partner [Aimeedeer]).
 The `wasm-opt` crate allows `wasm-opt` to be installed via `cargo`,
-and also includes an idiomatic Rust API to access `wasm-opt` programatically.
+and also includes an idiomatic Rust API to access `wasm-opt` programmatically.
 
 This was a fun bite-sized project that involved several interesting topics:
 Rust FFI via the [`cxx`] crate,
@@ -24,7 +24,7 @@ and the experience of writing and fulfilling a grant proposal.
 
 Thanks to
 Alon Zakai,
-David Tolnoy,
+David Tolnay,
 Marcin Górny,
 Michael Müller,
 and
@@ -142,7 +142,7 @@ This feels like overkill for such a small project,
 but they all have a clear role in the stack,
 and several layers are doing simple transformations around the FFI boundary.
 
-Prior to publication of this blog post we asked David Tolnoy,
+Prior to publication of this blog post we asked David Tolnay,
 the author of `cxx` to review our usage of his library.
 He made many insightful suggestions and contributions,
 some of which we hope to pass on here.
@@ -188,7 +188,7 @@ So to get `cargo` to install `wasm-opt`,
 we would create a Rust crate called `wasm-opt` whose `main` function
 did nothing but call the C++ `main` function.
 
-There would be some minor wrinkles to this stategy,
+There would be some minor wrinkles to this strategy,
 and it turns out that there is a much simpler way to use a C++ `main` function
 than calling it from Rust,
 but this is the easy part of the project.
@@ -330,7 +330,7 @@ From our experience getting the `wasm-opt-sys` crate to build
 we knew that rebuilding that crate took a long time,
 multiple minutes on my underpowered laptop.
 
-This is because the `cc` crate doesn't support any kind of incremental recompliation:
+This is because the `cc` crate doesn't support any kind of incremental recompilation:
 any time the `wasm-opt-sys` crate needs to rebuild, it compiles every C++ file in the project.
 The lack of incremental recompilation within `cc` is intentional &mdash;
 `cc` is not a full build system.
@@ -693,7 +693,7 @@ and it probably will help the C++ side be disciplined about ownership and const-
 
 Binaryen was not designed for compatibility with with `cxx`,
 so we ended up creating a full C++ shim layer to adapt between Binaryen's APIs
-and APIs that were suitable for binding throug `cxx`.
+and APIs that were suitable for binding through `cxx`.
 Fortunately Binaryen's API surface is reasonable and modern and easy to understand,
 so our shims are simple.
 
@@ -1130,7 +1130,7 @@ Pretty clever.
 ## A better shim pattern for non-`const` methods
 
 I mentioned previously that Binaryen's methods are not `const`-correct:
-it has methods that do not mutate the reciever (the `this` pointer),
+it has methods that do not mutate the receiver (the `this` pointer),
 but are also not declared `const`.
 
 Taking again our `readText` example, from our shims:
@@ -1154,7 +1154,7 @@ To make this `const`-correct we want it to be declared:
 
 Note the `const` on the right side of the method signature.
 
-In the absense of fixing the underlying API,
+In the absence of fixing the underlying API,
 Rust bindings need to work around this problem to avoid
 making the Rust APIs incorrectly mutable.
 
@@ -1164,7 +1164,7 @@ even indirectly,
 to the user-facing API:
 users call [`OptimizationOptions::run`] and that method does all the interaction with the C++ code.
 
-dtolnay's suggests handling this conversion within the C++ shim layer,
+dtolnay suggested handling this conversion within the C++ shim layer,
 by relying on `std::unique_ptr`'s [`operator ->()`][oparrow],
 which produces a non-`const` reference.
 
@@ -1268,7 +1268,7 @@ and this ensures that no other code can touch the contained
 ## (Custom) exception handling with `cxx`
 
 Any FFI bindings to C++ have to consider what happens if the C++ throws an exception:
-tt is undefined behavior to unwind the stack from C++ into Rust.
+it is undefined behavior to unwind the stack from C++ into Rust.
 
 The `cxx` crate provides a lot of help with this
 by [automatically converting a C++ `std::exception` to a Rust `cxx::Exception`][ex].
@@ -1593,7 +1593,7 @@ because the most valuable purpose of this CLI parser ended up being testing.
 
 We entered this project expecting to make a thin layer
 of bindings atop Binaryen.
-But what we actually did was use Binayren's [`WasmReader`] and [`WasmWriter`]
+But what we actually did was use Binaryen's [`WasmReader`] and [`WasmWriter`]
 plus its [`PassManager`] to completely reimplement the logic of `wasm-opt`,
 as defined in [`wasm-opt.cpp`], along with several data structures.
 
