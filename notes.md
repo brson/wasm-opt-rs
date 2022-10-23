@@ -867,7 +867,7 @@ and gives me confidence about the maintainability of the bindings.
 
 The errors that are emitted when there is a declaration mismatch
 are emitted by the C++ compiler,
-and are quite challending to understand,
+and are quite challenging to understand,
 but at least they stop you from running the code with mismatched types.
 
 Here's an example of the error emitted when
@@ -1042,7 +1042,7 @@ Moving in C++ invokes a _move constructor_,
 something that Rust doesn't know how to do.
 When an object is moved in C++,
 the original object _still exists_ and is still accessible,
-and is still in somke kind of valid state,
+and is still in some kind of valid state,
 but everything in that object has been transferred into the receiving object.
 
 Coming from Rust it seems weird and error-prone.
@@ -1617,14 +1617,12 @@ So we asked ourselves questions like:
 
 - "How can we guarantee the default value the Rust struct is the same as the C++ struct?"
 - "How can we detect if the field of a redefined C++ struct is added or removed?"
-- "How can we guarantee we guarantee that our `Pass` enum variants include all C++ pass name strings?"
+- "How can we guarantee that our `Pass` enum variants include all C++ pass name strings?"
 - "How can we guarantee that our redefined C++ enum variants have the same numerical values as C++?"
 - "How can we test that our Rust APIs behave the same as the real `wasm-opt` CLI?"
 
 And for each of these types of questions we figured out how to write a test case.
 Here are a few examples:
-
-
 
 
 ### Checking that Rust enum variants match a set of C++ strings
@@ -1640,6 +1638,7 @@ pub enum Pass {
     Asyncify,
     ...
 }
+```
 
 Binaryen maintains a global registry of passes that is [statically
 initialized][bsi], and has a function, [`PassRegistry::getRegisteredNames`]
@@ -1656,7 +1655,7 @@ and all the Rust pass names.
 
 
 
-### Checking that a Rust struct matches a C++ struct defintion
+### Checking that a Rust struct matches a C++ struct definition
 
 Binaryen's [`InliningOptions`] is a simple plain-old-data struct.
 While it might have been possible to redeclare it in Rust exactly
@@ -1698,8 +1697,8 @@ and seem worth enumerating:
 - [The `OptimizationOptions` builder methods](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/builder.rs).
   Overlaid onto `OptimizationOptions`. Most methods are obvious one-liners.
 - [The `Command` interpreter](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/integration.rs).
-  This constructs `OptimizationOptions` by interpreting the argsuments to Rust's `Command` type for launching processes.
-  It's a bit of an extravagence: it essentially duplicates `wasm-opt`'s own command-line parser.
+  This constructs `OptimizationOptions` by interpreting the arguments to Rust's `Command` type for launching processes.
+  It's a bit of extravagance: it essentially duplicates `wasm-opt`'s own command-line parser.
   Originally intended to make it easier for projects that already invoke the `wasm-opt` process
   to integrate the API,
   It ended up being invaluable for testing:
@@ -1772,7 +1771,7 @@ and justifying it in a grant is harder than this project.
 ## Appendix: The W3F grant experience
 
 This project was funded by [a grant from the Web3 Foundation][w3fg].
-We are thankful for the support of the orginization and the individuals responsible for helping us secure the grant.
+We are thankful for the support of the organization and the individuals responsible for helping us secure the grant.
 
 [w3fg]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md
 
@@ -1785,7 +1784,7 @@ Some factors that made this project successful include:
 
 - The scope of this project and what success would look like was well-defined, and small:
   bind `wasm-opt`, use it in `cargo-contract`.
-- The path to implement the project technically had few risks and unknowns.
+- The path to implementing the project technically had a few risks and unknowns.
 - The cost was modest: 30,000 USD. More about the cost below.
 
 But also:
@@ -1796,12 +1795,12 @@ But also:
 - Though we had never worked together previously,
   I have had professional contact for years with both Polkadot and W3F employees.
   
-Networking and brand-building has a compounding beneficial effect over one's career.
+Networking and brand-building have a compounding beneficial effect over one's career.
 I am grateful to know many people in the industry,
 and that many of them remain willing to work with me.
 
 In 2020 I wrote [a series of blog posts][b1]
-in wich I explored [Ink!],
+in which I explored [Ink!],
 the Rust DSL for smart contracts on [Substrate].
 I had some chats with one of the Ink! maintainers at the time.
 In 2021 I [wrote another][b2].
@@ -1849,7 +1848,7 @@ W3F grants are based on deliverables at milestones,
 each milestone receiving an agreed payout if the deliverables are completed as specified in the approved proposal.
 The W3F has three funding tiers that require progressively more approvals.
 The first tier is for proposals less than 10,000 USD.
-This is a very small amount of compensation, and only suitable for tiny projects, or perhaps students looking to start their career.
+This is a very small amount of compensation, and only suitable for tiny projects, or perhaps students looking to start their careers.
 The second tier is the sweet spot for a small project,
 providing funding for up to 30,000 USD,
 and only requiring a modest number of approvals.
@@ -1889,7 +1888,7 @@ In our [M1 deliverable] we made clear a few things we hadn't known or considered
 
 We communicated every negative we knew about the project as clearly as we could.
 
-We were asked to ammend the original proposal to indicate that fuzzing was out of scope,
+We were asked to amend the original proposal to indicate that fuzzing was out of scope,
 so that its omission could be evaluated in the final M2 delivery,
 and [we did so].
 
