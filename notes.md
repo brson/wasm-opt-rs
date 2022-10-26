@@ -14,7 +14,8 @@ converting C++ abstractions to Rust abstractions,
 designing Rust APIs,
 creating tests to catch upstream changes in C++ code,
 creating tests to verify conformance with upstream behavior,
-and the experience of writing and fulfilling a grant proposal.
+and the experience of writing and fulfilling a grant proposal,
+all of which I will describe herein.
 
 [Aimeedeer]: https://github.com/Aimeedeer
 [`wasm-opt`]: https://github.com/brson/wasm-opt-rs
@@ -31,7 +32,9 @@ and
 Robin Freyler
 for their contributions to and support of this work.
 
-Thanks to the [Web3 Foundation] for [funding this project].
+Thanks to the [Web3 Foundation] for [funding this project][a W3F grant].
+
+[Web3 Foundation]: https://github.com/w3f
 
 
 
@@ -42,6 +45,7 @@ Thanks to the [Web3 Foundation] for [funding this project].
 - [Summary](#user-content-summary)
 - [The plan: Our bin strategy](#user-content-the-plan-our-bin-strategy)
 - [The plan: Our `cxx` lib strategy](#user-content-the-plan-our-cxx-lib-strategy)
+- [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Building Binaryen without `cmake`](#user-content-building-binaryen-without-cmake)
 - [Dividing the FFI between crates](#user-content-dividing-the-ffi-between-crates)
 - [Linking to crates that contain no Rust code](#user-content-linking-to-crates-that-contain-no-rust-code)
@@ -57,7 +61,6 @@ Thanks to the [Web3 Foundation] for [funding this project].
 - [A Rusty API](#user-content-a-rusty-api)
 - [Toolchain integration considerations and a `Command`-based API](#user-content-toolchain-integration-considerations-and-a-command-based-api)
 - [Testing for maintainability](#user-content-testing-for-maintainability)
-- [Six layers of abstraction](#user-content-six-layers-of-abstraction)
 - [Outcome and future plans](#user-content-outcome-and-future-plans)
 - [Appendix: The W3F grant experience](#user-content-appendix-the-w3f-grant-experience)
 
@@ -73,7 +76,7 @@ to install `wasm-opt` via `cargo`:
 cargo install wasm-opt --locked
 ```
 
-You'll end up with a `wasm-opt` binary in [`$CARGO_HOME/bin`],
+You'll end up with a `wasm-opt` binary in `$CARGO_HOME/bin`,
 and it should work exactly the same as the `wasm-opt` you install from any other source:
 
 ```
@@ -123,8 +126,19 @@ And it worked out almost exactly as expected.
 We had the opportunity to use the [`cxx`] crate,
 which creates safe Rust bindings to C++ code,
 for the first time;
-and had to solve a bunch of minor problems,
-one of which required [upstream Binaryen changes][bchange].
+and had to solve a bunch of minor problems including:
+giving the C++ API a shape suitable for binding to Rust,
+dealing with the differing move semantics of C++ and Rust,
+working around C++ `const`-correctness issues,
+exception handling between FFI layers.
+We needed to make one [upstream Binaryen change][bchange].
+
+We were happy with the decision to use `cxx`. It worked as advertised:
+we didn't have to think much about memory-safety across the FFI as `cxx` guided us to the safe solutions.
+The `cxx` docs are pretty great,
+with [good API docs](https://docs.rs/cxx/latest/cxx/),
+and [a book](https://cxx.rs/).
+The [table showing the correspondence between C++ and Rust types][cxxt] is invaluable.
 
 While leveraging Binaryen's module readers / writers and optimization passes,
 we ended up duplicating the application-level logic of the `wasm-opt` program itself in Rust,
@@ -142,10 +156,10 @@ This feels like overkill for such a small project,
 but they all have a clear role in the stack,
 and several layers are doing simple transformations around the FFI boundary.
 
-Prior to publication of this blog post we asked David Tolnay,
+Prior to publication of this blog post we asked David Tolnay (dtolnay),
 the author of `cxx` to review our usage of his library.
 He made many insightful suggestions and contributions,
-some of which we hope to pass on here.
+some of which I'll pass on here.
 
 The next sections discuss our objectives at the outset of the project,
 then the bulk of this post is about our experience attempting to fulfill them.
@@ -159,7 +173,7 @@ corresponding to version `110`.
 [arexp]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md#appendix-the-wasm-opt-installation-experience
 [`cargo-contract`]: https://github.com/paritytech/cargo-contract/
 [Ink!]: https://github.com/paritytech/ink
-[a w3f grant]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md
+[a W3F grant]: https://github.com/w3f/Grants-Program/blob/master/applications/wasm-opt-for-rust.md
 [bchange]: https://github.com/WebAssembly/binaryen/pull/5087
 [sixabs]: #user-content-six-layers-of-abstraction
 
@@ -207,18 +221,59 @@ and ensuring that they worked the same.
 We proposed to use the [`cxx`] crate for the FFI.
 Though we had never used it,
 and had no sense of how it worked or would work for our purpose,
-it is created by [`dtolnay`],
+it is created by [dtolnay],
 who has designed many excellent Rust libraries,
 so we were enthusiastic to try it.
 
 [`cxx`]: http://docs.rs/cxx
-[`dtolnay`]: https://github.com/dtolnay
+[dtolnay]: https://github.com/dtolnay
 
 On top of the `cxx` API we would layer an idiomatic Rust API,
 though we did not know at the outside the form it would take.
 
 Both the lib and bin would live in the same `wasm-opt` crate,
 a decision with tradeoffs.
+
+
+
+
+## Six layers of abstraction
+
+This project ended up defining six clear layers of abstraction,
+which strikes me as a lot,
+but on examination I don't want to get rid of any of them.
+Some of them are imposed by the nature of FFI,
+and seem worth enumerating.
+Most of this post will be walking through the process of building
+these from bottom to top.
+
+- [The C++ shims](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h).
+  A tiny layer of types and methods that wrap the Binaryen types,
+  but present an interface that is easy to call via `cxx` bindings.
+- [The `cxx` declarations](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs).
+  The declarations used to auto-generate safe Rust types and C++ glue.
+- [The `base` API](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs).
+  This layer does several bits of API cleanup so other modules don't have to deal with FFI issues:
+  encapsulates `cxx::UniquePtr<SomeBinaryenType>` in a Rust struct,
+  uses Rust naming conventions instead of Binaryen's C++ conventions,
+  handles pinning as required by `cxx`,
+  handles conversion of `Path` to platform-specific string types, etc.
+- [The `OptimizationOptions` configuration types](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/api.rs)
+  and [the `run` method](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/run.rs).
+  This is the heart of the Rust API: create `OptimizationOptions` and call `run`.
+  The configuration types contained in `OptimizationOptions` closely mirror the `wasm-opt` command-line options.
+  Their definitions spill across several modules but they all are reexported at the crate root.
+  The `run` method duplicates the application-level logic of the `wasm-opt` binary in Rust.
+- [The `OptimizationOptions` builder methods](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/builder.rs).
+  Overlaid onto `OptimizationOptions`. Most methods are obvious one-liners.
+- [The `Command` interpreter](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/integration.rs).
+  This constructs `OptimizationOptions` by interpreting the arguments to Rust's `Command` type for launching processes.
+  It's a bit of extravagance: it essentially duplicates `wasm-opt`'s own command-line parser.
+  Originally intended to make it easier for projects that already invoke the `wasm-opt` process
+  to integrate the API,
+  It ended up being invaluable for testing:
+  we can run all three of 1) the real `wasm-opt`, 2) our Rust binary `wasm-opt`,
+  and 3) our library; all in the same way, ensuring they all behave the identically.
 
 
 
@@ -246,7 +301,7 @@ packages them into an archive (`.a`) file,
 and emits the correct metadata to tell cargo
 to include the archive in the crate's library (`.rlib`) file,
 and subsequently in the final executable.
-It is widely used in the Rust ecosystem and has a whole lot of platform-specific,
+It is widely used in the Rust ecosystem and contains a great deal of platform-specific,
 toolchain-specific knowledge about how to drive various parts of the C/C++ toolchain.
 But it is mostly intended for building small bits of code to supplement Rust crates.
 It is not a full build system.
@@ -309,12 +364,15 @@ When configuring its build Binaryen creates a `config.h` file that contains Bina
 This number can either come from the `CMakeLists.txt` configuration file,
 or from parsing the output of `git`.
 Since we already knew one of our prospective clients was parsing the `wasm-opt` version,
-we decided to reproduce this behavior exactly,
+we decided to [reproduce this behavior exactly][rp1],
 and our build script has two functions that pull the version number from each place
 and put them into `config.h` as appropriate.
 
 Binaryen's build configuration also hex-encodes and embeds a binary called `wasm-intrinsics.wat` into its source code.
-So we again had to reproduce that logic.
+So we again had to [reproduce that logic][rp2].
+
+[rp1]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-sys/build.rs#L332-L369
+[rp2]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-sys/build.rs#L332-L369
 
 Adapting our custom build process to Binaryen as it changes in the future will
 likely be the most difficult ongoing maintenance task on this project.
@@ -372,7 +430,7 @@ that they both need access to the Binaryen source code,
 as `cxx` generates C++ code that accesses Binaryen headers.
 This complicates our deploy process slightly,
 and also implies that we must be careful about managing the version numbers
-of these two crates such that compatible versions always carry identical Binaryen source.
+of these two crates such that compatible versions always use compatible Binaryen source code.
 
 We originally packaged the full Binaryen source code
 with both `wasm-opt-sys` and `wasm-opt-cxx-sys`,
@@ -473,13 +531,9 @@ _requiring_ us to do this unless we [split the `wasm-opt` library and binary int
 
 [split]: https://github.com/brson/wasm-opt-rs/issues/93
 
-Note: if you are going to publish both library and binary forms
-of the same functionality,
-it is probably best to do it in two different crates.
-
 Anyway, what we did:
 
-we had to write our Rust `main.rs` file and call the C++ `main` function.
+We had to write our Rust `main.rs` file and call the C++ `main` function.
 For this we did not use `cxx` as the FFI was easy to write by hand
 (and `cxx` wouldn't have helped us much with the `argc` and `argv` parameters anyway).
 The `wasm-opt` crate's `main.rs` calls the FFI directly,
@@ -565,10 +619,6 @@ list it all here for commentary:
 // Establish linking with wasm_opt_sys, which contains no Rust code.
 extern crate wasm_opt_sys;
 
-fn main() -> anyhow::Result<()> {
-    wasm_opt_main()
-}
-
 mod c {
     use libc::{c_char, c_int};
 
@@ -577,7 +627,7 @@ mod c {
     }
 }
 
-pub fn wasm_opt_main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     use libc::{c_char, c_int};
     use std::ffi::OsString;
     #[cfg(unix)]
@@ -615,12 +665,7 @@ pub fn wasm_opt_main() -> anyhow::Result<()> {
 }
 ```
 
-This file contains a `main` function that calls
-the previously-described `wasm_opt_sys::init`,
-which does nothing except fool `rustc` into linking
-the native code inside the `wasm-opt-sys` crate.
-
-The `wasm_opt_main` Rust function's only
+The `main` Rust function's only
 responsibilities are to translate Rust's command-line
 arguments to C-compatible command-line arguments,
 call the C++ `wasm_opt_main`,
@@ -652,7 +697,7 @@ the Rust code should be calling [`OsStrExt::encode_wide`]
 to get (potentially ill-formed) UTF-16,
 and passing that to Binaryen;
 Binaryen then would need to be adapted to accept and process "wide" (16-bit)
-`char`s on Windows, perhaps leveraging the C++ [`std::path`] type.
+`char`s on Windows, perhaps leveraging the C++ [`std::filesystem::path`] type.
 We left this large upstream task to future work.
 
 [`OsStrExt::encode_wide`]: https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStrExt.html#tymethod.encode_wide
@@ -669,20 +714,21 @@ before losing access to the things they point to.
 
 ## `cxx` and Binaryen
 
-We dedicated the [`wasm-opt-cxx-sys`] to creating bindings with [`cxx`].
-We were happy with this decision. `cxx` was great and worked as advertised.
-We didn't have to think much about memory-safety across the FFI as `cxx` guided us to the safe solutions.
+We dedicated the [`wasm-opt-cxx-sys`] crate to creating bindings with [`cxx`].
+We were happy with the decision to use `cxx`. It worked as advertised:
+we didn't have to think much about memory-safety across the FFI as `cxx` guided us to the safe solutions.
 
-We used `cxx` version `1.0.72`.
-There may be new versions by now with new features.
+[`wasm-opt-cxx-sys`]: https://github.com/brson/wasm-opt-rs/tree/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys
 
 The `cxx` docs are pretty great,
 with [good API docs](https://docs.rs/cxx/latest/cxx/),
 and [a book](https://cxx.rs/).
-
 The [table showing the correspondence between C++ and Rust types][cxxt] is invaluable.
 
 [cxxt]: https://cxx.rs/bindings.html
+
+We used `cxx` version `1.0.79`.
+There may be new versions by now with new features.
 
 The purpose of `cxx` is to make it possible to communicate between C++ and Rust using _safe_ Rust.
 As such, `cxx` is very opinionated about what the code on both sides of the FFI look like,
@@ -706,24 +752,14 @@ We only used the former, calling from Rust to C++.
 [`extern "C++"`]: https://cxx.rs/extern-c++.html
 [`extern "Rust"`]: https://cxx.rs/extern-rust.html
 
-This section will discuss our experience with `cxx`,
-but I want to stress that there is probably a lot we don't know about `cxx`
-and things I say may be incorrect:
-we learned enough `cxx` to get our bindings working acceptably,
-but there may be better patterns that we didn't discover.
-
-The next sections will discuss some of the obstacles
-we encountered creating `cxx` bindings,
-then we'll show what the final C++ shims look like.
+The next sections discuss our experience creating `cxx` bindings,
+some of the obstacles we encountered,
+and what our C++ shim layer looks like.
 
 
 
 
 ## Defining `cxx` bindings
-
-[Our `cxx` bindings][ourb].
-
-[ourb]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs
 
 In `cxx` bindings are defined in a dedicated module annotated with `#[cxx::bridge]`.
 Within that module are any number of `extern "C++"` (or `extern "Rust"`) blocks.
@@ -733,7 +769,9 @@ one for each C++ class we wanted bindings for.
 Each of those blocks then declared a single type,
 and one or more constructor functions and methods.
 
-Here is our bindings declaration for Binaryen's `ModuleReader`:
+Here our [our bindings][ourb]' declarations for Binaryen's `ModuleReader`:
+
+[ourb]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs
 
 ```rust
 #[cxx::bridge(namespace = "wasm_shims")]
@@ -815,6 +853,7 @@ Some things to notice here:
 
 [`std::exception`]: https://en.cppreference.com/w/cpp/error/exception
 [fat]: #user-content-custom-exception-handling-in-cxx
+[`cxx::Exception`]: https://docs.rs/cxx/1.0.79/cxx/struct.Exception.html
 
 The final thing to note is that the `self` type of
 these methods is `Pin<&mut Self>`.
@@ -840,7 +879,7 @@ and high-still layers of API hide the `base` API from users,
 exposing only APIs with correct `mut` declarations.
 
 Papering over the missing `const`-correctness was easy in our case,
-but more complex or stateful APIs would cause bigger problems,
+but more complex or stateful APIs would cause bigger problems
 that might require fixing the underlying declarations.
 
 [cc]: https://isocpp.org/wiki/faq/const-correctness
@@ -848,7 +887,8 @@ that might require fixing the underlying declarations.
 
 We haven't tried it yet,
 but `cxx` author dtolnay suggests [a preferred shim pattern][ncs] for
-dealing with non-const-correct methods.
+dealing with non-const-correct methods,
+described later in this post.
 
 [ncs]: #user-content-a-better-shim-pattern-for-non-const-methods
 
@@ -896,17 +936,14 @@ the errors from getting overwhelming.
 ## Our C++ shim layer
 
 To give the Binaryen C++ API a shape that fit the `cxx` model,
-we created a ["shim" C++ layer][shims] the lightly wraps everything
+we created a "shim" C++ layer the lightly wraps everything
 we want to call from Rust.
 These shims aren't strictly necessary in all instances,
 but following a consistent pattern is valuable for maintainability,
-so all our library calls go through `shims.h`,
+so all our library calls go through [`shims.h`],
 which lives in the `wasm-opt-cxx-sys` crate with the `cxx` bindings.
 
-[shims]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h
-
-It has been many years since I programmed in C++ regularly.
-If the C++ shim code linked above can be improved, pull requests are welcome.
+[`shims.h`]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h
 
 The structure of `shims.h` mostly mirrors the structure of our `cxx` bindings,
 with the major exception that C++ requires items that reference each other
@@ -919,7 +956,7 @@ and we put our shims in their own `wasm_shims` namespace.
 Like the previously-described `cxx` bindings,
 our shims are organized such that within a single block
 we define a C++ `struct` containing an inner Binaryen type,
-methods on that struct that present an interface `cxx` can work with,
+methods on that struct presenting an interface `cxx` can work with,
 and which transform their arguments to the arguments expected by the
 underlying Binaryen APIs,
 and free-standing constructor functions as required by `cxx`
@@ -967,12 +1004,6 @@ namespace wasm_shims {
 }
 ```
 
-Although unnecessary,
-for organizational purposes,
-and to mirror the many `unsafe extern "C++"` block of the bindings,
-we use many `namespace wasm_shims { ... }` blocks to group related declarations.
-We could also just surround every shim type in a single `namespace wasm_shims` block.
-
 Some things to notice about these shims:
 
 - Many of the Binaryen APIs take `std::string` by value.
@@ -980,7 +1011,8 @@ Some things to notice about these shims:
   the FFI boundary.
   These shims instead accept a `const` reference to `std::string`,
   then make a full copy of the string to pass to the inner method.
-  For our purposes this is fine, others might want to avoid the copy.
+  For our purposes this is fine, others might want to avoid the copy,
+  the pattern for which is described in the next section.
 - There is no exception handling. `cxx` does that for us.
 - `newModuleReader` is a free function that constructs a `std::unique_ptr`
   by deferring to `std::make_unique`, which eventually calls the actual constructor.
@@ -999,8 +1031,8 @@ it _is_ possible to move them across the FFI.
 We didn't do this because by the time we learned about it,
 we had already published the crate and didn't want to break compatibility for it.
 
-Understanding how to move values from Rust across the FFI to C++ kinda requires
-understanding the move semantics of both Rust and C++, and the semantics of Rust's `Pin`,
+Understanding how to move values from Rust across the FFI to C++ requires
+a basic understanding of the move semantics of both Rust and C++, and the semantics of Rust's `Pin`,
 and I don't fully understand all three of these,
 but I'll show how it's done anyway.
 
@@ -1087,7 +1119,7 @@ I tested this by adjusting our call to `readText`:
 [`let_cxx_string!`] is a `cxx` macro for creating C++ compatible strings.
 It returns a `Pin<&mut CxxString>`.
 
-[`let_cxx_string!`]: https://docs.rs/cxx/latest/cxx/macro.let_cxx_string.html
+[`let_cxx_string!`]: https://docs.rs/cxx/1.0.79/cxx/macro.let_cxx_string.html
 
 Trying to run this fails:
 
@@ -1164,7 +1196,9 @@ even indirectly,
 to the user-facing API:
 users call [`OptimizationOptions::run`] and that method does all the interaction with the C++ code.
 
-dtolnay suggested handling this conversion within the C++ shim layer,
+[`OptimizationOptions::run`]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/run.rs#L88
+
+dtolnay suggested handling the mutability conversion within the C++ shim layer,
 by relying on `std::unique_ptr`'s [`operator ->()`][oparrow],
 which produces a non-`const` reference.
 
@@ -1198,12 +1232,12 @@ Note that this is now a free function and not a method
 This binding can now be used from Rust without exposing
 unneeded mutable references.
 
-I again don't fully understand the consequences of this pattern.
-To my eye it looks real scary:
+I don't fully understand the consequences of this pattern.
+To my eyes it looks scary:
 on the Rust side `&UniquePtr` is promising no mutation,
 on the C++ side we're explicitly taking a mutable reference,
 but we also know that actually C++ is not going to mutate.
-Or at least we think we know that &mdash; we have to guarantees.
+Or at least we think we know that &mdash; we have no guarantees.
 
 This looks like a situation where you need to be familiar with
 the C++ code and confident there is no mutation.
@@ -1366,9 +1400,9 @@ and the `cxx` bindings in the latter.
 This arrangement requires `wasm-opt-sys` to access all of the Binaryen `.cpp` and `.h` files,
 and `wasm-opt-cxx-sys` to access all of the `.h` files.
 Our initial solution to this was to simply package the entire Binaryen
-code base twice, as part of each package.
+source code twice, as part of each package.
 
-But `cxx` has a solution to this problem in the [`cxx_build]` crate.
+But `cxx` has a solution to this problem in the [`cxx_build`] crate.
 
 The `cxx_build` crate adds a layer atop the `cc` crate:
 when calling `cxx_build::bridge`,
@@ -1382,11 +1416,11 @@ So our `wasm-opt-sys` build script can tell `wasm-opt-cxx-sys`
 the set of directories that contain Binaryen C++ headers
 that will be needed for the bindings.
 
-To do this, we push include directories onto the `exported_Sheader_dirs`
+To do this, we push include directories onto the `exported_header_dirs`
 `Vec` on the global [`CFG`] value.
 
 [`cxx_build`]: https://docs.rs/cxx-build/latest/cxx_build/
-[`cc::Build`] https://docs.rs/cc/latest/cc/struct.Build.html
+[`cc::Build`]: https://docs.rs/cc/latest/cc/struct.Build.html
 [`CFG`]: https://docs.rs/cxx-build/latest/cxx_build/static.CFG.html
 
 Here's approximately how it looks in the [`wasm-opt-sys` build script][build-script]:
@@ -1480,7 +1514,7 @@ and it is fun playing with new patterns.
 Here's how our modules are organized,
 as [declared in `lib.rs`][lrs]:
 
-[`lib.rs`]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/lib.rs#L99
+[lrs]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/lib.rs#L99
 
 ```rust
 // Most of the API surface is exported here.
@@ -1593,19 +1627,34 @@ because the most valuable purpose of this CLI parser ended up being testing.
 
 We entered this project expecting to make a thin layer
 of bindings atop Binaryen.
-But what we actually did was use Binaryen's [`WasmReader`] and [`WasmWriter`]
-plus its [`PassManager`] to completely reimplement the logic of `wasm-opt`,
+We expected this to need minimal testing,
+and we only promised to deliver "smoke tests".
+But what we actually did was use Binaryen's [`ModuleReader`] and [`ModuleWriter`]
+plus its [`PassRunner`] to completely reimplement the logic of `wasm-opt`,
 as defined in [`wasm-opt.cpp`], along with several data structures.
+
+[`ModuleReader`]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/wasm-io.h#L43
+[`ModuleWriter`]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/wasm-io.h#L87
+[`PassRunner`]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/pass.h#L206
 
 The Binaryen pieces we completely reimplemented, and their Rust counterparts:
 
 | C++ | Rust |
 |-----|------|
 | [`wasm-opt.cpp`] | [`OptimizationOptions::run`] |
-| [`InliningOptions`] | [`InliningOptions`] |
-| [`PassOptions`] | [`PassOptions`] |
-| [pass name strings] | [`Pass` enum] |
-| [`Feature` enum] | [`Feature` enum] |
+| [`InliningOptions`][iob] | [`InliningOptions`][ior] |
+| [`PassOptions`][pob] | [`PassOptions`][por] |
+| [pass name strings][pnb] | [`Pass` enum][pnr] |
+| [`Feature` enum][feb] | [`Feature` enum][fer] |
+
+[iob]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/pass.h#L65
+[ior]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/api.rs#L76
+[pob]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/pass.h#L98
+[por]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/api.rs#L104
+[pnb]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/passes/pass.cpp#L88
+[pnr]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/passes.rs#L11
+[feb]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/wasm-features.h#L27
+[fer]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/features.rs#L15
 
 With all these reimplementations,
 we must:
@@ -1623,6 +1672,8 @@ So we asked ourselves questions like:
 
 And for each of these types of questions we figured out how to write a test case.
 Here are a few examples:
+
+
 
 
 ### Checking that Rust enum variants match a set of C++ strings
@@ -1644,66 +1695,61 @@ Binaryen maintains a global registry of passes that is [statically
 initialized][bsi], and has a function, [`PassRegistry::getRegisteredNames`]
 that returns the name of every pass.
 
+[bsi]: https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/features.rs#L15
+[`PassRegistry::getRegisteredNames`]: https://github.com/WebAssembly/binaryen/blob/c74d5eb62e13e11da4352693a76eec405fccd565/src/passes/pass.cpp#L68
+
 If we can call that function from Rust,
 and if we can iterate over the variants of `Pass`,
 and convert those passes to a string,
 then we can create a set of all the C++ pass names,
 and all the Rust pass names.
 
-[So we did that].
+[So we did that](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/tests/api_tests.rs#L21).
 
 
 
 
 ### Checking that a Rust struct matches a C++ struct definition
 
-Binaryen's [`InliningOptions`] is a simple plain-old-data struct.
-While it might have been possible to redeclare it in Rust exactly
+Binaryen's `InliningOptions` is a simple plain-old-data struct,
+which we duplicated in Rust.
+We also duplicate the initialization of this struct in Rust,
+as an implementation of `Default`.
+We wanted to be sure that our default implementation matched Binaryen's,
+and that if any fields were added or removed from
+this struct in the future we would know about them.
+
+To do this we construct the Rust version of `InliningOptions`,
+and pass that to a hand-written C++ function,
+[`checkInliningOptionsDefaults`](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h#L306),
+that constructs the C++ type and compares all the fields.
+
+It also checks that the C++ type has a known hard-coded size:
+if that size ever changes, it probably indicates a field has changed.
+
 
 
 
 
 ### Ensuring that the Rust API's `run` method behaves like `wasm-opt`
 
+The most important testing we did was to esure that our API behaved the same as Binaryen's CLI.
 
+We leveraged our `Command`-based API for this
+to create a set of [confarmance tests][cts] that:
 
+[cts]: https://github.com/brson/wasm-opt-rs/tree/bae781010f6a2a7d774adc05d251cdf7608bc271/components/conformance-tests
 
+- build the Binaryen `wasm-opt`
+- build the Rust `wasm-opt`
 
-## Six layers of abstraction
+then, the test suite creates command line arguments for exercising `wasm-opt` under various scenarios,
+under both binaries and the API, and checks that for all three implementations:
 
-This project ended up defining six clear layers of abstraction,
-which strikes me as a lot,
-but on examination I don't want to get rid of any of them.
-Some of them are imposed by the nature of FFI,
-and seem worth enumerating:
+- `wasm-opt` either succeeded or failed
+- the output files were exactly the same
 
-- [The C++ shims](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/shims.h).
-  A tiny layer of types and methods that wrap the Binaryen types,
-  but present an interface that is easy to call via `cxx` bindings.
-- [The `cxx` declarations](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt-cxx-sys/src/lib.rs).
-  The declarations used to auto-generate safe Rust types and C++ glue.
-- [The `base` API](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/base.rs).
-  This layer does several bits of API cleanup so other modules don't have to deal with FFI issues:
-  encapsulates `cxx::UniquePtr<SomeBinaryenType>` in a Rust struct,
-  uses Rust naming conventions instead of Binaryen's C++ conventions,
-  handles pinning as required by `cxx`,
-  handles conversion of `Path` to platform-specific string types, etc.
-- [The `OptimizationOptions` configuration types](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/api.rs)
-  and [the `run` method](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/run.rs).
-  This is the heart of the Rust API: create `OptimizationOptions` and call `run`.
-  The configuration types contained in `OptimizationOptions` closely mirror the `wasm-opt` command-line options.
-  Their definitions spill across several modules but they all are reexported at the crate root.
-  The `run` method duplicates the application-level logic of the `wasm-opt` binary in Rust.
-- [The `OptimizationOptions` builder methods](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/builder.rs).
-  Overlaid onto `OptimizationOptions`. Most methods are obvious one-liners.
-- [The `Command` interpreter](https://github.com/brson/wasm-opt-rs/blob/bae781010f6a2a7d774adc05d251cdf7608bc271/components/wasm-opt/src/integration.rs).
-  This constructs `OptimizationOptions` by interpreting the arguments to Rust's `Command` type for launching processes.
-  It's a bit of extravagance: it essentially duplicates `wasm-opt`'s own command-line parser.
-  Originally intended to make it easier for projects that already invoke the `wasm-opt` process
-  to integrate the API,
-  It ended up being invaluable for testing:
-  we can run all three of 1) the real `wasm-opt`, 2) our Rust binary `wasm-opt`,
-  and 3) our library; all in the same way, ensuring they all behave the identically.
+These tests caught many bugs in our implementation.
 
 
 
@@ -1716,8 +1762,7 @@ with many clear and distinct tasks to split between myself and my partner.
 Most hacking isn't so clearcut, so I am grateful we found this one.
 
 It has already been [integrated into the master branch of `cargo-contract`][ccmb],
-and &mdash; amazingly &mdash;
-somebody other than us took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
+and somebody other than us took the initiative to [integrate it into Substrate's `wasm-builder`][sswb].
 
 [ccmb]: https://github.com/paritytech/cargo-contract/pull/766
 [sswb]: https://github.com/paritytech/substrate/pull/12280
@@ -1729,7 +1774,7 @@ The final crate has a few caveats for prospective integrators to consider:
   it will rebuild the C++ code from scratch. The lack of incremental
   recompilation is a limitation self-imposed by not using cmake or other
   external build system.
-- `wasm-opt` on Windows does not support extended unicode paths (probably
+- `wasm-opt` on Windows does not support extended Unicode paths (probably
   anything non-ASCII). This is a [limitation of
   binaryen](https://github.com/brson/wasm-opt-rs/issues/40) and not a regression
   of the bindings. It may or may not be fixed in the future. The APIs will
@@ -1783,19 +1828,12 @@ but still I thought I would outline what we did for the sake of other prospectiv
 Some factors that made this project successful include:
 
 - The scope of this project and what success would look like was well-defined, and small:
-  bind `wasm-opt`, use it in `cargo-contract`.
+  bind `wasm-opt`; use it in `cargo-contract`.
 - The path to implementing the project technically had a few risks and unknowns.
 - The cost was modest: 30,000 USD. More about the cost below.
 
-But also:
-
-- I have a well-known history with Rust and the Rust blockchain industry,
-  and am more-or-less a recognized expert,
-  so it is easier to approve my proposal than someone unknown.
-- Though we had never worked together previously,
-  I have had professional contact for years with both Polkadot and W3F employees.
-  
-Networking and brand-building have a compounding beneficial effect over one's career.
+It also helps that I have had professional contact for years with both Parity and W3F employees:
+networking and brand-building have a compounding beneficial effect over one's career.
 I am grateful to know many people in the industry,
 and that many of them remain willing to work with me.
 
@@ -1825,7 +1863,7 @@ it surely can only help to have the support of the maintainers of the project on
 
 Since this project was to create a binding to the 3rd-party Binaryen project,
 I _also_ pinged the author of that project,
-who I _also_ knew previously (we worked together at Mozilla).
+who I _also_ knew previously.
 I was looking to see whether they approved or disapproved of the idea (they liked it),
 whether they knew of any obvious obstacles,
 and whether there were any prior efforts to bind Binaryen that I was not considering (there was).
@@ -1841,8 +1879,12 @@ The process is completely open on GitHub.
 For an open source hacker, this is awesome:
 I love working on GitHub; I love working in the open.
 
+[a template]: https://github.com/w3f/Grants-Program/blob/master/applications/application-template.md
+
 [Our proposal] was pretty simple.
 I tried to make the deliverables precise and measurable.
+
+[Our proposal]: https://github.com/w3f/Grants-Program/pull/1070
 
 W3F grants are based on deliverables at milestones,
 each milestone receiving an agreed payout if the deliverables are completed as specified in the approved proposal.
@@ -1878,11 +1920,13 @@ the second (M2) was to do everything else.
 Fortunately, there were no high-risk setbacks discovered in the implementation of this project.
 In our [M1 deliverable] we made clear a few things we hadn't known or considered during the proposal:
 
+[M1 deliverable]: https://github.com/w3f/Grant-Milestone-Delivery/pull/552
+
 - The crate would require a Rust 1.48+ compiler
 - The crate would require a c++17 compiler
-- Binaryen [did not provide suitable error handling] in some cases,
+- Binaryen did not provide suitable error handling in some cases,
   and this would require an unexpected but doable upstream fix.
-- We discovered that [Binaryen did not handle Unicode correctly on Windows].
+- We discovered that Binaryen did not handle Unicode correctly on Windows.
 - `wasm-opt` had fuzzing capabilities that we had not mentioned in the proposal,
   and we did not intend to expose them to the Rust API.
 
@@ -1892,12 +1936,16 @@ We were asked to amend the original proposal to indicate that fuzzing was out of
 so that its omission could be evaluated in the final M2 delivery,
 and [we did so].
 
-We also published [a preview build of the crate] so the API and its docs could be evaluated.
+[we did so]: https://github.com/w3f/Grants-Program/pull/1195
+
+We also published [a preview build of the crate][pvb] so the API and its docs could be evaluated.
 Although we spent a lot of thought on the design of the Rust API,
 nobody at any stage of the process actually commented on it one way or the other.
 And in practice, any one `wasm-opt` integrator is only going to use a small part of the total API surface.
 They reasonably just care that it works like `wasm-opt`.
 I am proud though of the API and its docs.
+
+[pvb]: https://docs.rs/wasm-opt/0.0.1-preview.1
 
 With M1 done,
 and the API already in shape (if not actually functioning),
@@ -1912,11 +1960,11 @@ The second milestone (M2) stretched out as we spent a lot of time
 identifying areas in need of polish and perfection.
 As we were nearing completion,
 we were delighted when someone we did not know
-produced [a pull request to Substrate's `wasm-builder`] integrating our bindings.
+produced [a pull request to Substrate's `wasm-builder`][sswb] integrating our bindings.
 Though they used the preview build of the crate which was broken in various ways,
 this gave us a lot of encouragement that other people were interested in using our work.
 
-Throughout the project we used the [GitHub issue tracker]
+Throughout the project we used the GitHub issue tracker
 to track work items,
 and assigned issues to GitHub milestones,
 either M1, M2, or none.
@@ -1930,10 +1978,8 @@ nevertheless _definitely_ put more hours into the project than I.
 So I think that we ended up almost perfectly on budget.
 
 I was pretty shocked by that,
-as the original estimate was a driven not by any real estimation,
+as the original estimate was driven not by any real estimation,
 but just by a hunch that we could do it within the allocated budget.
-
-I still do not believe in software estimation.
 
 One of the deliverables W3F asks for every milestone is a blog post.
 I declined to offer a milestone (M1) blog post,
@@ -1942,7 +1988,8 @@ I kept notes throughout the project, and snippets of text to inform the blog,
 so that when it came time to finish it I would remember what was important.
 
 This blog post was probably the single largest work item of the entire project,
-taking at least 10 hours of my time.
+taking at least 10 hours of my time,
+and stretching on for weeks after the project was otherwise complete.
 I don't mind that at all though &mdash; I'm happy with how it turned out,
 lots of solid technical content,
 a strong addition to my website.
