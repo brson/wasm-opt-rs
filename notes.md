@@ -1971,15 +1971,13 @@ either M1, M2, or none.
 This project was thankfully amenable to subdivision into small tasks,
 which my junior partner could often complete on her own without my oversight.
 
-What about the 30,000 USD budget? Did we go over it?
-I track my time precisely, and I performed about 20,000 USD worth of work on this project.
-My partner, whose time we charge less for, but whose time we did not track precisely,
-nevertheless _definitely_ put more hours into the project than I.
-So I think that we ended up almost perfectly on budget.
+We went over the 30,000 budget.
 
-I was pretty shocked by that,
-as the original estimate was driven not by any real estimation,
-but just by a hunch that we could do it within the allocated budget.
+By the time we were about 99% done with the project we were right on budget.
+I had performed about 20,000 USD worth of work,
+and my partner, whose time we charge less for, but whose time we did not track precisely,
+nevertheless probably put more hours into the project than I.
+So we were on budget.
 
 One of the deliverables W3F asks for every milestone is a blog post.
 I declined to offer a milestone (M1) blog post,
@@ -1987,9 +1985,15 @@ but promised to deliver one for M2 &mdash; this one!
 I kept notes throughout the project, and snippets of text to inform the blog,
 so that when it came time to finish it I would remember what was important.
 
-This blog post was probably the single largest work item of the entire project,
-taking at least 10 hours of my time,
-and stretching on for weeks after the project was otherwise complete.
+This blog post was _definitely_ the single largest work item of the entire project.
+After passing the draft to David Tolnay to review,
+he came back with many good ideas,
+some of which we postponed to the future,
+but some of which we needed to take action on,
+if only to reflect the mistakes we made with `cxx` in this blog post,
+and how to correct them.
+I think I worked on the blog for at least 30 hours,
+stretching on for weeks after the project was otherwise complete.
 I don't mind that at all though &mdash; I'm happy with how it turned out,
 lots of solid technical content,
 a strong addition to my website.
