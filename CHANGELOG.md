@@ -1,3 +1,7 @@
+## 0.110.2
+
+- [Backported Binaryen patch to remove empty memories sections from output](https://github.com/brson/wasm-opt-rs/pull/111).
+
 ## 0.110.1
 
 - [Removed Binaryen test suite from published source](https://github.com/brson/wasm-opt-rs/issues/98).
