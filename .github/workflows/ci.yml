@@ -85,6 +85,7 @@ jobs:
           rustc --version
           cargo build --verbose
           cargo test -- --nocapture
+          cargo clean
       - if: ${{ matrix.target == '' && matrix.c-compiler != '' }}
         name: Build / test with alt compiler
         env:
@@ -96,12 +97,14 @@ jobs:
           rustc --version
           cargo build --verbose
           cargo test -- --nocapture
+          cargo clean
       - if: matrix.target != ''
         name: Build / test 32-bit
         run: |
           rustc --version
           cargo build --verbose --target=${{matrix.target}}
           cargo test --target=${{matrix.target}} -- --nocapture
+          cargo clean
 
   conformance-tests:
     name: Conformance Tests
