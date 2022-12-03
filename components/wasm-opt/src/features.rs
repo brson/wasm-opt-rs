@@ -91,8 +91,8 @@ pub enum Feature {
     MultiMemories,
     /// The original WebAssembly specificai.
     /// The same as None.
-//    #[strum(disabled)]
-//    Mvp,
+    //    #[strum(disabled)]
+    //    Mvp,
     Default,
     /// All features, excluding [`Feature::GcNnLocals`].
     #[strum(disabled)]

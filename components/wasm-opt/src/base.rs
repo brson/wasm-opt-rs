@@ -319,7 +319,7 @@ pub enum Feature {
     // TODO: Should be the same as None
     // Mvp = 0,
     Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
-   // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
+    // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
     All = ((1 << 17) - 1) & !(1 << 12), // All = ((1 << 17) - 1) & ~GCNNLocals,
