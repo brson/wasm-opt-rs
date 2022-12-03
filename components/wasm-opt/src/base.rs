@@ -297,7 +297,7 @@ pub fn get_feature_array() -> Vec<u32> {
 
 #[derive(Clone, Debug, EnumIter)]
 pub enum Feature {
-    Mvp = 0,
+    None = 0,
     Atomics = 1 << 0,
     MutableGlobals = 1 << 1,
     TruncSat = 1 << 2,
@@ -310,18 +310,20 @@ pub enum Feature {
     Multivalue = 1 << 9,
     Gc = 1 << 10,
     Memory64 = 1 << 11,
-    TypedFunctionReferences = 1 << 12,
     // TODO: Remove this feature when the wasm spec stabilizes.
-    GcNnLocals = 1 << 13,
-    RelaxedSimd = 1 << 14,
-    ExtendedConst = 1 << 15,
-    Strings = 1 << 16,
-    MultiMemories = 1 << 17,
-    // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
+    GcNnLocals = 1 << 12,
+    RelaxedSimd = 1 << 13,
+    ExtendedConst = 1 << 14,
+    Strings = 1 << 15,
+    MultiMemories = 1 << 16,
+    // TODO: Should be the same as None
+    // Mvp = 0,
+    Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
+   // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
-    All = ((1 << 18) - 1) & !(1 << 13), // All = ((1 << 18) - 1) & ~GCNNLocals,
-    AllPossible = (1 << 18) - 1,
+    All = ((1 << 17) - 1) & !(1 << 12), // All = ((1 << 17) - 1) & ~GCNNLocals,
+    AllPossible = (1 << 17) - 1,
 }
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);

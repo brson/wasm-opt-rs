@@ -243,7 +243,7 @@ namespace wasm_shims {
   std::unique_ptr<std::vector<uint32_t>> getFeatureArray() {
     std::vector<uint32_t> f;
 
-    f.push_back(wasm::FeatureSet::Feature::MVP);
+    f.push_back(wasm::FeatureSet::Feature::None);
     f.push_back(wasm::FeatureSet::Feature::Atomics);
     f.push_back(wasm::FeatureSet::Feature::MutableGlobals);
     f.push_back(wasm::FeatureSet::Feature::TruncSat);
@@ -256,12 +256,13 @@ namespace wasm_shims {
     f.push_back(wasm::FeatureSet::Feature::Multivalue);
     f.push_back(wasm::FeatureSet::Feature::GC);
     f.push_back(wasm::FeatureSet::Feature::Memory64);
-    f.push_back(wasm::FeatureSet::Feature::ReferenceTypes);
     f.push_back(wasm::FeatureSet::Feature::GCNNLocals);
     f.push_back(wasm::FeatureSet::Feature::RelaxedSIMD);
     f.push_back(wasm::FeatureSet::Feature::ExtendedConst);
     f.push_back(wasm::FeatureSet::Feature::Strings);
     f.push_back(wasm::FeatureSet::Feature::MultiMemories);
+    //   f.push_back(wasm::FeatureSet::Feature::MVP);
+    f.push_back(wasm::FeatureSet::Feature::Default);
     f.push_back(wasm::FeatureSet::Feature::All);
     f.push_back(wasm::FeatureSet::Feature::AllPossible);
 

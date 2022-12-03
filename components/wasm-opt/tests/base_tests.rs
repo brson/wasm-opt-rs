@@ -432,6 +432,7 @@ fn all_features_correct() -> anyhow::Result<()> {
         features_via_base.push(f as u32);
     });
 
+    
     assert_eq!(features_via_shims, features_via_base);
     Ok(())
 }

@@ -13,9 +13,9 @@ use strum_macros::EnumString;
 /// [rm]: https://webassembly.org/roadmap/
 #[derive(Clone, Debug, Eq, Hash, PartialEq, EnumString)]
 pub enum Feature {
-    /// The original WebAssembly specificai.
+    /// None.
     #[strum(disabled)]
-    Mvp,
+    None,
     /// Atomics.
     ///
     /// [Specification](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md).
@@ -70,8 +70,6 @@ pub enum Feature {
     /// [Specification](https://github.com/WebAssembly/memory64/blob/main/proposals/memory64/Overview.md).
     #[strum(serialize = "memory64")]
     Memory64,
-    #[strum(serialize = "typed-function-references")]
-    TypedFunctionReferences,
     #[strum(serialize = "gc-nn-locals")]
     GcNnLocals,
     /// Relaxed SIMD.
@@ -91,6 +89,11 @@ pub enum Feature {
     /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
     #[strum(serialize = "multi-memories")]
     MultiMemories,
+    /// The original WebAssembly specificai.
+    /// The same as None.
+//    #[strum(disabled)]
+//    Mvp,
+    Default,
     /// All features, excluding [`Feature::GcNnLocals`].
     #[strum(disabled)]
     All,

@@ -290,7 +290,7 @@ fn will_remove_debug_info(passes: &[Pass]) -> bool {
 
 fn convert_feature(feature: &Feature) -> BaseFeature {
     match feature {
-        Feature::Mvp => BaseFeature::Mvp,
+        Feature::None => BaseFeature::None,
         Feature::Atomics => BaseFeature::Atomics,
         Feature::MutableGlobals => BaseFeature::MutableGlobals,
         Feature::TruncSat => BaseFeature::TruncSat,
@@ -303,12 +303,13 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::Multivalue => BaseFeature::Multivalue,
         Feature::Gc => BaseFeature::Gc,
         Feature::Memory64 => BaseFeature::Memory64,
-        Feature::TypedFunctionReferences => BaseFeature::TypedFunctionReferences,
         Feature::GcNnLocals => BaseFeature::GcNnLocals,
         Feature::RelaxedSimd => BaseFeature::RelaxedSimd,
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
         Feature::MultiMemories => BaseFeature::MultiMemories,
+//        Feature::Mvp => BaseFeature::Mvp,
+        Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,
         Feature::AllPossible => BaseFeature::AllPossible,
     }
