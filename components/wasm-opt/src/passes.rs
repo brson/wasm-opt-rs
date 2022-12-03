@@ -39,6 +39,8 @@ pub enum Pass {
     DeNan,
     /// Turns indirect calls into direct ones.
     Directize,
+    ///
+    DiscardGlobalEffects,
     /// Optimizes using the DataFlow SSA IR.
     Dfo,
     /// Dump DWARF debug info sections from the read binary.
@@ -63,6 +65,8 @@ pub enum Pass {
     GenerateDyncalls,
     /// Generate dynCall functions used by emscripten ABI, but only for functions with i64 in their signature (which cannot be invoked via the wasm table without JavaScript BigInt support).
     GenerateI64Dyncalls,
+    /// Generate global effect info (helps later passes).
+    GenerateGlobalEffects,
     /// Generate Stack IR.
     GenerateStackIr,
     /// Refine the types of globals.
@@ -89,6 +93,8 @@ pub enum Pass {
     InliningOptimizing,
     /// Lower away binaryen intrinsics.
     IntrinsicLowering,
+    ///
+    Jspi,
     /// Legalizes i64 types on the import/export boundary.
     LegalizeJsInterface,
     /// Legalizes i64 types on the import/export boundary in a minimal manner, only on things only JS will call.
@@ -131,6 +137,12 @@ pub enum Pass {
     ModAsyncifyAlwaysAndOnlyUnwind,
     /// Apply the assumption that asyncify never unwinds.
     ModAsyncifyNeverUnwind,
+    /// Creates specialized versions of functions.
+    Monomorphize,
+    /// Creates specialized versions of functions (even if unhelpful).
+    MonomorphizeAlways,
+    /// Combines multiple memories into a single memory.
+    MultiMemoryLowering,
     /// Name list.
     Nm,
     /// (Re)name all heap types.
@@ -141,6 +153,8 @@ pub enum Pass {
     OptimizeAddedConstants,
     /// Optimizes added constants into load/store offsets, propagating them across locals too.
     OptimizeAddedConstantsPropagate,
+    /// Eliminate and reuse casts.
+    OptimizeCasts,
     /// Optimizes instruction combinations.
     OptimizeInstructions,
     /// Optimize Stack IR.
@@ -189,6 +203,8 @@ pub enum Pass {
     RemoveUnusedNames,
     /// Sorts functions by access frequency.
     ReorderFunctions,
+    /// Sorts globals by access frequency.
+    ReorderGlobals,
     /// Sorts locals by access frequency.
     RecorderLocals,
     /// Re-optimize control flow using the relooper algorithm.
@@ -205,6 +221,8 @@ pub enum Pass {
     SignaturePruning,
     /// Apply more specific subtypes to signature types where possible.
     SignatureRefining,
+    /// Lower sign-ext operations to wasm mvp.
+    SignextLowering,
     /// Miscellaneous globals-related optimizations.
     SimplifyGlobals,
     /// Miscellaneous globals-related optimizations, and optimizes where we replaced global.gets with constants.
@@ -274,6 +292,7 @@ impl Pass {
             Dce => "dce",
             Dealign => "dealign",
             DeNan => "denan",
+            DiscardGlobalEffects => "discard-global-effects",
             Directize => "directize",
             Dfo => "dfo",
             DwarfDump => "dwarfdump",
@@ -287,6 +306,7 @@ impl Pass {
             FuncMetrics => "func-metrics",
             GenerateDyncalls => "generate-dyncalls",
             GenerateI64Dyncalls => "generate-i64-dyncalls",
+            GenerateGlobalEffects => "generate-global-effects",
             GenerateStackIr => "generate-stack-ir",
             GlobalRefining => "global-refining",
             Gto => "gto",
@@ -299,6 +319,7 @@ impl Pass {
             Inlining => "inlining",
             InliningOptimizing => "inlining-optimizing",
             IntrinsicLowering => "intrinsic-lowering",
+            Jspi => "jspi",
             LegalizeJsInterface => "legalize-js-interface",
             LegalizeJsInterfaceMinimally => "legalize-js-interface-minimally",
             LocalCse => "local-cse",
@@ -320,11 +341,15 @@ impl Pass {
             MinifyImportsAndExportsAndModules => "minify-imports-and-exports-and-modules",
             ModAsyncifyAlwaysAndOnlyUnwind => "mod-asyncify-always-and-only-unwind",
             ModAsyncifyNeverUnwind => "mod-asyncify-never-unwind",
+            Monomorphize => "monomorphize",
+            MonomorphizeAlways => "monomorphize-always",
+            MultiMemoryLowering => "multi-memory-lowering",
             Nm => "nm",
             NameTypes => "name-types",
             OnceReduction => "once-reduction",
             OptimizeAddedConstants => "optimize-added-constants",
             OptimizeAddedConstantsPropagate => "optimize-added-constants-propagate",
+            OptimizeCasts => "optimize-casts",
             OptimizeInstructions => "optimize-instructions",
             OptimizeStackIr => "optimize-stack-ir",
             PickLoadSigns => "pick-load-signs",
@@ -349,6 +374,7 @@ impl Pass {
             RemoveUnusedNonfunctionModuleElements => "remove-unused-nonfunction-module-elements",
             RemoveUnusedNames => "remove-unused-names",
             ReorderFunctions => "reorder-functions",
+            ReorderGlobals => "reorder-globals",
             RecorderLocals => "reorder-locals",
             Rereloop => "rereloop",
             Rse => "rse",
@@ -357,6 +383,7 @@ impl Pass {
             SetGlobals => "set-globals",
             SignaturePruning => "signature-pruning",
             SignatureRefining => "signature-refining",
+            SignextLowering => "signext-lowering",
             SimplifyGlobals => "simplify-globals",
             SimplifyGlobalsOptimizing => "simplify-globals-optimizing",
             SimplifyLocals => "simplify-locals",
