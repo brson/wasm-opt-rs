@@ -149,6 +149,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "safe_integer.cpp",
         "threads.cpp",
         "utilities.cpp",
+        "istring.cpp",
     ];
     let support_files = support_files.iter().map(|f| support_dir.join(f));
 
