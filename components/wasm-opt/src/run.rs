@@ -226,7 +226,9 @@ impl OptimizationOptions {
         let mut feature_set_enabled = BaseFeatureSet::new();
         let mut feature_set_disabled = BaseFeatureSet::new();
         match &self.features {
-            Features::Default => {}
+            Features::Default => {
+                feature_set_enabled.set(BaseFeature::Default);
+            }
             Features::MvpOnly => {
                 feature_set_enabled.set_mvp();
                 feature_set_disabled.set_all();
