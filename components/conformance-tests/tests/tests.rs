@@ -782,7 +782,6 @@ fn wasm_to_wasm_disable_custom_features() -> Result<()> {
         "--disable-multivalue",
         "--disable-gc",
         "--disable-memory64",
-        "--disable-typed-function-references",
         "--disable-gc-nn-locals",
         "--disable-relaxed-simd",
         "--disable-extended-const",
