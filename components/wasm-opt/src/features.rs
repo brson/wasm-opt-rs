@@ -89,10 +89,10 @@ pub enum Feature {
     /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
     #[strum(serialize = "multi-memories")]
     MultiMemories,
-    /// The original WebAssembly specificai.
-    /// The same as None.
-    //    #[strum(disabled)]
-    //    Mvp,
+    /// The original WebAssembly specification.
+    /// It has the same value as None.
+    #[strum(disabled)]
+    Mvp,
     Default,
     /// All features, excluding [`Feature::GcNnLocals`].
     #[strum(disabled)]

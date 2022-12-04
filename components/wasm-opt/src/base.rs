@@ -316,7 +316,7 @@ pub enum Feature {
     ExtendedConst = 1 << 14,
     Strings = 1 << 15,
     MultiMemories = 1 << 16,
-    // TODO: Should be the same as None
+    // MVP has the same value as None.
     // Mvp = 0,
     Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
