@@ -743,7 +743,6 @@ fn wasm_to_wasm_enable_custom_features() -> Result<()> {
         "--enable-multivalue",
         "--enable-gc",
         "--enable-memory64",
-        "--enable-typed-function-references",
         "--enable-gc-nn-locals",
         "--enable-relaxed-simd",
         "--enable-extended-const",
