@@ -93,6 +93,7 @@ pub enum Feature {
     /// It has the same value as None.
     #[strum(disabled)]
     Mvp,
+    #[strum(disabled)]
     Default,
     /// All features, excluding [`Feature::GcNnLocals`].
     #[strum(disabled)]
