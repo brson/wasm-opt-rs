@@ -87,20 +87,20 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-        fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: &CxxString);
+        fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: Pin<&mut CxxString>);
 
-        fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: &CxxString);
+        fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: Pin<&mut CxxString>);
 
         fn writeText(
             self: Pin<&mut Self>,
             wasm: Pin<&mut Module>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
         ) -> Result<()>;
 
         fn writeBinary(
             self: Pin<&mut Self>,
             wasm: Pin<&mut Module>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
         ) -> Result<()>;
     }
 

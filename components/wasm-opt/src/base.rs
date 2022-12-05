@@ -100,7 +100,7 @@ impl ModuleWriter {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.setSourceMapFilename(&source_map_filename);
+        this.setSourceMapFilename(source_map_filename);
 
         Ok(())
     }
@@ -109,7 +109,7 @@ impl ModuleWriter {
         let_cxx_string!(source_map_url = source_map_url);
 
         let this = self.0.pin_mut();
-        this.setSourceMapUrl(&source_map_url);
+        this.setSourceMapUrl(source_map_url);
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
@@ -119,7 +119,7 @@ impl ModuleWriter {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.writeText(wasm.0.pin_mut(), &path)
+        this.writeText(wasm.0.pin_mut(), path)
     }
 
     pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
@@ -127,7 +127,7 @@ impl ModuleWriter {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.writeBinary(wasm.0.pin_mut(), &path)
+        this.writeBinary(wasm.0.pin_mut(), path)
     }
 }
 

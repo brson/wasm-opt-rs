@@ -94,22 +94,22 @@ namespace wasm_shims {
       inner.setDebugInfo(debug);
     }
 
-    void setSourceMapFilename(const std::string& source_map_filename) {
-      inner.setSourceMapFilename(source_map_filename);
+    void setSourceMapFilename(std::string& source_map_filename) {
+      inner.setSourceMapFilename(std::move(source_map_filename));
     }
 
-    void setSourceMapUrl(const std::string& source_map_url) {
-      inner.setSourceMapUrl(source_map_url);
+    void setSourceMapUrl(std::string& source_map_url) {
+      inner.setSourceMapUrl(std::move(source_map_url));
     }
   
     void writeText(Module& wasm,
-                   const std::string& filename) {
-      inner.writeText(wasm, std::string(filename));
+                   std::string& filename) {
+      inner.writeText(wasm, std::move(filename));
     }
 
     void writeBinary(Module& wasm,
-                     const std::string& filename) {
-      inner.writeBinary(wasm, std::string(filename));
+                     std::string& filename) {
+      inner.writeBinary(wasm, std::move(filename));
     }
   };
     
