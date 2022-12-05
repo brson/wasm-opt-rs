@@ -55,24 +55,24 @@ namespace wasm_shims {
       inner.setDWARF(dwarf);
     }
 
-    void readText(const std::string& filename, Module& wasm) {
-      inner.readText(std::string(filename), wasm);
+    void readText(std::string& filename, Module& wasm) {
+      inner.readText(std::move(filename), wasm);
     }
 
-    void readBinary(const std::string& filename,
+    void readBinary(std::string& filename,
                     Module& wasm,
-                    const std::string& sourceMapFilename) {
-      inner.readBinary(std::string(filename),
+                    std::string& sourceMapFilename) {
+      inner.readBinary(std::move(filename),
                        wasm,
-                       std::string(sourceMapFilename));
+                       std::move(sourceMapFilename));
     }
 
-    void read(const std::string& filename,
+    void read(std::string& filename,
               Module& wasm,
-              const std::string& sourceMapFilename) {
-      inner.read(std::string(filename),
+              std::string& sourceMapFilename) {
+      inner.read(std::move(filename),
                  wasm,
-                 std::string(sourceMapFilename));
+                 std::move(sourceMapFilename));
     }
   };
 
@@ -80,8 +80,8 @@ namespace wasm_shims {
     return std::make_unique<ModuleReader>();
   }
 
-  void ModuleReader_readText(const std::unique_ptr<ModuleReader> &reader, const std::string& filename, Module& wasm) {
-    reader->inner.readText(std::string(filename), wasm);
+  void ModuleReader_readText(const std::unique_ptr<ModuleReader> &reader, std::string& filename, Module& wasm) {
+    reader->inner.readText(std::move(filename), wasm);
   }
 
 }

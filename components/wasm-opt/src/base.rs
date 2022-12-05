@@ -42,7 +42,7 @@ impl ModuleReader {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.readText(&path, wasm.0.pin_mut())
+        this.readText(path, wasm.0.pin_mut())
     }
 
     pub fn read_binary(
@@ -59,7 +59,7 @@ impl ModuleReader {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.readBinary(&path, wasm.0.pin_mut(), &source_map_filename)
+        this.readBinary(path, wasm.0.pin_mut(), source_map_filename)
     }
 
     pub fn read(
@@ -76,7 +76,7 @@ impl ModuleReader {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.read(&path, wasm.0.pin_mut(), &source_map_filename)
+        this.read(path, wasm.0.pin_mut(), source_map_filename)
     }
 }
 

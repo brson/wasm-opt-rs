@@ -55,28 +55,28 @@ pub mod wasm {
 
         fn readText(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
         fn ModuleReader_readText(
             reader: &UniquePtr<ModuleReader>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
         fn readBinary(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
+            sourceMapFilename: Pin<&mut CxxString>,
         ) -> Result<()>;
 
         fn read(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
+            sourceMapFilename: Pin<&mut CxxString>,
         ) -> Result<()>;
     }
 
