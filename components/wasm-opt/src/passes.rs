@@ -39,7 +39,7 @@ pub enum Pass {
     DeNan,
     /// Turns indirect calls into direct ones.
     Directize,
-    ///
+    /// Discards global effect info.
     DiscardGlobalEffects,
     /// Optimizes using the DataFlow SSA IR.
     Dfo,
@@ -93,7 +93,7 @@ pub enum Pass {
     InliningOptimizing,
     /// Lower away binaryen intrinsics.
     IntrinsicLowering,
-    ///
+    /// Wrap imports and exports for JavaScript promise integration.
     Jspi,
     /// Legalizes i64 types on the import/export boundary.
     LegalizeJsInterface,
