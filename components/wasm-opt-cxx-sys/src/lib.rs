@@ -107,9 +107,9 @@ pub mod wasm {
     unsafe extern "C++" {
         fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
 
-        fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
+        fn getPassDescription(name: Pin<&mut CxxString>) -> UniquePtr<CxxString>;
 
-        fn isPassHidden(name: &CxxString) -> bool;
+        fn isPassHidden(name: Pin<&mut CxxString>) -> bool;
     }
 
     unsafe extern "C++" {
@@ -153,7 +153,7 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
 
-        fn setArguments(self: Pin<&mut Self>, key: &CxxString, value: &CxxString);
+        fn setArguments(self: Pin<&mut Self>, key: Pin<&mut CxxString>, value: Pin<&mut CxxString>);
     }
 
     unsafe extern "C++" {
@@ -186,13 +186,13 @@ pub mod wasm {
             options: UniquePtr<PassOptions>,
         ) -> UniquePtr<PassRunner<'wasm>>;
 
-        fn add(self: Pin<&mut Self>, pass_name: &CxxString);
+        fn add(self: Pin<&mut Self>, pass_name: Pin<&mut CxxString>);
 
         fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 
         fn run(self: Pin<&mut Self>);
 
-        fn passRemovesDebugInfo(name: &CxxString) -> bool;
+        fn passRemovesDebugInfo(name: Pin<&mut CxxString>) -> bool;
     }
 
     unsafe extern "C++" {

@@ -124,14 +124,14 @@ namespace wasm_shims {
     return std::make_unique<std::vector<std::string>>(r->getRegisteredNames());
   }
 
-  std::unique_ptr<std::string> getPassDescription(const std::string& name) {
+  std::unique_ptr<std::string> getPassDescription(std::string& name) {
     auto r = wasm::PassRegistry::get();
-    return std::make_unique<std::string>(r->getPassDescription(std::string(name)));
+    return std::make_unique<std::string>(r->getPassDescription(std::move(name)));
   }
 
-  bool isPassHidden(const std::string& name) {
+  bool isPassHidden(std::string& name) {
     auto r = wasm::PassRegistry::get();
-    return r->isPassHidden(std::string(name));
+    return r->isPassHidden(std::move(name));
   }
 }
 
@@ -209,8 +209,8 @@ namespace wasm_shims {
       inner.debugInfo = debugInfo;
     }
 
-    void setArguments(const std::string& key, const std::string& value) {
-      inner.arguments[key] = value;
+    void setArguments(std::string& key, std::string& value) {
+      inner.arguments[key] = std::move(value);
     }
   };
 
@@ -281,8 +281,8 @@ namespace wasm_shims {
     PassRunner(Module* wasm) : inner(wasm::PassRunner(wasm)) {}
     PassRunner(Module* wasm, PassOptions options) : inner(wasm::PassRunner(wasm, options.inner)) {}
 
-    void add(const std::string& passName) {
-      inner.add(std::string(passName));
+    void add(std::string& passName) {
+      inner.add(std::move(passName));
     }
 
     void addDefaultOptimizationPasses() {
@@ -302,8 +302,8 @@ namespace wasm_shims {
     return std::make_unique<PassRunner>(&wasm, *options);
   }
 
-  bool passRemovesDebugInfo(const std::string& name) {
-    return wasm::PassRunner::passRemovesDebugInfo(std::string(name));
+  bool passRemovesDebugInfo(std::string& name) {
+    return wasm::PassRunner::passRemovesDebugInfo(std::move(name));
   }
 }
 

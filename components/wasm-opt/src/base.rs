@@ -151,7 +151,7 @@ pub mod pass_registry {
     pub fn get_pass_description(name: &str) -> String {
         let_cxx_string!(name = name);
 
-        let description = wasm::getPassDescription(&name);
+        let description = wasm::getPassDescription(name);
         let description = description.as_ref().expect("non-null");
 
         description.to_str().expect("utf8").to_string()
@@ -161,7 +161,7 @@ pub mod pass_registry {
     pub fn is_pass_hidden(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        wasm::isPassHidden(&name)
+        wasm::isPassHidden(name)
     }
 }
 
@@ -260,7 +260,7 @@ impl PassOptions {
         let_cxx_string!(value = value);
 
         let this = self.0.pin_mut();
-        this.setArguments(&key, &value);
+        this.setArguments(key, value);
     }
 }
 
@@ -341,7 +341,7 @@ impl<'wasm> PassRunner<'wasm> {
         let_cxx_string!(pass_name = pass_name);
 
         let this = self.0.pin_mut();
-        this.add(&pass_name);
+        this.add(pass_name);
     }
 
     pub fn add_default_optimization_passes(&mut self) {
@@ -357,7 +357,7 @@ impl<'wasm> PassRunner<'wasm> {
     pub fn pass_removes_debug_info(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        wasm::passRemovesDebugInfo(&name)
+        wasm::passRemovesDebugInfo(name)
     }
 }
 
