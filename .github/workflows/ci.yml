@@ -35,7 +35,7 @@ jobs:
             cxx-compiler: clang++
             rust: stable
           - os: ubuntu-20.04
-            c-ompiler: gcc-7
+            c-compiler: gcc-7
             cxx-compiler: g++-7
             rust: stable
           - os: ubuntu-20.04
