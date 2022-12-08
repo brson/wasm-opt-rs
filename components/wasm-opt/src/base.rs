@@ -42,7 +42,7 @@ impl ModuleReader {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.readText(&path, wasm.0.pin_mut())
+        this.readText(path, wasm.0.pin_mut())
     }
 
     pub fn read_binary(
@@ -59,7 +59,7 @@ impl ModuleReader {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.readBinary(&path, wasm.0.pin_mut(), &source_map_filename)
+        this.readBinary(path, wasm.0.pin_mut(), source_map_filename)
     }
 
     pub fn read(
@@ -76,7 +76,7 @@ impl ModuleReader {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.read(&path, wasm.0.pin_mut(), &source_map_filename)
+        this.read(path, wasm.0.pin_mut(), source_map_filename)
     }
 }
 
@@ -100,7 +100,7 @@ impl ModuleWriter {
         let_cxx_string!(source_map_filename = source_map_filename);
 
         let this = self.0.pin_mut();
-        this.setSourceMapFilename(&source_map_filename);
+        this.setSourceMapFilename(source_map_filename);
 
         Ok(())
     }
@@ -109,7 +109,7 @@ impl ModuleWriter {
         let_cxx_string!(source_map_url = source_map_url);
 
         let this = self.0.pin_mut();
-        this.setSourceMapUrl(&source_map_url);
+        this.setSourceMapUrl(source_map_url);
     }
 
     pub fn write_text(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
@@ -119,7 +119,7 @@ impl ModuleWriter {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.writeText(wasm.0.pin_mut(), &path)
+        this.writeText(wasm.0.pin_mut(), path)
     }
 
     pub fn write_binary(&mut self, wasm: &mut Module, path: &Path) -> Result<(), cxx::Exception> {
@@ -127,7 +127,7 @@ impl ModuleWriter {
         let_cxx_string!(path = path);
 
         let this = self.0.pin_mut();
-        this.writeBinary(wasm.0.pin_mut(), &path)
+        this.writeBinary(wasm.0.pin_mut(), path)
     }
 }
 
@@ -151,7 +151,7 @@ pub mod pass_registry {
     pub fn get_pass_description(name: &str) -> String {
         let_cxx_string!(name = name);
 
-        let description = wasm::getPassDescription(&name);
+        let description = wasm::getPassDescription(name);
         let description = description.as_ref().expect("non-null");
 
         description.to_str().expect("utf8").to_string()
@@ -161,7 +161,7 @@ pub mod pass_registry {
     pub fn is_pass_hidden(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        wasm::isPassHidden(&name)
+        wasm::isPassHidden(name)
     }
 }
 
@@ -260,7 +260,7 @@ impl PassOptions {
         let_cxx_string!(value = value);
 
         let this = self.0.pin_mut();
-        this.setArguments(&key, &value);
+        this.setArguments(key, value);
     }
 }
 
@@ -341,7 +341,7 @@ impl<'wasm> PassRunner<'wasm> {
         let_cxx_string!(pass_name = pass_name);
 
         let this = self.0.pin_mut();
-        this.add(&pass_name);
+        this.add(pass_name);
     }
 
     pub fn add_default_optimization_passes(&mut self) {
@@ -357,7 +357,7 @@ impl<'wasm> PassRunner<'wasm> {
     pub fn pass_removes_debug_info(name: &str) -> bool {
         let_cxx_string!(name = name);
 
-        wasm::passRemovesDebugInfo(&name)
+        wasm::passRemovesDebugInfo(name)
     }
 }
 

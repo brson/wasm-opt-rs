@@ -55,24 +55,24 @@ namespace wasm_shims {
       inner.setDWARF(dwarf);
     }
 
-    void readText(const std::string& filename, Module& wasm) {
-      inner.readText(std::string(filename), wasm);
+    void readText(std::string& filename, Module& wasm) {
+      inner.readText(std::move(filename), wasm);
     }
 
-    void readBinary(const std::string& filename,
+    void readBinary(std::string& filename,
                     Module& wasm,
-                    const std::string& sourceMapFilename) {
-      inner.readBinary(std::string(filename),
+                    std::string& sourceMapFilename) {
+      inner.readBinary(std::move(filename),
                        wasm,
-                       std::string(sourceMapFilename));
+                       std::move(sourceMapFilename));
     }
 
-    void read(const std::string& filename,
+    void read(std::string& filename,
               Module& wasm,
-              const std::string& sourceMapFilename) {
-      inner.read(std::string(filename),
+              std::string& sourceMapFilename) {
+      inner.read(std::move(filename),
                  wasm,
-                 std::string(sourceMapFilename));
+                 std::move(sourceMapFilename));
     }
   };
 
@@ -80,8 +80,8 @@ namespace wasm_shims {
     return std::make_unique<ModuleReader>();
   }
 
-  void ModuleReader_readText(const std::unique_ptr<ModuleReader> &reader, const std::string& filename, Module& wasm) {
-    reader->inner.readText(std::string(filename), wasm);
+  void ModuleReader_readText(const std::unique_ptr<ModuleReader> &reader, std::string& filename, Module& wasm) {
+    reader->inner.readText(std::move(filename), wasm);
   }
 
 }
@@ -94,22 +94,22 @@ namespace wasm_shims {
       inner.setDebugInfo(debug);
     }
 
-    void setSourceMapFilename(const std::string& source_map_filename) {
-      inner.setSourceMapFilename(source_map_filename);
+    void setSourceMapFilename(std::string& source_map_filename) {
+      inner.setSourceMapFilename(std::move(source_map_filename));
     }
 
-    void setSourceMapUrl(const std::string& source_map_url) {
-      inner.setSourceMapUrl(source_map_url);
+    void setSourceMapUrl(std::string& source_map_url) {
+      inner.setSourceMapUrl(std::move(source_map_url));
     }
   
     void writeText(Module& wasm,
-                   const std::string& filename) {
-      inner.writeText(wasm, std::string(filename));
+                   std::string& filename) {
+      inner.writeText(wasm, std::move(filename));
     }
 
     void writeBinary(Module& wasm,
-                     const std::string& filename) {
-      inner.writeBinary(wasm, std::string(filename));
+                     std::string& filename) {
+      inner.writeBinary(wasm, std::move(filename));
     }
   };
     
@@ -124,14 +124,14 @@ namespace wasm_shims {
     return std::make_unique<std::vector<std::string>>(r->getRegisteredNames());
   }
 
-  std::unique_ptr<std::string> getPassDescription(const std::string& name) {
+  std::unique_ptr<std::string> getPassDescription(std::string& name) {
     auto r = wasm::PassRegistry::get();
-    return std::make_unique<std::string>(r->getPassDescription(std::string(name)));
+    return std::make_unique<std::string>(r->getPassDescription(std::move(name)));
   }
 
-  bool isPassHidden(const std::string& name) {
+  bool isPassHidden(std::string& name) {
     auto r = wasm::PassRegistry::get();
-    return r->isPassHidden(std::string(name));
+    return r->isPassHidden(std::move(name));
   }
 }
 
@@ -209,8 +209,8 @@ namespace wasm_shims {
       inner.debugInfo = debugInfo;
     }
 
-    void setArguments(const std::string& key, const std::string& value) {
-      inner.arguments[key] = value;
+    void setArguments(std::string& key, std::string& value) {
+      inner.arguments[key] = std::move(value);
     }
   };
 
@@ -281,8 +281,8 @@ namespace wasm_shims {
     PassRunner(Module* wasm) : inner(wasm::PassRunner(wasm)) {}
     PassRunner(Module* wasm, PassOptions options) : inner(wasm::PassRunner(wasm, options.inner)) {}
 
-    void add(const std::string& passName) {
-      inner.add(std::string(passName));
+    void add(std::string& passName) {
+      inner.add(std::move(passName));
     }
 
     void addDefaultOptimizationPasses() {
@@ -302,8 +302,8 @@ namespace wasm_shims {
     return std::make_unique<PassRunner>(&wasm, *options);
   }
 
-  bool passRemovesDebugInfo(const std::string& name) {
-    return wasm::PassRunner::passRemovesDebugInfo(std::string(name));
+  bool passRemovesDebugInfo(std::string& name) {
+    return wasm::PassRunner::passRemovesDebugInfo(std::move(name));
   }
 }
 

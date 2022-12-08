@@ -55,28 +55,28 @@ pub mod wasm {
 
         fn readText(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
         fn ModuleReader_readText(
             reader: &UniquePtr<ModuleReader>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
         fn readBinary(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
+            sourceMapFilename: Pin<&mut CxxString>,
         ) -> Result<()>;
 
         fn read(
             self: Pin<&mut Self>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
             wasm: Pin<&mut Module>,
-            sourceMapFilename: &CxxString,
+            sourceMapFilename: Pin<&mut CxxString>,
         ) -> Result<()>;
     }
 
@@ -87,29 +87,29 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
-        fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: &CxxString);
+        fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: Pin<&mut CxxString>);
 
-        fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: &CxxString);
+        fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: Pin<&mut CxxString>);
 
         fn writeText(
             self: Pin<&mut Self>,
             wasm: Pin<&mut Module>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
         ) -> Result<()>;
 
         fn writeBinary(
             self: Pin<&mut Self>,
             wasm: Pin<&mut Module>,
-            filename: &CxxString,
+            filename: Pin<&mut CxxString>,
         ) -> Result<()>;
     }
 
     unsafe extern "C++" {
         fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
 
-        fn getPassDescription(name: &CxxString) -> UniquePtr<CxxString>;
+        fn getPassDescription(name: Pin<&mut CxxString>) -> UniquePtr<CxxString>;
 
-        fn isPassHidden(name: &CxxString) -> bool;
+        fn isPassHidden(name: Pin<&mut CxxString>) -> bool;
     }
 
     unsafe extern "C++" {
@@ -153,7 +153,7 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
 
-        fn setArguments(self: Pin<&mut Self>, key: &CxxString, value: &CxxString);
+        fn setArguments(self: Pin<&mut Self>, key: Pin<&mut CxxString>, value: Pin<&mut CxxString>);
     }
 
     unsafe extern "C++" {
@@ -186,13 +186,13 @@ pub mod wasm {
             options: UniquePtr<PassOptions>,
         ) -> UniquePtr<PassRunner<'wasm>>;
 
-        fn add(self: Pin<&mut Self>, pass_name: &CxxString);
+        fn add(self: Pin<&mut Self>, pass_name: Pin<&mut CxxString>);
 
         fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 
         fn run(self: Pin<&mut Self>);
 
-        fn passRemovesDebugInfo(name: &CxxString) -> bool;
+        fn passRemovesDebugInfo(name: Pin<&mut CxxString>) -> bool;
     }
 
     unsafe extern "C++" {
