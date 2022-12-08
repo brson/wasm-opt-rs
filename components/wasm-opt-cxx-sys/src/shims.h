@@ -210,7 +210,7 @@ namespace wasm_shims {
     }
 
     void setArguments(std::string& key, std::string& value) {
-      inner.arguments[key] = std::move(value);
+      inner.arguments[std::move(key)] = std::move(value);
     }
   };
 
