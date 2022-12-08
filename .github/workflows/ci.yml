@@ -16,6 +16,9 @@ jobs:
       matrix:
         os: [macos-11, windows-2019, ubuntu-20.04]
         rust: [stable, 1.48.0]
+        c-compiler: ['']
+        cxx-compiler: ['']
+        target: ['']
         include:
           - os: ubuntu-20.04
             rust: nightly
@@ -24,15 +27,21 @@ jobs:
           - os: ubuntu-20.04
             target: i686-unknown-linux-gnu
             rust: stable
+          - os: ubuntu-20.04
+            rust: stable
           - os: windows-2019
             target: i686-pc-windows-msvc
+            rust: stable
+          - os: windows-2019
+            rust: stable
+          - os: ubuntu-20.04
             rust: stable
           - os: ubuntu-20.04
             c-compiler: clang
             cxx-compiler: clang++
             rust: stable
           - os: ubuntu-20.04
-            c-ompiler: gcc-7
+            c-compiler: gcc-7
             cxx-compiler: g++-7
             rust: stable
           - os: ubuntu-20.04
