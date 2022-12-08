@@ -90,9 +90,13 @@ pub enum Feature {
     #[strum(serialize = "multi-memories")]
     MultiMemories,
     /// The original WebAssembly specification.
-    /// It has the same value as None.
+    ///
+    /// It has the same value as `None`.
     #[strum(disabled)]
     Mvp,
+    /// The default feature set.
+    ///
+    /// Includes [`Feature::SignExt`] and [`Feature::MutableGlobals`].
     #[strum(disabled)]
     Default,
     /// All features, excluding [`Feature::GcNnLocals`].

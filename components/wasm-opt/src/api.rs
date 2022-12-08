@@ -184,8 +184,8 @@ pub struct Passes {
 /// Disabling [`Feature::Mvp`] means no features are disabled.
 #[derive(Clone, Debug)]
 pub enum Features {
-    /// Enables [`Feature::Mvp`].
-    /// Disables [`Feature::Mvp`].
+    /// Enables [`Feature::Default`].
+    /// Disables [`Feature::None`].
     Default,
     /// Enables [`Feature::Mvp`].
     /// Disables [`Feature::All`].

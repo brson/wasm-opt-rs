@@ -225,10 +225,12 @@ impl OptimizationOptions {
     fn apply_features(&self, m: &mut Module) {
         let mut feature_set_enabled = BaseFeatureSet::new();
         let mut feature_set_disabled = BaseFeatureSet::new();
+
+        // In Binaryen 111 the enabled set starts as Default.
+        feature_set_enabled.set(BaseFeature::Default);
+
         match &self.features {
-            Features::Default => {
-                feature_set_enabled.set(BaseFeature::Default);
-            }
+            Features::Default => {}
             Features::MvpOnly => {
                 feature_set_enabled.set_mvp();
                 feature_set_disabled.set_all();
