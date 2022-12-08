@@ -16,6 +16,9 @@ jobs:
       matrix:
         os: [macos-11, windows-2019, ubuntu-20.04]
         rust: [stable, 1.48.0]
+        c-compiler: ['']
+        cxx-compiler: ['']
+        target: ['']
         include:
           - os: ubuntu-20.04
             rust: nightly
