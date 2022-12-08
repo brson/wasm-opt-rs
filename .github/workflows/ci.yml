@@ -27,8 +27,14 @@ jobs:
           - os: ubuntu-20.04
             target: i686-unknown-linux-gnu
             rust: stable
+          - os: ubuntu-20.04
+            rust: stable
           - os: windows-2019
             target: i686-pc-windows-msvc
+            rust: stable
+          - os: windows-2019
+            rust: stable
+          - os: ubuntu-20.04
             rust: stable
           - os: ubuntu-20.04
             c-compiler: clang
