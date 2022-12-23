@@ -223,36 +223,12 @@ impl OptimizationOptions {
     }
 
     fn apply_features(&self, m: &mut Module) {
-        let mut feature_set_enabled = BaseFeatureSet::new();
-        let mut feature_set_disabled = BaseFeatureSet::new();
+        let (enabled_features, disabled_features) =
+            convert_feature_sets(
+                &self.features,
+            );
 
-        // In Binaryen 111 the enabled set starts as Default.
-        feature_set_enabled.set(BaseFeature::Default);
-
-        match &self.features {
-            Features::Default => {}
-            Features::MvpOnly => {
-                feature_set_enabled.set_mvp();
-                feature_set_disabled.set_all();
-            }
-            Features::All => {
-                feature_set_enabled.set_all();
-                feature_set_disabled.set_mvp();
-            }
-            Features::Custom { enabled, disabled } => {
-                enabled.iter().for_each(|f| {
-                    let feature = convert_feature(f);
-                    feature_set_enabled.set(feature);
-                });
-
-                disabled.iter().for_each(|f| {
-                    let feature = convert_feature(f);
-                    feature_set_disabled.set(feature);
-                });
-            }
-        }
-
-        m.apply_features(feature_set_enabled, feature_set_disabled);
+        m.apply_features(enabled_features, disabled_features);
     }
 
     fn translate_pass_options(&self) -> BasePassOptions {
@@ -292,6 +268,39 @@ fn will_remove_debug_info(passes: &[Pass]) -> bool {
         .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
 }
 
+fn convert_feature_sets(
+    features: &Features,
+) -> (BaseFeatureSet, BaseFeatureSet) {
+    let mut feature_set_enabled = BaseFeatureSet::new();
+    let mut feature_set_disabled = BaseFeatureSet::new();
+
+    match features.baseline {
+        FeatureBaseline::Default => {
+            feature_set_enabled.set(BaseFeature::Default);
+        }
+        FeatureBaseline::MvpOnly => {
+            feature_set_enabled.set_mvp();
+            feature_set_disabled.set_all();
+        }
+        FeatureBaseline::All => {
+            feature_set_enabled.set_all();
+            feature_set_disabled.set_mvp();
+        }
+    }
+
+    features.enabled.iter().for_each(|f| {
+        let feature = convert_feature(f);
+        feature_set_enabled.set(feature);
+    });
+
+    features.disabled.iter().for_each(|f| {
+        let feature = convert_feature(f);
+        feature_set_disabled.set(feature);
+    });
+
+    (feature_set_enabled, feature_set_disabled)
+}
+        
 fn convert_feature(feature: &Feature) -> BaseFeature {
     match feature {
         Feature::None => BaseFeature::None,
