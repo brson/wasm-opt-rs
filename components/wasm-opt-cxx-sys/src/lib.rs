@@ -59,12 +59,6 @@ pub mod wasm {
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
-        fn ModuleReader_readText(
-            reader: &UniquePtr<ModuleReader>,
-            filename: Pin<&mut CxxString>,
-            wasm: Pin<&mut Module>,
-        ) -> Result<()>;
-
         fn readBinary(
             self: Pin<&mut Self>,
             filename: Pin<&mut CxxString>,

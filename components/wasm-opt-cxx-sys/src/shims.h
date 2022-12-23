@@ -79,11 +79,6 @@ namespace wasm_shims {
   std::unique_ptr<ModuleReader> newModuleReader() {
     return std::make_unique<ModuleReader>();
   }
-
-  void ModuleReader_readText(const std::unique_ptr<ModuleReader> &reader, std::string& filename, Module& wasm) {
-    reader->inner.readText(std::move(filename), wasm);
-  }
-
 }
 
 namespace wasm_shims {
