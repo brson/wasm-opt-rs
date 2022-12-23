@@ -152,10 +152,11 @@ impl OptimizationOptions {
                 self.enable_feature(feature)
             }
             Features::Custom {
-                enabled: features,
-                disabled: _,
+                enabled: enabled_features,
+                disabled: disabled_features,
             } => {
-                features.insert(feature);
+                enabled_features.insert(feature);
+                disabled_features.remove(&feature);
                 self
             }
         }
@@ -174,10 +175,11 @@ impl OptimizationOptions {
                 self.disable_feature(feature)
             }
             Features::Custom {
-                enabled: _,
-                disabled: features,
+                enabled: enabled_features,
+                disabled: disabled_features,
             } => {
-                features.insert(feature);
+                enabled_features.remove(&feature);
+                disabled_features.insert(feature);
                 self
             }
         }
