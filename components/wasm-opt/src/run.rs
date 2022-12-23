@@ -223,10 +223,7 @@ impl OptimizationOptions {
     }
 
     fn apply_features(&self, m: &mut Module) {
-        let (enabled_features, disabled_features) =
-            convert_feature_sets(
-                &self.features,
-            );
+        let (enabled_features, disabled_features) = convert_feature_sets(&self.features);
 
         m.apply_features(enabled_features, disabled_features);
     }
@@ -268,9 +265,7 @@ fn will_remove_debug_info(passes: &[Pass]) -> bool {
         .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
 }
 
-fn convert_feature_sets(
-    features: &Features,
-) -> (BaseFeatureSet, BaseFeatureSet) {
+fn convert_feature_sets(features: &Features) -> (BaseFeatureSet, BaseFeatureSet) {
     let mut feature_set_enabled = BaseFeatureSet::new();
     let mut feature_set_disabled = BaseFeatureSet::new();
 
@@ -302,7 +297,7 @@ fn convert_feature_sets(
 
     (feature_set_enabled, feature_set_disabled)
 }
-        
+
 fn convert_feature(feature: &Feature) -> BaseFeature {
     match feature {
         Feature::None => BaseFeature::None,
@@ -345,10 +340,8 @@ mod test {
         let features = Features::default();
         let (enabled, disabled) = convert_feature_sets(&features);
 
-        assert_eq!(enabled.as_int(),
-                   BaseFeature::Default as u32);
-        assert_eq!(disabled.as_int(),
-                   BaseFeature::None as u32);
+        assert_eq!(enabled.as_int(), BaseFeature::Default as u32);
+        assert_eq!(disabled.as_int(), BaseFeature::None as u32);
 
         assert!(has(&enabled, BaseFeature::SignExt));
         assert!(!has(&disabled, BaseFeature::SignExt));
@@ -359,8 +352,7 @@ mod test {
     #[test]
     fn test_features_remove_defaults() {
         let mut opts = OptimizationOptions::new_optimize_for_size();
-        opts
-            .disable_feature(Feature::SignExt)
+        opts.disable_feature(Feature::SignExt)
             .disable_feature(Feature::MutableGlobals);
         let (enabled, disabled) = convert_feature_sets(&opts.features);
 
@@ -384,7 +376,7 @@ mod test {
         assert!(has(&disabled, BaseFeature::Gc));
 
         opts.enable_feature(Feature::Gc);
-        
+
         let (enabled, disabled) = convert_feature_sets(&opts.features);
 
         assert!(has(&enabled, BaseFeature::Gc));
@@ -410,7 +402,7 @@ mod test {
         assert!(!has(&disabled, BaseFeature::Gc));
 
         opts.disable_feature(Feature::Gc);
-        
+
         let (enabled, disabled) = convert_feature_sets(&opts.features);
 
         assert!(!has(&enabled, BaseFeature::Gc));
