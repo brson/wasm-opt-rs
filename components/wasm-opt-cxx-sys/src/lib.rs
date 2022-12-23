@@ -159,7 +159,11 @@ pub mod wasm {
 
         fn setAll(self: Pin<&mut Self>);
 
-        fn set(self: Pin<&mut Self>, feature: u32);
+        fn set(self: Pin<&mut Self>, feature: u32, val: bool);
+
+        fn has(self: &Self, features: &WasmFeatureSet) -> bool;
+
+        fn as_int(self: &Self) -> u32;
 
         fn getFeatureArray() -> UniquePtr<CxxVector<u32>>;
 

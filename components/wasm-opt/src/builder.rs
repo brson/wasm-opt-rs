@@ -140,20 +140,16 @@ impl OptimizationOptions {
 
     /// Enables a feature.
     ///
-    /// This adds the feature to [`Features::enabled`] and removes it from
-    /// [`Features::disabled`].
+    /// This adds the feature to [`Features::enabled`].
     pub fn enable_feature(&mut self, feature: Feature) -> &mut Self {
         self.features.enabled.insert(feature);
-        self.features.disabled.remove(&feature);
         self
     }
 
     /// Disables a feature.
     ///
-    /// This adds the feature to [`Features::disabled`] and removes it from
-    /// [`Features::enabled`].
+    /// This adds the feature to [`Features::disabled`].
     pub fn disable_feature(&mut self, feature: Feature) -> &mut Self {
-        self.features.enabled.remove(&feature);
         self.features.disabled.insert(feature);
         self
     }

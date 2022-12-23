@@ -226,8 +226,16 @@ namespace wasm_shims {
       inner.setAll();
     }
 
-    void set(uint32_t feature) {
-      inner.set(feature);
+    void set(uint32_t feature, bool val) {
+      inner.set(feature, val);
+    }
+
+    bool has(const WasmFeatureSet& features) const {
+      return inner.has(features.inner);
+    }
+
+    uint32_t as_int() const {
+      return inner;
     }
   };
 

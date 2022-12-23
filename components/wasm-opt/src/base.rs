@@ -281,9 +281,19 @@ impl FeatureSet {
         this.setAll();
     }
 
-    pub fn set(&mut self, feature: Feature) {
+    pub fn set(&mut self, feature: Feature, val: bool) {
         let this = self.0.pin_mut();
-        this.set(feature as u32);
+        this.set(feature as u32, val);
+    }
+
+    pub fn has(&self, features: &FeatureSet) -> bool {
+        //let this = self.0.pin();
+        //let other = features.0.pin();
+        self.0.has(&*features.0)
+    }
+
+    pub fn as_int(&self) -> u32 {
+        self.0.as_int()
     }
 }
 
@@ -295,7 +305,7 @@ pub fn get_feature_array() -> Vec<u32> {
     feature_vec
 }
 
-#[derive(Clone, Debug, EnumIter)]
+#[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Feature {
     None = 0,
     Atomics = 1 << 0,

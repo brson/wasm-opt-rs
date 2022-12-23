@@ -276,7 +276,7 @@ fn convert_feature_sets(
 
     match features.baseline {
         FeatureBaseline::Default => {
-            feature_set_enabled.set(BaseFeature::Default);
+            feature_set_enabled.set(BaseFeature::Default, true);
         }
         FeatureBaseline::MvpOnly => {
             feature_set_enabled.set_mvp();
@@ -290,12 +290,14 @@ fn convert_feature_sets(
 
     features.enabled.iter().for_each(|f| {
         let feature = convert_feature(f);
-        feature_set_enabled.set(feature);
+        feature_set_enabled.set(feature, true);
+        feature_set_disabled.set(feature, false);
     });
 
     features.disabled.iter().for_each(|f| {
         let feature = convert_feature(f);
-        feature_set_disabled.set(feature);
+        feature_set_enabled.set(feature, false);
+        feature_set_disabled.set(feature, true);
     });
 
     (feature_set_enabled, feature_set_disabled)
@@ -325,5 +327,79 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,
         Feature::AllPossible => BaseFeature::AllPossible,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn has(set: &BaseFeatureSet, feature: BaseFeature) -> bool {
+        let mut new_set = BaseFeatureSet::new();
+        new_set.set(feature, true);
+        set.has(&new_set)
+    }
+
+    #[test]
+    fn test_features_default() {
+        let features = Features::default();
+        let (enabled, disabled) = convert_feature_sets(&features);
+
+        assert_eq!(enabled.as_int(),
+                   BaseFeature::Default as u32);
+        assert_eq!(disabled.as_int(),
+                   BaseFeature::None as u32);
+    }
+
+    #[test]
+    fn test_features_mvp_and_enable() {
+        let mut opts = OptimizationOptions::new_optimize_for_size();
+        opts.mvp_features_only();
+
+        let (enabled, disabled) = convert_feature_sets(&opts.features);
+
+        assert!(has(&enabled, BaseFeature::None));
+        assert!(has(&disabled, BaseFeature::All));
+
+        assert!(!has(&enabled, BaseFeature::Gc));
+        assert!(has(&disabled, BaseFeature::Gc));
+
+        opts.enable_feature(Feature::Gc);
+        
+        let (enabled, disabled) = convert_feature_sets(&opts.features);
+
+        assert!(has(&enabled, BaseFeature::Gc));
+        assert!(!has(&disabled, BaseFeature::Gc));
+
+        // Other features still disabled
+
+        assert!(!has(&enabled, BaseFeature::Atomics));
+        assert!(has(&disabled, BaseFeature::Atomics));
+    }
+
+    #[test]
+    fn test_features_all_and_disable() {
+        let mut opts = OptimizationOptions::new_optimize_for_size();
+        opts.all_features();
+
+        let (enabled, disabled) = convert_feature_sets(&opts.features);
+
+        assert!(has(&enabled, BaseFeature::All));
+        assert!(has(&disabled, BaseFeature::None));
+
+        assert!(has(&enabled, BaseFeature::Gc));
+        assert!(!has(&disabled, BaseFeature::Gc));
+
+        opts.disable_feature(Feature::Gc);
+        
+        let (enabled, disabled) = convert_feature_sets(&opts.features);
+
+        assert!(!has(&enabled, BaseFeature::Gc));
+        assert!(has(&disabled, BaseFeature::Gc));
+
+        // Other features still enabled
+
+        assert!(has(&enabled, BaseFeature::Atomics));
+        assert!(!has(&disabled, BaseFeature::Atomics));
     }
 }
