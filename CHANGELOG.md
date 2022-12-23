@@ -1,6 +1,7 @@
 ## 0.111.0
 
 - Upgraded to Binaryen 111.
+- [Fixed bugs in feature selection via the API](https://github.com/brson/wasm-opt-rs/issues/123).
 - Binaryen now enables the `SignExt` and `MutableGlobals` features by default,
   which are also enabled in the LLVM backend.
   In the future Binaryen will align its default feature selection with the LLVM backend.
