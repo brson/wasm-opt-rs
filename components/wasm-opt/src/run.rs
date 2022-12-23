@@ -349,6 +349,25 @@ mod test {
                    BaseFeature::Default as u32);
         assert_eq!(disabled.as_int(),
                    BaseFeature::None as u32);
+
+        assert!(has(&enabled, BaseFeature::SignExt));
+        assert!(!has(&disabled, BaseFeature::SignExt));
+        assert!(has(&enabled, BaseFeature::MutableGlobals));
+        assert!(!has(&disabled, BaseFeature::MutableGlobals));
+    }
+
+    #[test]
+    fn test_features_remove_defaults() {
+        let mut opts = OptimizationOptions::new_optimize_for_size();
+        opts
+            .disable_feature(Feature::SignExt)
+            .disable_feature(Feature::MutableGlobals);
+        let (enabled, disabled) = convert_feature_sets(&opts.features);
+
+        assert!(!has(&enabled, BaseFeature::SignExt));
+        assert!(has(&disabled, BaseFeature::SignExt));
+        assert!(!has(&enabled, BaseFeature::MutableGlobals));
+        assert!(has(&disabled, BaseFeature::MutableGlobals));
     }
 
     #[test]

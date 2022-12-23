@@ -180,6 +180,9 @@ pub struct Passes {
 }
 
 /// Which wasm [`Feature`]s to enable and disable.
+///
+/// The baseline features are applied first, then
+/// enabled and disabled features are applied.
 #[derive(Clone, Debug, Default)]
 pub struct Features {
     pub baseline: FeatureBaseline,

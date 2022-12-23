@@ -140,7 +140,8 @@ impl OptimizationOptions {
 
     /// Enables a feature.
     ///
-    /// This adds the feature to [`Features::enabled`].
+    /// This adds the feature to [`Features::enabled`], and is equivalent to the
+    /// `--enable-{feature}` command line arguments.
     pub fn enable_feature(&mut self, feature: Feature) -> &mut Self {
         self.features.enabled.insert(feature);
         self
@@ -148,7 +149,8 @@ impl OptimizationOptions {
 
     /// Disables a feature.
     ///
-    /// This adds the feature to [`Features::disabled`].
+    /// This adds the feature to [`Features::disabled`], and is equivalent to
+    /// the `--disable-{feature}` command line arguments.
     pub fn disable_feature(&mut self, feature: Feature) -> &mut Self {
         self.features.disabled.insert(feature);
         self
