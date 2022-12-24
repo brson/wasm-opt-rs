@@ -11,7 +11,7 @@ use strum_macros::EnumString;
 /// used where.
 ///
 /// [rm]: https://webassembly.org/roadmap/
-#[derive(Clone, Debug, Eq, Hash, PartialEq, EnumString)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, EnumString)]
 pub enum Feature {
     /// None.
     #[strum(disabled)]

@@ -181,23 +181,33 @@ pub struct Passes {
 
 /// Which wasm [`Feature`]s to enable and disable.
 ///
-/// Disabling [`Feature::Mvp`] means no features are disabled.
+/// The baseline features are applied first, then
+/// enabled and disabled features are applied.
+#[derive(Clone, Debug, Default)]
+pub struct Features {
+    pub baseline: FeatureBaseline,
+    pub enabled: HashSet<Feature>,
+    pub disabled: HashSet<Feature>,
+}
+
+/// The set of features to apply before applying custom features.
 #[derive(Clone, Debug)]
-pub enum Features {
+pub enum FeatureBaseline {
+    /// The default Binaryen feature set.
+    ///
     /// Enables [`Feature::Default`].
     /// Disables [`Feature::None`].
     Default,
+    /// Only allow WebAssembly MVP features.
+    ///
     /// Enables [`Feature::Mvp`].
     /// Disables [`Feature::All`].
     MvpOnly,
+    /// Allow all features.
+    ///
     /// Enables [`Feature::All`].
     /// Disables [Feature::Mvp`].
     All,
-    /// Specify which features to enable and disable.
-    Custom {
-        enabled: HashSet<Feature>,
-        disabled: HashSet<Feature>,
-    },
 }
 
 /// Constructors.
@@ -379,8 +389,8 @@ impl Default for Passes {
     }
 }
 
-impl Default for Features {
-    fn default() -> Features {
-        Features::Default
+impl Default for FeatureBaseline {
+    fn default() -> FeatureBaseline {
+        FeatureBaseline::Default
     }
 }

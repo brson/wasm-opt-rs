@@ -1,7 +1,6 @@
 //! A builder API for `OptimizationOptions`.
 
 use crate::api::*;
-use std::collections::HashSet;
 
 /// Builder methods.
 impl OptimizationOptions {
@@ -127,59 +126,33 @@ impl OptimizationOptions {
         self
     }
 
-    /// Sets [`OptimizationOptions::features`] to [`Features::MvpOnly`].
+    /// Sets the baseline feature set to [`FeatureBaseline::MvpOnly`].
     pub fn mvp_features_only(&mut self) -> &mut Self {
-        self.features = Features::MvpOnly;
+        self.features.baseline = FeatureBaseline::MvpOnly;
         self
     }
 
-    /// Sets [`OptimizationOptions::features`] to [`Features::All`].
+    /// Sets the baseline feature set to [`FeatureBaseline::All`].
     pub fn all_features(&mut self) -> &mut Self {
-        self.features = Features::All;
+        self.features.baseline = FeatureBaseline::All;
         self
     }
 
-    /// Adds a feature to [`Features::Custom::enabled`].
+    /// Enables a feature.
     ///
-    /// Sets [`OptimizationOptions::features`] to [`Features::Custom`] if not already.
+    /// This adds the feature to [`Features::enabled`], and is equivalent to the
+    /// `--enable-{feature}` command line arguments.
     pub fn enable_feature(&mut self, feature: Feature) -> &mut Self {
-        match &mut self.features {
-            Features::Default | Features::MvpOnly | Features::All => {
-                self.features = Features::Custom {
-                    enabled: HashSet::new(),
-                    disabled: HashSet::new(),
-                };
-                self.enable_feature(feature)
-            }
-            Features::Custom {
-                enabled: features,
-                disabled: _,
-            } => {
-                features.insert(feature);
-                self
-            }
-        }
+        self.features.enabled.insert(feature);
+        self
     }
 
-    /// Adds a feature to [`Features::Custom::disabled`].
+    /// Disables a feature.
     ///
-    /// Sets [`OptimizationOptions::features`] to [`Features::Custom`] if not already.
+    /// This adds the feature to [`Features::disabled`], and is equivalent to
+    /// the `--disable-{feature}` command line arguments.
     pub fn disable_feature(&mut self, feature: Feature) -> &mut Self {
-        match &mut self.features {
-            Features::Default | Features::MvpOnly | Features::All => {
-                self.features = Features::Custom {
-                    enabled: HashSet::new(),
-                    disabled: HashSet::new(),
-                };
-                self.disable_feature(feature)
-            }
-            Features::Custom {
-                enabled: _,
-                disabled: features,
-            } => {
-                features.insert(feature);
-                self
-            }
-        }
+        self.features.disabled.insert(feature);
+        self
     }
 }

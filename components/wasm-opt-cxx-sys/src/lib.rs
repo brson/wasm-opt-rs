@@ -59,12 +59,6 @@ pub mod wasm {
             wasm: Pin<&mut Module>,
         ) -> Result<()>;
 
-        fn ModuleReader_readText(
-            reader: &UniquePtr<ModuleReader>,
-            filename: Pin<&mut CxxString>,
-            wasm: Pin<&mut Module>,
-        ) -> Result<()>;
-
         fn readBinary(
             self: Pin<&mut Self>,
             filename: Pin<&mut CxxString>,
@@ -165,7 +159,11 @@ pub mod wasm {
 
         fn setAll(self: Pin<&mut Self>);
 
-        fn set(self: Pin<&mut Self>, feature: u32);
+        fn set(self: Pin<&mut Self>, feature: u32, val: bool);
+
+        fn has(self: &Self, features: &WasmFeatureSet) -> bool;
+
+        fn as_int(self: &Self) -> u32;
 
         fn getFeatureArray() -> UniquePtr<CxxVector<u32>>;
 
