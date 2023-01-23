@@ -59,6 +59,28 @@
 //! and [`OptimizationOptions::writer_file_type`].
 //!
 //!
+//! ## Enabling and disabling WASM features
+//!
+//! The WebAssembly specification has [optional features](https://webassembly.org/roadmap/),
+//! represeted by the [`Feature`] enum.
+//! The `Feature` variants link to the relevant specifications of each feature when known.
+//! `wasm-opt` can be configured with support for them individually using the
+//! [`OptimizationOptions::enable_feature`] and [`OptimizationOptions::disable_feature`]
+//! methods.
+//!
+//! By default Binaryen (and this crate) enables these common features by default:
+//!
+//! - [`Feature::SignExt`]
+//! - [`Feature::MutableGlobals`].
+//!
+//! The original WebAssembly specification with no additional features is known
+//! as the _MVP_ specification. __To enable only the MVP features call
+//! [`OptimizationOptions::mvp_features_only`]__.
+//!
+//! After resetting to MVP features, additional calls to `enable_feature` will
+//! add features to the MVP feature set.
+//!
+//!
 //! ## Customizing passes
 //!
 //! All Binaryen optimization passes are represented in the [`Pass`]
