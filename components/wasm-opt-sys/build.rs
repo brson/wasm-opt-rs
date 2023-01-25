@@ -1,10 +1,8 @@
 use cxx_build::CFG;
-use regex::Regex;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 fn main() -> anyhow::Result<()> {
     check_cxx17_support()?;
@@ -309,64 +307,11 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
     let config_file = output_dir.join("config.h");
 
-    let cmake_version = get_project_version_from_cmake()?;
-    let mut config_text = format!("#define PROJECT_VERSION \"{}\"", cmake_version);
-
-    let git_version = get_project_version_from_git();
-    match git_version {
-        Ok(git_version) => {
-            config_text = format!(
-                "#define PROJECT_VERSION \"{} ({})\"",
-                cmake_version, git_version
-            );
-        }
-        Err(_) => {
-            // Can't get the git version when building from package.
-        }
-    }
+    let config_text = "#define PROJECT_VERSION \"111 (version_111)\"";
 
     fs::write(&config_file, config_text)?;
 
     Ok(())
-}
-
-fn get_project_version_from_cmake() -> anyhow::Result<String> {
-    let re = Regex::new(r".*?binaryen LANGUAGES C CXX VERSION \d+.*?").unwrap();
-
-    let binaryen_dir = get_binaryen_dir()?;
-    let cmake_file = binaryen_dir.join("CMakeLists.txt");
-
-    let file = File::open(cmake_file)?;
-
-    let version_info: Vec<String> = BufReader::new(file)
-        .lines()
-        .map(|line| line.unwrap())
-        .filter(|line| re.is_match(line.as_ref()))
-        .collect();
-
-    let re = Regex::new(r"\d+").unwrap();
-    let cap = re.captures(&version_info[0]).expect("cmake version");
-    let version = &cap[0];
-
-    Ok(version.to_string())
-}
-
-fn get_project_version_from_git() -> anyhow::Result<String> {
-    let binaryen_dir = get_binaryen_dir()?;
-
-    let output = Command::new("git")
-        .arg("-C")
-        .arg(binaryen_dir.as_os_str())
-        .arg("describe")
-        .arg("--tags")
-        .arg("--match")
-        .arg("version_*")
-        .output();
-
-    let output = output?;
-    let output = String::from_utf8(output.stdout)?.trim().to_string();
-
-    Ok(output)
 }
 
 fn check_cxx17_support() -> anyhow::Result<()> {
