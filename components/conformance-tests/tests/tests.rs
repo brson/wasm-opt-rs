@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -74,7 +74,7 @@ fn run_test(args: TestArgs) -> Result<()> {
         assert_eq!(binaryen_out_file, rust_out_file);
 
         let api_out_file = fs::read(api_out.outfile)?;
-        
+
         assert_eq!(api_out_file, rust_out_file);
     } else {
         assert!(!rust_out.outfile.exists());
@@ -746,7 +746,7 @@ fn wasm_to_wasm_enable_custom_features() -> Result<()> {
         "--enable-gc-nn-locals",
         "--enable-relaxed-simd",
         "--enable-extended-const",
-        "--enable-strings",        
+        "--enable-strings",
         "--enable-multi-memories",
     ];
 
@@ -784,7 +784,7 @@ fn wasm_to_wasm_disable_custom_features() -> Result<()> {
         "--disable-gc-nn-locals",
         "--disable-relaxed-simd",
         "--disable-extended-const",
-        "--disable-strings",        
+        "--disable-strings",
         "--disable-multi-memories",
     ];
 
@@ -805,8 +805,12 @@ fn wasm_to_wasm_pass_arg() -> Result<()> {
     let infile_sourcemap = None::<PathBuf>;
     let outfile_sourcemap = None::<PathBuf>;
 
-    let args = vec!["--extract-function", "--pass-arg", "extract-function@rust_begin_unwind"];
-    
+    let args = vec![
+        "--extract-function",
+        "--pass-arg",
+        "extract-function@rust_begin_unwind",
+    ];
+
     run_test(TestArgs {
         infile,
         infile_sourcemap,
@@ -825,7 +829,7 @@ fn wasm_to_wasm_converge() -> Result<()> {
     let outfile_sourcemap = None::<PathBuf>;
 
     let args = vec!["-Os", "--converge"];
-    
+
     run_test(TestArgs {
         infile,
         infile_sourcemap,
@@ -852,4 +856,25 @@ fn input_file_does_not_exist() -> Result<()> {
         outfile_sourcemap,
         args,
     })
+}
+
+#[test]
+fn check_versions() -> Result<()> {
+    let paths = get_paths()?;
+
+    let output = Command::new(paths.binaryen_wasm_opt)
+        .arg("--version")
+        .output()?;
+
+    let version_binaryen = String::from_utf8(output.stdout)?.trim().to_string();
+
+    let output = Command::new(paths.rust_wasm_opt)
+        .arg("--version")
+        .output()?;
+
+    let version_rust = String::from_utf8(output.stdout)?.trim().to_string();
+
+    assert_eq!(version_binaryen, version_rust);
+
+    Ok(())
 }
