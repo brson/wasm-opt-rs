@@ -143,6 +143,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "colors.cpp",
         "command-line.cpp",
         "debug.cpp",
+        "dfa_minimization.cpp",
         "file.cpp",
         "safe_integer.cpp",
         "threads.cpp",
@@ -155,6 +156,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let ir_files = [
         "drop.cpp",
         "eh-utils.cpp",
+        "export-utils.cpp",
         "ExpressionManipulator.cpp",
         "ExpressionAnalyzer.cpp",
         "LocalGraph.cpp",
