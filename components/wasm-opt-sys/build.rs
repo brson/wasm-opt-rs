@@ -103,8 +103,8 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
     for line in reader.lines() {
         let mut line = line?;
 
-        if line.contains("int main") {
-            line = line.replace("int main", "extern \"C\" int wasm_opt_main_actual");
+        if line.contains("int BYN_MAIN") {
+            line = line.replace("int BYN_MAIN", "extern \"C\" int wasm_opt_main_actual");
         }
 
         writer.write_all(line.as_bytes())?;
@@ -145,6 +145,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "debug.cpp",
         "dfa_minimization.cpp",
         "file.cpp",
+        "pchar.cpp",
         "safe_integer.cpp",
         "threads.cpp",
         "utilities.cpp",

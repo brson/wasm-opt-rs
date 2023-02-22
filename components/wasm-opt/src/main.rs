@@ -5,6 +5,7 @@ fn main() -> anyhow::Result<()> {
     wasm_opt_main()
 }
 
+#[cfg(not(windows))]
 mod c {
     use libc::{c_char, c_int};
 
@@ -13,6 +14,50 @@ mod c {
     }
 }
 
+#[cfg(windows)]
+mod c {
+    use libc::{wchar_t, c_int};
+
+    extern "C" {
+        pub fn wasm_opt_main(argc: c_int, argv: *const *const wchar_t) -> c_int;
+    }
+}
+
+#[cfg(windows)]
+pub fn wasm_opt_main() -> anyhow::Result<()> {
+    use libc::{wchar_t, c_int};
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStrExt;
+
+    let args: Vec<OsString> = std::env::args_os().collect();
+
+    type NativeChar = wchar_t;
+
+    let c_args: Vec<Vec<NativeChar>> =
+        args
+        .into_iter()
+        .map(|s| {
+            s.encode_wide().chain(Some(0 as NativeChar)).collect()
+        })
+        .collect();
+                       
+    let c_ptrs: Vec<*const NativeChar> = c_args.iter().map(|s| s.as_ptr() as *const NativeChar).collect();
+
+    let argc = c_ptrs.len() as c_int;
+    let argv = c_ptrs.as_ptr();
+
+    let c_return;
+    unsafe {
+        c_return = c::wasm_opt_main(argc, argv);
+    }
+
+    drop(c_ptrs);
+    drop(c_args);
+
+    std::process::exit(c_return)
+}
+
+#[cfg(not(windows))]
 pub fn wasm_opt_main() -> anyhow::Result<()> {
     use libc::{c_char, c_int};
     use std::ffi::OsString;
