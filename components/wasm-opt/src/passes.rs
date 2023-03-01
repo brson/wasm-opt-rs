@@ -19,6 +19,8 @@ pub enum Pass {
     Dae,
     /// Removes arguments to calls in an lto-like manner, and optimizes where removed.
     DaeOptimizing,
+    /// Refine and merge abstract (never-created) types.
+    AbstractTypeRefining,
     /// Reduce # of locals by coalescing.
     CoalesceLocals,
     /// Reduce # of locals by coalescing and learning.
@@ -143,6 +145,8 @@ pub enum Pass {
     MonomorphizeAlways,
     /// Combines multiple memories into a single memory.
     MultiMemoryLowering,
+    /// Combines multiple memories into a single memory, trapping if the read or write is larger than the length of the memory's data.
+    MultiMemoryLoweringWithBoundsChecks,
     /// Name list.
     Nm,
     /// (Re)name all heap types.
@@ -201,6 +205,8 @@ pub enum Pass {
     RemoveUnusedNonfunctionModuleElements,
     /// Removes names from locations that are never branched to.
     RemoveUnusedNames,
+    /// Remove unused private GC types.
+    RemoveUnusedTypes,
     /// Sorts functions by access frequency.
     ReorderFunctions,
     /// Sorts globals by access frequency.
@@ -265,6 +271,10 @@ pub enum Pass {
     TrapModeClamp,
     /// Replace trapping operations with js semantics.
     TrapModeJs,
+    /// Merge types to their supertypes where possible.
+    TypeMerging,
+    /// Create new nominal types to help other optimizations.
+    TypeSsa,
     /// Removes local.tees, replacing them with sets and gets.
     Untee,
     /// Removes obviously unneeded code.
@@ -283,6 +293,7 @@ impl Pass {
             AvoidReinterprets => "avoid-reinterprets",
             Dae => "dae",
             DaeOptimizing => "dae-optimizing",
+            AbstractTypeRefining => "abstract-type-refining",
             CoalesceLocals => "coalesce-locals",
             CoalesceLocalsLearning => "coalesce-locals-learning",
             CodePushing => "code-pushing",
@@ -344,6 +355,7 @@ impl Pass {
             Monomorphize => "monomorphize",
             MonomorphizeAlways => "monomorphize-always",
             MultiMemoryLowering => "multi-memory-lowering",
+            MultiMemoryLoweringWithBoundsChecks => "multi-memory-lowering-with-bounds-checks",
             Nm => "nm",
             NameTypes => "name-types",
             OnceReduction => "once-reduction",
@@ -373,6 +385,7 @@ impl Pass {
             RemoveUnusedModuleElements => "remove-unused-module-elements",
             RemoveUnusedNonfunctionModuleElements => "remove-unused-nonfunction-module-elements",
             RemoveUnusedNames => "remove-unused-names",
+            RemoveUnusedTypes => "remove-unused-types",
             ReorderFunctions => "reorder-functions",
             ReorderGlobals => "reorder-globals",
             RecorderLocals => "reorder-locals",
@@ -405,6 +418,8 @@ impl Pass {
             StripTargetFeatuers => "strip-target-features",
             TrapModeClamp => "trap-mode-clamp",
             TrapModeJs => "trap-mode-js",
+            TypeMerging => "type-merging",
+            TypeSsa => "type-ssa",
             Untee => "untee",
             Vacuum => "vacuum",
         }
