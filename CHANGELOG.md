@@ -1,3 +1,8 @@
+## 0.112.0
+
+- Upgraded to Binaryen 112.
+- [Fixed the displayed version number in `wasm-opt` bin](https://github.com/brson/wasm-opt-rs/pull/133)
+
 ## 0.111.0
 
 - Upgraded to Binaryen 111.
