@@ -178,7 +178,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let passes_files = get_files_from_dir(&passes_dir)?;
 
     let fuzzing_dir = src_dir.join("tools/fuzzing");
-    let fuzzing_files = ["fuzzing.cpp", "random.cpp"];
+    let fuzzing_files = ["fuzzing.cpp", "random.cpp", "heap-types.cpp"];
     let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
     let asmjs_dir = src_dir.join("asmjs");
@@ -309,7 +309,7 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
     let config_file = output_dir.join("config.h");
 
-    let config_text = "#define PROJECT_VERSION \"112 (version_112)\"";
+    let config_text = "#define PROJECT_VERSION \"113 (version_113)\"";
 
     fs::write(&config_file, config_text)?;
 
