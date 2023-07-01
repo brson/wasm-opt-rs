@@ -11,7 +11,7 @@ set -x -e
 # graph correctly (it picks a once_cell that requires rust 2021), so we publish
 # with the first version of rust that supported 2021.
 RUST_MIN_VERSION=1.48.0
-RUST_DEPLOY_VERSION=1.56.0
+RUST_DEPLOY_VERSION=1.60.0
 
 # This is just to make sure we've got the compiler.
 rustc +$RUST_DEPLOY_VERSION --version
