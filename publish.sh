@@ -3,6 +3,7 @@
 # replacing version numbers:
 #     perl -p -i -e "s/0\.110\.0/0\.110\.1/g" components/*/*toml
 #
+# REMEMBER TO WIPE THE binaryen SUBDIR
 # REMEMBER TO TAG THE RELEASE
 
 set -x -e
