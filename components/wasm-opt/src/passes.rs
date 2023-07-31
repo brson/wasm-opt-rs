@@ -265,6 +265,8 @@ pub enum Pass {
     StripDwarf,
     /// Strip the wasm producers section.
     StripProducers,
+    /// Strip EH instructions.
+    StripEh,
     /// Strip the wasm target features section.
     StripTargetFeatuers,
     /// Replace trapping operations with clamping semantics.
@@ -415,6 +417,7 @@ impl Pass {
             StripDebug => "strip-debug",
             StripDwarf => "strip-dwarf",
             StripProducers => "strip-producers",
+            StripEh => "strip-eh",
             StripTargetFeatuers => "strip-target-features",
             TrapModeClamp => "trap-mode-clamp",
             TrapModeJs => "trap-mode-js",

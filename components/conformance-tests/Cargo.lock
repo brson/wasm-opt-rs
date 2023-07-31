@@ -41,7 +41,7 @@ dependencies = [
 
 [[package]]
 name = "conformance-tests"
-version = "0.113.0"
+version = "0.114.0"
 dependencies = [
  "anyhow",
  "tempfile",
@@ -148,9 +148,9 @@ checksum = "2f7254b99e31cad77da24b08ebf628882739a608578bb1bcdfc1f9c21260d7c0"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.43"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a2ca2c61bc9f3d74d2886294ab7b9853abd9c1ad903a3ac7815c58989bb7bab"
+checksum = "dec2b086b7a862cf4de201096214fa870344cf922b2b30c167badb3af3195406"
 dependencies = [
  "unicode-ident",
 ]
@@ -281,7 +281,7 @@ checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
 
 [[package]]
 name = "wasm-opt"
-version = "0.113.0"
+version = "0.114.0"
 dependencies = [
  "anyhow",
  "libc",
@@ -295,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-cxx-sys"
-version = "0.113.0"
+version = "0.114.0"
 dependencies = [
  "anyhow",
  "cxx",
@@ -305,7 +305,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-sys"
-version = "0.113.0"
+version = "0.114.0"
 dependencies = [
  "anyhow",
  "cc",
