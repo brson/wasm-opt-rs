@@ -3,6 +3,7 @@
 # replacing version numbers:
 #     perl -p -i -e "s/0\.110\.0/0\.110\.1/g" components/*/*toml
 #
+# REMEMBER TO do a dry-run build with the RUST_DEPLOY_VERSION
 # REMEMBER TO WIPE THE binaryen SUBDIR
 # REMEMBER TO TAG THE RELEASE
 
