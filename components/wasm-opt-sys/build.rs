@@ -54,6 +54,7 @@ fn main() -> anyhow::Result<()> {
         let flags: &[_] = if target_env != "msvc" {
             &[
                 "-std=c++17",
+                "-w",
                 "-Wno-unused-parameter",
                 "-DTHROW_ON_FATAL",
                 "-DBUILD_LLVM_DWARF",
@@ -62,6 +63,7 @@ fn main() -> anyhow::Result<()> {
         } else {
             &[
                 "/std:c++17",
+                "/w",
                 "/DTHROW_ON_FATAL",
                 "/DBUILD_LLVM_DWARF",
                 "/DNDEBUG",
