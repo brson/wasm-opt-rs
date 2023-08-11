@@ -114,8 +114,8 @@ impl OptimizationOptions {
             reader.set_dwarf(set_dwarf);
 
             match self.reader.file_type {
-                FileType::Wasm => reader.read_text(infile, &mut m),
-                FileType::Wat => reader.read_binary(infile, &mut m, infile_sourcemap),
+                FileType::Wasm => reader.read_binary(infile, &mut m, infile_sourcemap),
+                FileType::Wat => reader.read_text(infile, &mut m),
                 FileType::Any => reader.read(infile, &mut m, infile_sourcemap),
             }
             .map_err(|e| OptimizationError::Read {
