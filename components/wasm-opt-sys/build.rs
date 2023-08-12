@@ -13,18 +13,10 @@ fn main() -> anyhow::Result<()> {
     let binaryen_dir = get_binaryen_dir()?;
 
     let src_dir = binaryen_dir.join("src");
-    {
-        let passes_dir = src_dir.join("passes");
-        let passes_dwarf = passes_dir.join("DWARF.cpp");
-        let passes_dwarf_rename = passes_dir.join("DWARF__WASM_OPT_RS.cpp");
-        // File has to be renamed because of some conflicts with the LLVM files, would cause a
-        // weird linking error otherwise.
-        fs::rename(&passes_dwarf, &passes_dwarf_rename)?;
-    }
     let src_files = get_src_files(&src_dir)?;
 
     let llvm_dir = binaryen_dir.join("third_party/llvm-project");
-    let llvm_files = get_llvm_files(&llvm_dir);
+    let llvm_files = get_llvm_files(&llvm_dir)?;
 
     let tools_dir = src_dir.join("tools");
     let wasm_opt_src = tools_dir.join("wasm-opt.cpp");
@@ -78,19 +70,11 @@ fn main() -> anyhow::Result<()> {
     builder
         .file(wasm_opt_main_shim)
         .files(src_files)
-        .files(llvm_files)
+        .files(&llvm_files)
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
 
     builder.compile("wasm-opt-cc");
-
-    {
-        let passes_dir = src_dir.join("passes");
-        let passes_dwarf = passes_dir.join("DWARF.cpp");
-        let passes_dwarf_rename = passes_dir.join("DWARF__WASM_OPT_RS.cpp");
-        // Un-rename file from above
-        fs::rename(&passes_dwarf_rename, &passes_dwarf)?;
-    }
 
     Ok(())
 }
@@ -372,15 +356,15 @@ fn check_cxx17_support() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_llvm_files(llvm_dir: &Path) -> [PathBuf; 63] {
+fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
+    let llvm_dwarf = disambiguate_file(&llvm_dir.join("Dwarf.cpp"), "LLVMDwarf.cpp")?;
     // Array taken from https://github.com/WebAssembly/binaryen/blob/third_party/llvm-project/CMakeLists.txt
-    [
+    Ok([
         llvm_dir.join("Debug.cpp"),
         llvm_dir.join("Binary.cpp"),
         llvm_dir.join("ConvertUTF.cpp"),
         llvm_dir.join("DataExtractor.cpp"),
         llvm_dir.join("DJB.cpp"),
-        llvm_dir.join("Dwarf.cpp"),
         llvm_dir.join("dwarf2yaml.cpp"),
         llvm_dir.join("DWARFAbbreviationDeclaration.cpp"),
         llvm_dir.join("DWARFAcceleratorTable.cpp"),
@@ -438,5 +422,6 @@ fn get_llvm_files(llvm_dir: &Path) -> [PathBuf; 63] {
         llvm_dir.join("WithColor.cpp"),
         llvm_dir.join("YAMLParser.cpp"),
         llvm_dir.join("YAMLTraits.cpp"),
-    ]
+        llvm_dwarf,
+    ])
 }
