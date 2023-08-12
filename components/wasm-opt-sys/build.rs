@@ -358,13 +358,15 @@ fn check_cxx17_support() -> anyhow::Result<()> {
 
 fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
     let llvm_dwarf = disambiguate_file(&llvm_dir.join("Dwarf.cpp"), "LLVMDwarf.cpp")?;
-    // Array taken from https://github.com/WebAssembly/binaryen/blob/third_party/llvm-project/CMakeLists.txt
+    let llvm_debug = disambiguate_file(&llvm_dir.join("Debug.cpp"), "LLVMDebug.cpp")?;
+    // Array taken from
+    // https://github.com/WebAssembly/binaryen/blob/616c08bc1ec604a822d354cbb0353b7994cec72d/third_party/llvm-project/CMakeLists.txt
     Ok([
-        llvm_dir.join("Debug.cpp"),
         llvm_dir.join("Binary.cpp"),
         llvm_dir.join("ConvertUTF.cpp"),
         llvm_dir.join("DataExtractor.cpp"),
         llvm_dir.join("DJB.cpp"),
+        llvm_debug,
         llvm_dir.join("dwarf2yaml.cpp"),
         llvm_dir.join("DWARFAbbreviationDeclaration.cpp"),
         llvm_dir.join("DWARFAcceleratorTable.cpp"),
