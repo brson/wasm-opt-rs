@@ -15,6 +15,9 @@ fn main() -> anyhow::Result<()> {
     let src_dir = binaryen_dir.join("src");
     let src_files = get_src_files(&src_dir)?;
 
+    let llvm_dir = binaryen_dir.join("third_party/llvm-project");
+    let llvm_files = get_llvm_files(&llvm_dir)?;
+
     let tools_dir = src_dir.join("tools");
     let wasm_opt_src = tools_dir.join("wasm-opt.cpp");
     let wasm_opt_src = get_converted_wasm_opt_cpp(&wasm_opt_src)?;
@@ -32,6 +35,8 @@ fn main() -> anyhow::Result<()> {
     CFG.exported_header_dirs.push(&src_dir);
     CFG.exported_header_dirs.push(&tools_dir);
     CFG.exported_header_dirs.push(&output_dir);
+    let llvm_include = llvm_dir.join("include");
+    CFG.exported_header_dirs.push(&llvm_include);
 
     let mut builder = cxx_build::bridge("src/lib.rs");
 
@@ -39,9 +44,22 @@ fn main() -> anyhow::Result<()> {
         let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
 
         let flags: &[_] = if target_env != "msvc" {
-            &["-std=c++17", "-Wno-unused-parameter", "-DTHROW_ON_FATAL"]
+            &[
+                "-std=c++17",
+                "-w",
+                "-Wno-unused-parameter",
+                "-DTHROW_ON_FATAL",
+                "-DBUILD_LLVM_DWARF",
+                "-DNDEBUG",
+            ]
         } else {
-            &["/std:c++17", "/DTHROW_ON_FATAL"]
+            &[
+                "/std:c++17",
+                "/w",
+                "/DTHROW_ON_FATAL",
+                "/DBUILD_LLVM_DWARF",
+                "/DNDEBUG",
+            ]
         };
 
         for flag in flags {
@@ -52,6 +70,7 @@ fn main() -> anyhow::Result<()> {
     builder
         .file(wasm_opt_main_shim)
         .files(src_files)
+        .files(&llvm_files)
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
 
@@ -335,4 +354,76 @@ fn check_cxx17_support() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
+    let llvm_dwarf = disambiguate_file(&llvm_dir.join("Dwarf.cpp"), "LLVMDwarf.cpp")?;
+    let llvm_debug = disambiguate_file(&llvm_dir.join("Debug.cpp"), "LLVMDebug.cpp")?;
+    // Array taken from
+    // https://github.com/WebAssembly/binaryen/blob/616c08bc1ec604a822d354cbb0353b7994cec72d/third_party/llvm-project/CMakeLists.txt
+    Ok([
+        llvm_dir.join("Binary.cpp"),
+        llvm_dir.join("ConvertUTF.cpp"),
+        llvm_dir.join("DataExtractor.cpp"),
+        llvm_dir.join("DJB.cpp"),
+        llvm_debug,
+        llvm_dir.join("dwarf2yaml.cpp"),
+        llvm_dir.join("DWARFAbbreviationDeclaration.cpp"),
+        llvm_dir.join("DWARFAcceleratorTable.cpp"),
+        llvm_dir.join("DWARFAddressRange.cpp"),
+        llvm_dir.join("DWARFCompileUnit.cpp"),
+        llvm_dir.join("DWARFContext.cpp"),
+        llvm_dir.join("DWARFDataExtractor.cpp"),
+        llvm_dir.join("DWARFDebugAbbrev.cpp"),
+        llvm_dir.join("DWARFDebugAddr.cpp"),
+        llvm_dir.join("DWARFDebugAranges.cpp"),
+        llvm_dir.join("DWARFDebugArangeSet.cpp"),
+        llvm_dir.join("DWARFDebugFrame.cpp"),
+        llvm_dir.join("DWARFDebugInfoEntry.cpp"),
+        llvm_dir.join("DWARFDebugLine.cpp"),
+        llvm_dir.join("DWARFDebugLoc.cpp"),
+        llvm_dir.join("DWARFDebugMacro.cpp"),
+        llvm_dir.join("DWARFDebugPubTable.cpp"),
+        llvm_dir.join("DWARFDebugRangeList.cpp"),
+        llvm_dir.join("DWARFDebugRnglists.cpp"),
+        llvm_dir.join("DWARFDie.cpp"),
+        llvm_dir.join("DWARFEmitter.cpp"),
+        llvm_dir.join("DWARFExpression.cpp"),
+        llvm_dir.join("DWARFFormValue.cpp"),
+        llvm_dir.join("DWARFGdbIndex.cpp"),
+        llvm_dir.join("DWARFListTable.cpp"),
+        llvm_dir.join("DWARFTypeUnit.cpp"),
+        llvm_dir.join("DWARFUnit.cpp"),
+        llvm_dir.join("DWARFUnitIndex.cpp"),
+        llvm_dir.join("DWARFVerifier.cpp"),
+        llvm_dir.join("DWARFVisitor.cpp"),
+        llvm_dir.join("DWARFYAML.cpp"),
+        llvm_dir.join("Error.cpp"),
+        llvm_dir.join("ErrorHandling.cpp"),
+        llvm_dir.join("FormatVariadic.cpp"),
+        llvm_dir.join("Hashing.cpp"),
+        llvm_dir.join("LEB128.cpp"),
+        llvm_dir.join("LineIterator.cpp"),
+        llvm_dir.join("MCRegisterInfo.cpp"),
+        llvm_dir.join("MD5.cpp"),
+        llvm_dir.join("MemoryBuffer.cpp"),
+        llvm_dir.join("NativeFormatting.cpp"),
+        llvm_dir.join("ObjectFile.cpp"),
+        llvm_dir.join("obj2yaml_Error.cpp"),
+        llvm_dir.join("Optional.cpp"),
+        llvm_dir.join("Path.cpp"),
+        llvm_dir.join("raw_ostream.cpp"),
+        llvm_dir.join("ScopedPrinter.cpp"),
+        llvm_dir.join("SmallVector.cpp"),
+        llvm_dir.join("SourceMgr.cpp"),
+        llvm_dir.join("StringMap.cpp"),
+        llvm_dir.join("StringRef.cpp"),
+        llvm_dir.join("SymbolicFile.cpp"),
+        llvm_dir.join("Twine.cpp"),
+        llvm_dir.join("UnicodeCaseFold.cpp"),
+        llvm_dir.join("WithColor.cpp"),
+        llvm_dir.join("YAMLParser.cpp"),
+        llvm_dir.join("YAMLTraits.cpp"),
+        llvm_dwarf,
+    ])
 }

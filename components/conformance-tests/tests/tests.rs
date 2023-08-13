@@ -251,6 +251,15 @@ fn get_test_infile_wasm() -> Result<PathBuf> {
     Ok(infile)
 }
 
+fn get_test_infile_wasm_alt() -> Result<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
+    let manifest_dir = PathBuf::from(manifest_dir);
+    let workspace = manifest_dir.join("../..");
+    let infile = workspace.join("components/wasm-opt/tests/hello_world.wasm");
+
+    Ok(infile)
+}
+
 fn get_test_infile_wat() -> Result<PathBuf> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = PathBuf::from(manifest_dir);
@@ -877,4 +886,23 @@ fn check_versions() -> Result<()> {
     assert_eq!(version_binaryen, version_rust);
 
     Ok(())
+}
+
+#[test]
+fn dwarf_line_info() -> Result<()> {
+    let infile = get_test_infile_wasm_alt()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec![];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
 }

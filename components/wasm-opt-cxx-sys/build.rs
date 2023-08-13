@@ -5,9 +5,9 @@ fn main() -> anyhow::Result<()> {
         let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
 
         let flags: &[_] = if target_env != "msvc" {
-            &["-std=c++17", "-Wno-unused-parameter"]
+            &["-std=c++17", "-Wno-unused-parameter", "-DBUILD_LLVM_DWARF"]
         } else {
-            &["/std:c++17"]
+            &["/std:c++17", "/DBUILD_LLVM_DWARF"]
         };
 
         for flag in flags {
