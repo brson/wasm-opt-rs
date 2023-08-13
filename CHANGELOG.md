@@ -1,3 +1,7 @@
+## 0.114.1
+
+- [Compiled missing DWARF passes](https://github.com/brson/wasm-opt-rs/pull/151).
+
 ## 0.114.0
 
 - Upgraded to Binaryen 114.
