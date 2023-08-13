@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt-sys"
-version = "0.114.0"
+version = "0.114.1"
 description = "Native wasm-opt build"
 license = "MIT / Apache-2.0"
 edition = "2018"
