@@ -14,7 +14,7 @@ set -x -e
 # other crates' latest versions no longer work with 1.48.
 # We publish with the first version of Rust that can publish and verify the crates.
 RUST_MIN_VERSION=1.48.0
-RUST_DEPLOY_VERSION=1.61.0
+RUST_DEPLOY_VERSION=1.63.0
 
 # This is just to make sure we've got the compiler.
 rustc +$RUST_DEPLOY_VERSION --version
