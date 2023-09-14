@@ -4,6 +4,8 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
+mod cc_cache;
+
 fn main() -> anyhow::Result<()> {
     check_cxx17_support()?;
 
