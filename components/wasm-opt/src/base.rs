@@ -325,7 +325,7 @@ pub enum Feature {
     RelaxedSimd = 1 << 13,
     ExtendedConst = 1 << 14,
     Strings = 1 << 15,
-    MultiMemories = 1 << 16,
+    MultiMemory = 1 << 16,
     // MVP has the same value as None.
     // Mvp = 0,
     Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
@@ -389,7 +389,6 @@ pub fn check_pass_options_defaults_os(pass_options: PassOptions) -> bool {
     wasm::checkPassOptionsDefaultsOs(pass_options.0)
 }
 
-// FIXME binaryen unicode path handling is broken on windows
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();

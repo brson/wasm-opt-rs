@@ -87,8 +87,8 @@ pub enum Feature {
     /// Multiple memories.
     ///
     /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
-    #[strum(serialize = "multi-memories")]
-    MultiMemories,
+    #[strum(serialize = "multi-memory")]
+    MultiMemory,
     /// The original WebAssembly specification.
     ///
     /// It has the same value as `None`.

@@ -317,7 +317,7 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::RelaxedSimd => BaseFeature::RelaxedSimd,
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
-        Feature::MultiMemories => BaseFeature::MultiMemories,
+        Feature::MultiMemory => BaseFeature::MultiMemory,
         Feature::Mvp => BaseFeature::None,
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,

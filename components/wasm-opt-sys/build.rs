@@ -30,6 +30,14 @@ fn main() -> anyhow::Result<()> {
 
     create_config_header()?;
 
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
+
+    // Emit linker flags
+    if target_env == "msvc" {
+        // Needed for CommandLineToArgvW
+        println!("cargo:rustc-link-lib=shell32");
+    }
+
     // Set up cxx's include path so that wasm-opt-cxx-sys's C++ header can
     // include from these same dirs.
     CFG.exported_header_dirs.push(&src_dir);
@@ -41,8 +49,6 @@ fn main() -> anyhow::Result<()> {
     let mut builder = cxx_build::bridge("src/lib.rs");
 
     {
-        let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
-
         let flags: &[_] = if target_env != "msvc" {
             &[
                 "-std=c++17",
@@ -145,6 +151,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "wasm-debug.cpp",
         "wasm-emscripten.cpp",
         "wasm-interpreter.cpp",
+        "wasm-ir-builder.cpp",
         "wasm-io.cpp",
         "wasm-stack.cpp",
         "wasm-s-parser.cpp",
@@ -170,6 +177,10 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "istring.cpp",
     ];
     let support_files = support_files.iter().map(|f| support_dir.join(f));
+    let support_path_cpp = disambiguate_file(
+        &support_dir.join("path.cpp"), "support-path.cpp"
+    )?;
+    let support_files = support_files.into_iter().chain(Some(support_path_cpp));
 
     let ir_dir = src_dir.join("ir");
     let ir_files = [
@@ -208,6 +219,10 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let cfg_files = ["Relooper.cpp"];
     let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
 
+    let analysis_dir = src_dir.join("analysis");
+    let analysis_files = ["cfg.cpp"];
+    let analysis_files = analysis_files.iter().map(|f| analysis_dir.join(f));
+
     let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
 
     let src_files: Vec<_> = None
@@ -219,6 +234,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         .chain(fuzzing_files)
         .chain(asmjs_files)
         .chain(cfg_files)
+        .chain(analysis_files)
         .chain(Some(file_intrinsics).into_iter())
         .collect();
 
