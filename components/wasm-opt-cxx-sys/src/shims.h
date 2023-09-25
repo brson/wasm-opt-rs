@@ -259,16 +259,14 @@ namespace wasm_shims {
     f.push_back(wasm::FeatureSet::Feature::Multivalue);
     f.push_back(wasm::FeatureSet::Feature::GC);
     f.push_back(wasm::FeatureSet::Feature::Memory64);
-    f.push_back(wasm::FeatureSet::Feature::GCNNLocals);
     f.push_back(wasm::FeatureSet::Feature::RelaxedSIMD);
     f.push_back(wasm::FeatureSet::Feature::ExtendedConst);
     f.push_back(wasm::FeatureSet::Feature::Strings);
-    f.push_back(wasm::FeatureSet::Feature::MultiMemories);
+    f.push_back(wasm::FeatureSet::Feature::MultiMemory);
     // This is not part of the Rust API because it has the same value as None.
     // f.push_back(wasm::FeatureSet::Feature::MVP);
     f.push_back(wasm::FeatureSet::Feature::Default);
     f.push_back(wasm::FeatureSet::Feature::All);
-    f.push_back(wasm::FeatureSet::Feature::AllPossible);
 
     return std::make_unique<std::vector<uint32_t>>(f);
   }

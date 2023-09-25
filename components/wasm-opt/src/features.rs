@@ -70,8 +70,6 @@ pub enum Feature {
     /// [Specification](https://github.com/WebAssembly/memory64/blob/main/proposals/memory64/Overview.md).
     #[strum(serialize = "memory64")]
     Memory64,
-    #[strum(serialize = "gc-nn-locals")]
-    GcNnLocals,
     /// Relaxed SIMD.
     ///
     /// [Specification](https://github.com/WebAssembly/relaxed-simd/tree/main/proposals/relaxed-simd).
@@ -84,11 +82,11 @@ pub enum Feature {
     ExtendedConst,
     #[strum(serialize = "strings")]
     Strings,
-    /// Multiple memories.
+    /// Multiple memory.
     ///
     /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
-    #[strum(serialize = "multi-memories")]
-    MultiMemories,
+    #[strum(serialize = "multi-memory")]
+    MultiMemory,
     /// The original WebAssembly specification.
     ///
     /// It has the same value as `None`.
@@ -99,10 +97,7 @@ pub enum Feature {
     /// Includes [`Feature::SignExt`] and [`Feature::MutableGlobals`].
     #[strum(disabled)]
     Default,
-    /// All features, excluding [`Feature::GcNnLocals`].
-    #[strum(disabled)]
-    All,
     /// All features.
     #[strum(disabled)]
-    AllPossible,
+    All,
 }
