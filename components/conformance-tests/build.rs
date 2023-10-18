@@ -65,8 +65,7 @@ fn build_rust_wasm_opt() -> Result<()> {
     let dirs = get_dirs()?;
 
     let mut cmd = Command::new("cargo");
-    cmd
-        .current_dir(dirs.workspace)
+    cmd.current_dir(dirs.workspace)
         .args(["build", "-p", "wasm-opt", "--release"]);
 
     #[cfg(feature = "dwarf")]
