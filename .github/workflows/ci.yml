@@ -48,10 +48,6 @@ jobs:
             c-compiler: clang-7
             cxx-compiler: clang++-7
             rust: stable
-          - os: ubuntu-18.04
-            rust: stable
-          - os: ubuntu-18.04
-            rust: 1.48.0
 
     runs-on: ${{ matrix.os }}
 
