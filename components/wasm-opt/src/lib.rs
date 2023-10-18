@@ -117,6 +117,15 @@
 //! crate provides the [`integration`] module, which presents an API that is
 //! compatible with `std`s `Command`. This allows client code to use mostly the
 //! same code path for executing the `wasm-opt` CLI, and the crate-based API.
+//!
+//!
+//! ## Cargo features
+//!
+//! Enabled by default, the `dwarf` feature enables passes related to DWARF
+//! debug info. When enabled, this crate includes C++ code from the LLVM project.
+//! This can cause duplicate symbol linkage errors when _also_ linking to LLVM.
+//! When disabled, this code is not built, so can link successfully to LLVM,
+//! but the Binaryen DWARF passes will do nothing.
 
 // Most of the API surface is exported here.
 //
