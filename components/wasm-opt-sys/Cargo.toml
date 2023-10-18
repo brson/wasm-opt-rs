@@ -18,5 +18,5 @@ cxx-build = "1.0.79"
 cxx = "1.0.79"
 
 [features]
-default = []
+default = ["dwarf"]
 dwarf = []
