@@ -1,3 +1,14 @@
+## 0.114.2
+
+- Added the "dwarf" cargo feature, disabled by default.
+- [Fixed link-time regression in 0.114.1](https://github.com/brson/wasm-opt-rs/issues/154)
+
+  0.114.1 added missing DWARF passes. Unfortunately these passes, taken from
+  LLVM code, cause duplicate symbol linker errors when linked into a program
+  that links to LLVM. For now we have put the compilation of these passes under
+  the "dwarf" flag and made them non-default. In a future release "dwarf" will
+  be a default feature. Version 0.114.1 has been yanked.
+
 ## 0.114.1
 
 - [Compiled missing DWARF passes](https://github.com/brson/wasm-opt-rs/pull/151).
