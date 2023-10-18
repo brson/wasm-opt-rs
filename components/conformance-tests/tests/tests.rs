@@ -251,6 +251,7 @@ fn get_test_infile_wasm() -> Result<PathBuf> {
     Ok(infile)
 }
 
+#[cfg(feature = "dwarf")]
 fn get_test_infile_wasm_alt() -> Result<PathBuf> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_dir = PathBuf::from(manifest_dir);
@@ -889,6 +890,7 @@ fn check_versions() -> Result<()> {
 }
 
 #[test]
+#[cfg(feature = "dwarf")]
 fn dwarf_line_info() -> Result<()> {
     let infile = get_test_infile_wasm_alt()?;
     let outfile = PathBuf::from("outfile.wasm");
