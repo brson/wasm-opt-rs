@@ -64,10 +64,15 @@ fn build_binaryen_wasm_opt() -> Result<()> {
 fn build_rust_wasm_opt() -> Result<()> {
     let dirs = get_dirs()?;
 
-    let cargo_status = Command::new("cargo")
+    let mut cmd = Command::new("cargo");
+    cmd
         .current_dir(dirs.workspace)
-        .args(["build", "-p", "wasm-opt", "--release"])
-        .status()?;
+        .args(["build", "-p", "wasm-opt", "--release"]);
+
+    #[cfg(feature = "dwarf")]
+    cmd.args(["--features", "dwarf"]);
+
+    let cargo_status = cmd.status()?;
 
     if !cargo_status.success() {
         bail!("cargo failed");
