@@ -13,3 +13,7 @@ anyhow = "1.0.58"
 anyhow = "1.0.58"
 wasm-opt = { path = "../wasm-opt", version = "0.114.1" }
 tempfile = "3.3.0"
+
+[features]
+default = []
+dwarf = ["wasm-opt/dwarf"]
