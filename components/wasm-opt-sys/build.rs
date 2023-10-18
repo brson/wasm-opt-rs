@@ -15,7 +15,9 @@ fn main() -> anyhow::Result<()> {
     let src_dir = binaryen_dir.join("src");
     let src_files = get_src_files(&src_dir)?;
 
+    #[cfg(feature = "dwarf")]
     let llvm_dir = binaryen_dir.join("third_party/llvm-project");
+    #[cfg(feature = "dwarf")]
     let llvm_files = get_llvm_files(&llvm_dir)?;
 
     let tools_dir = src_dir.join("tools");
@@ -35,8 +37,12 @@ fn main() -> anyhow::Result<()> {
     CFG.exported_header_dirs.push(&src_dir);
     CFG.exported_header_dirs.push(&tools_dir);
     CFG.exported_header_dirs.push(&output_dir);
-    let llvm_include = llvm_dir.join("include");
-    CFG.exported_header_dirs.push(&llvm_include);
+
+    #[cfg(feature = "dwarf")]
+    {
+        let llvm_include = llvm_dir.join("include");
+        CFG.exported_header_dirs.push(&llvm_include);
+    }
 
     let mut builder = cxx_build::bridge("src/lib.rs");
 
@@ -49,6 +55,7 @@ fn main() -> anyhow::Result<()> {
                 "-w",
                 "-Wno-unused-parameter",
                 "-DTHROW_ON_FATAL",
+                #[cfg(feature = "dwarf")]
                 "-DBUILD_LLVM_DWARF",
                 "-DNDEBUG",
             ]
@@ -57,6 +64,7 @@ fn main() -> anyhow::Result<()> {
                 "/std:c++17",
                 "/w",
                 "/DTHROW_ON_FATAL",
+                #[cfg(feature = "dwarf")]
                 "/DBUILD_LLVM_DWARF",
                 "/DNDEBUG",
             ]
@@ -70,9 +78,11 @@ fn main() -> anyhow::Result<()> {
     builder
         .file(wasm_opt_main_shim)
         .files(src_files)
-        .files(&llvm_files)
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
+
+    #[cfg(feature = "dwarf")]
+    builder.files(&llvm_files);
 
     builder.compile("wasm-opt-cc");
 
@@ -356,6 +366,7 @@ fn check_cxx17_support() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "dwarf")]
 fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
     let llvm_dwarf = disambiguate_file(&llvm_dir.join("Dwarf.cpp"), "LLVMDwarf.cpp")?;
     let llvm_debug = disambiguate_file(&llvm_dir.join("Debug.cpp"), "LLVMDebug.cpp")?;

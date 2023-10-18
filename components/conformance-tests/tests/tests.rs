@@ -889,6 +889,7 @@ fn check_versions() -> Result<()> {
 }
 
 #[test]
+#[cfg(feature = "dwarf")]
 fn dwarf_line_info() -> Result<()> {
     let infile = get_test_infile_wasm_alt()?;
     let outfile = PathBuf::from("outfile.wasm");

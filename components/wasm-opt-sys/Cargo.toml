@@ -16,3 +16,7 @@ cxx-build = "1.0.79"
 
 [dependencies]
 cxx = "1.0.79"
+
+[features]
+default = []
+dwarf = []
