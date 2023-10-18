@@ -1,3 +1,12 @@
+## 0.116.0
+
+- The "dwarf" feature is enabled by default.
+  This feature activates DWARF-related passes in Binaryen.
+  It builds C++ code from the LLVM project.
+  Disable it to avoid linkage errors with LLVM.
+- [Binaryen changelog for 116](https://github.com/WebAssembly/binaryen/blob/main/CHANGELOG.md#v116).
+- [Binaryen changelog for 115](https://github.com/WebAssembly/binaryen/blob/main/CHANGELOG.md#v115).
+
 ## 0.114.2
 
 - Added the "dwarf" cargo feature, disabled by default.
