@@ -48,10 +48,6 @@ jobs:
             c-compiler: clang-7
             cxx-compiler: clang++-7
             rust: stable
-          - os: ubuntu-18.04
-            rust: stable
-          - os: ubuntu-18.04
-            rust: 1.48.0
 
     runs-on: ${{ matrix.os }}
 
@@ -86,7 +82,9 @@ jobs:
 
       - if: ${{ matrix.target != '' && matrix.os == 'ubuntu-20.04' }}
         name: Install cross tools
-        run: sudo apt-get install gcc-multilib g++-multilib
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-multilib g++-multilib
 
       - if: ${{ matrix.target == '' && matrix.c-compiler == '' }}
         name: Build / test
