@@ -1,6 +1,6 @@
 [package]
 name = "conformance-tests"
-version = "0.114.2"
+version = "0.116.0"
 description = "Tests against binaryen"
 license = "MIT / Apache-2.0"
 edition = "2018"
@@ -11,9 +11,9 @@ anyhow = "1.0.58"
 
 [dev-dependencies]
 anyhow = "1.0.58"
-wasm-opt = { path = "../wasm-opt", version = "0.114.2" }
+wasm-opt = { path = "../wasm-opt", version = "0.116.0", default-features = false }
 tempfile = "3.3.0"
 
 [features]
-default = []
+default = ["dwarf"]
 dwarf = ["wasm-opt/dwarf"]

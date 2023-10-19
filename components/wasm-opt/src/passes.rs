@@ -81,6 +81,8 @@ pub enum Pass {
     ///
     /// Optimize the entire program using information about what content can actually appear in each location.
     Gufa,
+    /// GUFA plus add casts for all inferences.
+    GufaCastAll,
     /// Gufa plus local optimizations in functions we modified.
     GufaOptimizing,
     /// Apply more specific subtypes to type fields where possible.
@@ -207,6 +209,8 @@ pub enum Pass {
     RemoveUnusedNames,
     /// Remove unused private GC types.
     RemoveUnusedTypes,
+    /// Sorts functions by name (useful for debugging).
+    ReorderFunctionsByName,
     /// Sorts functions by access frequency.
     ReorderFunctions,
     /// Sorts globals by access frequency.
@@ -325,6 +329,7 @@ impl Pass {
             Gto => "gto",
             Gsi => "gsi",
             Gufa => "gufa",
+            GufaCastAll => "gufa-cast-all",
             GufaOptimizing => "gufa-optimizing",
             TypeRefining => "type-refining",
             Heap2Local => "heap2local",
@@ -388,6 +393,7 @@ impl Pass {
             RemoveUnusedNonfunctionModuleElements => "remove-unused-nonfunction-module-elements",
             RemoveUnusedNames => "remove-unused-names",
             RemoveUnusedTypes => "remove-unused-types",
+            ReorderFunctionsByName => "reorder-functions-by-name",
             ReorderFunctions => "reorder-functions",
             ReorderGlobals => "reorder-globals",
             RecorderLocals => "reorder-locals",

@@ -147,6 +147,10 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
 }
 
 fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
+    let analysis_dir = src_dir.join("analysis");
+    let analysis_files = ["cfg.cpp"];
+    let analysis_files = analysis_files.iter().map(|f| analysis_dir.join(f));
+
     let wasm_dir = src_dir.join("wasm");
     let wasm_files = [
         "literal.cpp",
@@ -155,6 +159,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "wasm-debug.cpp",
         "wasm-emscripten.cpp",
         "wasm-interpreter.cpp",
+        "wasm-ir-builder.cpp",
         "wasm-io.cpp",
         "wasm-stack.cpp",
         "wasm-s-parser.cpp",
@@ -222,6 +227,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
 
     let src_files: Vec<_> = None
         .into_iter()
+        .chain(analysis_files)
         .chain(wasm_files)
         .chain(support_files)
         .chain(ir_files)
@@ -338,7 +344,7 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
     let config_file = output_dir.join("config.h");
 
-    let config_text = "#define PROJECT_VERSION \"114 (version_114)\"";
+    let config_text = "#define PROJECT_VERSION \"116 (version_116)\"";
 
     fs::write(&config_file, config_text)?;
 

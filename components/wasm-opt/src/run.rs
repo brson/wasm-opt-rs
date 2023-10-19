@@ -313,15 +313,13 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::Multivalue => BaseFeature::Multivalue,
         Feature::Gc => BaseFeature::Gc,
         Feature::Memory64 => BaseFeature::Memory64,
-        Feature::GcNnLocals => BaseFeature::GcNnLocals,
         Feature::RelaxedSimd => BaseFeature::RelaxedSimd,
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
-        Feature::MultiMemories => BaseFeature::MultiMemories,
+        Feature::MultiMemory => BaseFeature::MultiMemory,
         Feature::Mvp => BaseFeature::None,
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,
-        Feature::AllPossible => BaseFeature::AllPossible,
     }
 }
 
