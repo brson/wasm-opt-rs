@@ -391,8 +391,8 @@ fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();
 
-    #[cfg(windows)]
-    let path = path.as_os_str().to_str().expect("utf8").as_bytes();
+    #[cfg(not(unix))]
+    let path = path.to_str().expect("utf8").as_bytes();
 
     Ok(path)
 }
