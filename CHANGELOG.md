@@ -1,3 +1,7 @@
+## 0.116.1
+
+- [Fixed build on wasm32-wasmi](https://github.com/brson/wasm-opt-rs/pull/165).
+
 ## 0.116.0
 
 - The "dwarf" feature is enabled by default.
