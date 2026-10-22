@@ -123,16 +123,6 @@ jobs:
         run: git submodule update --init --recursive
       - run: cargo test --manifest-path components/conformance-tests/Cargo.toml
 
-  non-dwarf:
-    name: Without dwarf feature
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Checkout submodule
-        run: git submodule update --init --recursive
-      - run: cargo test --no-default-features
-      - run: cargo test --no-default-features --manifest-path components/conformance-tests/Cargo.toml
-
   fmt:
     name: Cargo fmt
     runs-on: ubuntu-latest

@@ -4,8 +4,39 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
+/// Binaryen vendors a subset of LLVM. Rename its namespace and its `extern "C"`
+/// entry points so that they cannot clash with an LLVM that the final binary
+/// links from elsewhere.
+const LLVM_RENAMES: &[(&str, &str)] = &[
+    ("llvm", "binaryen_llvm"),
+    (
+        "LLVMInstallFatalErrorHandler",
+        "binaryen_LLVMInstallFatalErrorHandler",
+    ),
+    (
+        "LLVMResetFatalErrorHandler",
+        "binaryen_LLVMResetFatalErrorHandler",
+    ),
+    ("LLVMGetErrorTypeId", "binaryen_LLVMGetErrorTypeId"),
+    ("LLVMConsumeError", "binaryen_LLVMConsumeError"),
+    ("LLVMGetErrorMessage", "binaryen_LLVMGetErrorMessage"),
+    (
+        "LLVMDisposeErrorMessage",
+        "binaryen_LLVMDisposeErrorMessage",
+    ),
+    (
+        "LLVMGetStringErrorTypeId",
+        "binaryen_LLVMGetStringErrorTypeId",
+    ),
+];
+
 fn main() -> anyhow::Result<()> {
     check_cxx17_support()?;
+
+    if std::env::var("CARGO_CFG_TARGET_OS")? == "windows" {
+        // binaryen's support/command-line.cpp calls CommandLineToArgvW.
+        println!("cargo:rustc-link-lib=shell32");
+    }
 
     let output_dir = std::env::var("OUT_DIR")?;
     let output_dir = Path::new(&output_dir);
@@ -15,9 +46,7 @@ fn main() -> anyhow::Result<()> {
     let src_dir = binaryen_dir.join("src");
     let src_files = get_src_files(&src_dir)?;
 
-    #[cfg(feature = "dwarf")]
     let llvm_dir = binaryen_dir.join("third_party/llvm-project");
-    #[cfg(feature = "dwarf")]
     let llvm_files = get_llvm_files(&llvm_dir)?;
 
     let tools_dir = src_dir.join("tools");
@@ -38,24 +67,26 @@ fn main() -> anyhow::Result<()> {
     CFG.exported_header_dirs.push(&tools_dir);
     CFG.exported_header_dirs.push(&output_dir);
 
-    #[cfg(feature = "dwarf")]
-    {
-        let llvm_include = llvm_dir.join("include");
-        CFG.exported_header_dirs.push(&llvm_include);
-    }
+    let llvm_include = llvm_dir.join("include");
+    anyhow::ensure!(
+        llvm_include.is_dir(),
+        "binaryen LLVM headers are missing: {}",
+        llvm_include.display()
+    );
+    CFG.exported_header_dirs.push(&llvm_include);
 
     let mut builder = cxx_build::bridge("src/lib.rs");
 
     {
         let target_env = std::env::var("CARGO_CFG_TARGET_ENV")?;
+        let msvc = target_env == "msvc";
 
-        let flags: &[_] = if target_env != "msvc" {
+        let flags: &[_] = if !msvc {
             &[
                 "-std=c++17",
                 "-w",
                 "-Wno-unused-parameter",
                 "-DTHROW_ON_FATAL",
-                #[cfg(feature = "dwarf")]
                 "-DBUILD_LLVM_DWARF",
                 "-DNDEBUG",
             ]
@@ -64,7 +95,6 @@ fn main() -> anyhow::Result<()> {
                 "/std:c++17",
                 "/w",
                 "/DTHROW_ON_FATAL",
-                #[cfg(feature = "dwarf")]
                 "/DBUILD_LLVM_DWARF",
                 "/DNDEBUG",
             ]
@@ -72,6 +102,11 @@ fn main() -> anyhow::Result<()> {
 
         for flag in flags {
             builder.flag(flag);
+        }
+
+        let define = if msvc { "/D" } else { "-D" };
+        for &(from, to) in LLVM_RENAMES {
+            builder.flag(&format!("{}{}={}", define, from, to));
         }
     }
 
@@ -81,7 +116,6 @@ fn main() -> anyhow::Result<()> {
         .file(wasm_opt_src)
         .file(wasm_intrinsics_src);
 
-    #[cfg(feature = "dwarf")]
     builder.files(&llvm_files);
 
     builder.compile("wasm-opt-cc");
@@ -147,99 +181,46 @@ fn get_converted_wasm_opt_cpp(src_dir: &Path) -> anyhow::Result<PathBuf> {
 }
 
 fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
-    let analysis_dir = src_dir.join("analysis");
-    let analysis_files = ["cfg.cpp"];
-    let analysis_files = analysis_files.iter().map(|f| analysis_dir.join(f));
+    // `ir/intrinsics.cpp` and `passes/Intrinsics.cpp` only differ in case, so
+    // the former is compiled under a different name to avoid a collision on
+    // case-insensitive filesystems.
+    let ir_intrinsics = src_dir.join("ir/intrinsics.cpp");
 
-    let wasm_dir = src_dir.join("wasm");
-    let wasm_files = [
-        "literal.cpp",
-        "parsing.cpp",
-        "wasm-binary.cpp",
-        "wasm-debug.cpp",
-        "wasm-emscripten.cpp",
-        "wasm-interpreter.cpp",
-        "wasm-ir-builder.cpp",
-        "wasm-io.cpp",
-        "wasm-stack.cpp",
-        "wasm-s-parser.cpp",
-        "wasm-type.cpp",
-        "wasm-validator.cpp",
-        "wasm.cpp",
-        "wat-lexer.cpp",
-        "wat-parser.cpp",
-    ];
-    let wasm_files = wasm_files.iter().map(|f| wasm_dir.join(f));
+    let mut src_files: Vec<PathBuf> = Vec::new();
 
-    let support_dir = src_dir.join("support");
-    let support_files = [
-        "bits.cpp",
-        "colors.cpp",
-        "command-line.cpp",
-        "debug.cpp",
-        "dfa_minimization.cpp",
-        "file.cpp",
-        "safe_integer.cpp",
-        "threads.cpp",
-        "utilities.cpp",
-        "istring.cpp",
-    ];
-    let support_files = support_files.iter().map(|f| support_dir.join(f));
-
-    let ir_dir = src_dir.join("ir");
-    let ir_files = [
-        "drop.cpp",
-        "eh-utils.cpp",
-        "ExpressionManipulator.cpp",
-        "ExpressionAnalyzer.cpp",
-        "export-utils.cpp",
-        "LocalGraph.cpp",
-        "LocalStructuralDominance.cpp",
-        "lubs.cpp",
-        "memory-utils.cpp",
-        "module-utils.cpp",
-        "names.cpp",
-        "possible-contents.cpp",
-        "properties.cpp",
-        "ReFinalize.cpp",
-        "stack-utils.cpp",
-        "table-utils.cpp",
-        "type-updating.cpp",
-    ];
-    let ir_files = ir_files.iter().map(|f| ir_dir.join(f));
-
-    let passes_dir = src_dir.join("passes");
-    let passes_files = get_files_from_dir(&passes_dir)?;
+    for dir in SOURCE_DIRS {
+        let dir_path = src_dir.join(dir);
+        anyhow::ensure!(
+            dir_path.is_dir(),
+            "binaryen source directory `{}` is missing",
+            dir_path.display()
+        );
+        for file in get_files_from_dir(&dir_path)? {
+            if file == ir_intrinsics {
+                continue;
+            }
+            src_files.push(file);
+        }
+    }
 
     let fuzzing_dir = src_dir.join("tools/fuzzing");
-    let fuzzing_files = ["fuzzing.cpp", "random.cpp", "heap-types.cpp"];
-    let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
+    if fuzzing_dir.is_dir() {
+        src_files.extend(get_files_from_dir(&fuzzing_dir)?);
+    }
 
-    let asmjs_dir = src_dir.join("asmjs");
-    let asmjs_files = ["asm_v_wasm.cpp", "shared-constants.cpp"];
-    let asmjs_files = asmjs_files.iter().map(|f| asmjs_dir.join(f));
-
-    let cfg_dir = src_dir.join("cfg");
-    let cfg_files = ["Relooper.cpp"];
-    let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
-
-    let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
-
-    let src_files: Vec<_> = None
-        .into_iter()
-        .chain(analysis_files)
-        .chain(wasm_files)
-        .chain(support_files)
-        .chain(ir_files)
-        .chain(passes_files)
-        .chain(fuzzing_files)
-        .chain(asmjs_files)
-        .chain(cfg_files)
-        .chain(Some(file_intrinsics).into_iter())
-        .collect();
+    let file_intrinsics = disambiguate_file(&ir_intrinsics, "intrinsics-ir.cpp")?;
+    src_files.push(file_intrinsics);
 
     Ok(src_files)
 }
+
+/// The directories of Binaryen's source tree that hold library sources.
+///
+/// These are compiled as whole directories, so that the build keeps working
+/// as Binaryen adds, removes, and moves files between versions.
+const SOURCE_DIRS: &[&str] = &[
+    "analysis", "asmjs", "cfg", "ir", "parser", "passes", "support", "wasm",
+];
 
 fn get_files_from_dir(src_dir: &Path) -> anyhow::Result<impl Iterator<Item = PathBuf> + '_> {
     let files = fs::read_dir(src_dir)?
@@ -344,7 +325,7 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
     let config_file = output_dir.join("config.h");
 
-    let config_text = "#define PROJECT_VERSION \"116 (version_116)\"";
+    let config_text = "#define PROJECT_VERSION \"117 (version_117)\"";
 
     fs::write(&config_file, config_text)?;
 
@@ -372,10 +353,12 @@ fn check_cxx17_support() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "dwarf")]
 fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
     let llvm_dwarf = disambiguate_file(&llvm_dir.join("Dwarf.cpp"), "LLVMDwarf.cpp")?;
     let llvm_debug = disambiguate_file(&llvm_dir.join("Debug.cpp"), "LLVMDebug.cpp")?;
+    // `Path.cpp` collides with binaryen's `src/support/path.cpp` on
+    // case-insensitive filesystems, so compile it under a different name.
+    let llvm_path = disambiguate_file(&llvm_dir.join("Path.cpp"), "LLVMPath.cpp")?;
     // Array taken from
     // https://github.com/WebAssembly/binaryen/blob/616c08bc1ec604a822d354cbb0353b7994cec72d/third_party/llvm-project/CMakeLists.txt
     Ok([
@@ -428,7 +411,7 @@ fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
         llvm_dir.join("ObjectFile.cpp"),
         llvm_dir.join("obj2yaml_Error.cpp"),
         llvm_dir.join("Optional.cpp"),
-        llvm_dir.join("Path.cpp"),
+        llvm_path,
         llvm_dir.join("raw_ostream.cpp"),
         llvm_dir.join("ScopedPrinter.cpp"),
         llvm_dir.join("SmallVector.cpp"),

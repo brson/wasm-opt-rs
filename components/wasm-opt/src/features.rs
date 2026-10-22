@@ -87,6 +87,11 @@ pub enum Feature {
     /// [Specification](https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md).
     #[strum(serialize = "multi-memory")]
     MultiMemory,
+    /// Typed continuations.
+    ///
+    /// [Specification](https://github.com/effect-handlers/wasm-spec/blob/main/proposals/continuations/Overview.md).
+    #[strum(serialize = "typed-continuations")]
+    TypedContinuations,
     /// The original WebAssembly specification.
     ///
     /// It has the same value as `None`.
