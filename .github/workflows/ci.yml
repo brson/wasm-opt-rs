@@ -14,39 +14,35 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-11, windows-2019, ubuntu-20.04]
-        rust: [stable, 1.48.0]
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        rust: [stable, 1.75.0]
         c-compiler: ['']
         cxx-compiler: ['']
         target: ['']
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             rust: nightly
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             rust: beta
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             target: i686-unknown-linux-gnu
             rust: stable
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             rust: stable
-          - os: windows-2019
+          - os: windows-latest
             target: i686-pc-windows-msvc
             rust: stable
-          - os: windows-2019
+          - os: windows-latest
             rust: stable
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             rust: stable
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             c-compiler: clang
             cxx-compiler: clang++
             rust: stable
-          - os: ubuntu-20.04
-            c-compiler: gcc-7
-            cxx-compiler: g++-7
-            rust: stable
-          - os: ubuntu-20.04
-            c-compiler: clang-7
-            cxx-compiler: clang++-7
+          - os: ubuntu-latest
+            c-compiler: gcc
+            cxx-compiler: g++
             rust: stable
 
     runs-on: ${{ matrix.os }}
@@ -58,17 +54,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install clang
 
-      - if: matrix.c-compiler == 'clang-7'
-        name: Install clang-7
+      - if: matrix.c-compiler == 'gcc'
+        name: Install gcc
         run: |
           sudo apt-get update
-          sudo apt-get install clang-7
-
-      - if: matrix.c-compiler == 'gcc-7'
-        name: Install gcc-7
-        run: |
-          sudo apt-get update
-          sudo apt-get install gcc-7 g++-7
+          sudo apt-get install gcc g++
 
       - uses: dtolnay/rust-toolchain@v1
         with:
@@ -80,7 +70,7 @@ jobs:
       - if: matrix.target != ''
         run: rustup target add ${{matrix.target}}
 
-      - if: ${{ matrix.target != '' && matrix.os == 'ubuntu-20.04' }}
+      - if: ${{ matrix.target != '' && matrix.os == 'ubuntu-latest' }}
         name: Install cross tools
         run: |
           sudo apt-get update
