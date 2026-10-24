@@ -15,9 +15,10 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
-        rust: [stable, 1.75.0]
+        rust: [stable]
         c-compiler: ['']
         cxx-compiler: ['']
+        cxxflags: ['']
         target: ['']
         include:
           - os: ubuntu-latest
@@ -44,17 +45,27 @@ jobs:
             c-compiler: gcc
             cxx-compiler: g++
             rust: stable
+          - os: windows-latest
+            rust: 1.48.0
+          - os: ubuntu-latest
+            rust: 1.48.0
+          - os: windows-latest
+            rust: stable
+            c-compiler: clang-cl
+            cxx-compiler: clang-cl
+            cxxflags: /EHsc
+        
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - if: matrix.c-compiler == 'clang'
+      - if: matrix.os == 'ubuntu-latest' && matrix.c-compiler == 'clang'
         name: Install clang
         run: |
           sudo apt-get update
           sudo apt-get install clang
 
-      - if: matrix.c-compiler == 'gcc'
+      - if: matrix.os == 'ubuntu-latest' && matrix.c-compiler == 'gcc'
         name: Install gcc
         run: |
           sudo apt-get update
@@ -76,29 +87,32 @@ jobs:
           sudo apt-get update
           sudo apt-get install gcc-multilib g++-multilib
 
-      - if: ${{ matrix.target == '' && matrix.c-compiler == '' }}
-        name: Build / test
-        run: |
-          rustc --version
-          cargo build --verbose
-          cargo test -- --nocapture
-      - if: ${{ matrix.target == '' && matrix.c-compiler != '' }}
-        name: Build / test with alt compiler
+      - name: Build / test
+        shell: bash
         env:
-          CC: ${{matrix.c-compiler}}
-          CXX: ${{matrix.cxx-compiler}}
+          TARGET: ${{ matrix.target }}
+          C_COMPILER: ${{ matrix.c-compiler }}
+          CXX_COMPILER: ${{ matrix.cxx-compiler }}
+          CXX_FLAGS: ${{ matrix.cxxflags }}
+          MSYS2_ENV_CONV_EXCL: CXXFLAGS
         run: |
-          $CC --version
-          $CXX --version
+          if [[ -n "$C_COMPILER" ]]; then
+            export CC="$C_COMPILER"
+            export CXX="$CXX_COMPILER"
+            "$CC" --version
+            "$CXX" --version
+          fi
+          if [[ -n "$CXX_FLAGS" ]]; then
+            export CXXFLAGS="$CXX_FLAGS"
+          fi
           rustc --version
-          cargo build --verbose
-          cargo test -- --nocapture
-      - if: matrix.target != ''
-        name: Build / test 32-bit
-        run: |
-          rustc --version
-          cargo build --verbose --target=${{matrix.target}}
-          cargo test --target=${{matrix.target}} -- --nocapture
+          if [[ -n "$TARGET" ]]; then
+            cargo build --verbose --target="$TARGET"
+            cargo test --target="$TARGET" -- --nocapture
+          else
+            cargo build --verbose
+            cargo test -- --nocapture
+          fi
 
   conformance-tests:
     name: Conformance Tests
