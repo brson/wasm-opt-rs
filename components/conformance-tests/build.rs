@@ -44,13 +44,18 @@ fn build_binaryen_wasm_opt() -> Result<()> {
         .current_dir(&dirs.binaryen_build)
         .arg(&dirs.binaryen_src)
         .arg("-DBUILD_TESTS=OFF")
+        .arg("-DENABLE_WERROR=OFF")
+        .arg("-G")
+        .arg("Ninja")
         .status()?;
 
     if !cmake_status.success() {
         bail!("cmake failed");
     }
 
-    let make_status = Command::new("make")
+    let make_status = Command::new("cmake")
+        .arg("--build")
+        .arg(".")
         .current_dir(&dirs.binaryen_build)
         .status()?;
 
