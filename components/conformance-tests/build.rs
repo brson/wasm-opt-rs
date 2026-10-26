@@ -43,10 +43,11 @@ fn build_binaryen_wasm_opt() -> Result<()> {
     let cmake_status = Command::new("cmake")
         .current_dir(&dirs.binaryen_build)
         .arg(&dirs.binaryen_src)
-        .arg("-DBUILD_TESTS=OFF")
-        .arg("-DENABLE_WERROR=OFF")
         .arg("-G")
         .arg("Ninja")
+        .arg("-DBUILD_TESTS=OFF")
+        // New compilers add warnings that binaryen's default -Werror turns into errors.
+        .arg("-DENABLE_WERROR=OFF")
         .status()?;
 
     if !cmake_status.success() {
