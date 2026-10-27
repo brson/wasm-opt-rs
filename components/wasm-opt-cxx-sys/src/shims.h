@@ -263,6 +263,7 @@ namespace wasm_shims {
     f.push_back(wasm::FeatureSet::Feature::ExtendedConst);
     f.push_back(wasm::FeatureSet::Feature::Strings);
     f.push_back(wasm::FeatureSet::Feature::MultiMemory);
+    f.push_back(wasm::FeatureSet::Feature::TypedContinuations);
     // This is not part of the Rust API because it has the same value as None.
     // f.push_back(wasm::FeatureSet::Feature::MVP);
     f.push_back(wasm::FeatureSet::Feature::Default);

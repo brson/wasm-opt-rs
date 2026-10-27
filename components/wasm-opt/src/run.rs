@@ -317,6 +317,7 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
         Feature::MultiMemory => BaseFeature::MultiMemory,
+        Feature::TypedContinuations => BaseFeature::TypedContinuations,
         Feature::Mvp => BaseFeature::None,
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,

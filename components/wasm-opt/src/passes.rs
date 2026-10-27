@@ -99,6 +99,8 @@ pub enum Pass {
     IntrinsicLowering,
     /// Wrap imports and exports for JavaScript promise integration.
     Jspi,
+    /// Legalizes the import/export boundary and prunes when needed.
+    LegalizeAndPruneJsInterface,
     /// Legalizes i64 types on the import/export boundary.
     LegalizeJsInterface,
     /// Legalizes i64 types on the import/export boundary in a minimal manner, only on things only JS will call.
@@ -153,6 +155,12 @@ pub enum Pass {
     Nm,
     /// (Re)name all heap types.
     NameTypes,
+    /// Mark functions as no-inline (for full inlining only).
+    NoFullInline,
+    /// Mark functions as no-inline.
+    NoInline,
+    /// Mark functions as no-inline (for partial inlining only).
+    NoPartialInline,
     /// Reduces calls to code that only runs once.
     OnceReduction,
     /// Optimizes added constants into load/store offsets.
@@ -163,8 +171,12 @@ pub enum Pass {
     OptimizeCasts,
     /// Optimizes instruction combinations.
     OptimizeInstructions,
+    /// Optimizes J2CL specific constructs.
+    OptimizeJ2cl,
     /// Optimize Stack IR.
     OptimizeStackIr,
+    /// Outline instructions.
+    Outlining,
     /// Pick load signs based on their uses.
     PickLoadSigns,
     /// Tranform Binaryen IR into Poppy IR.
@@ -193,6 +205,8 @@ pub enum Pass {
     Symbolmap,
     /// Print out Stack IR (useful for internal debugging).
     PrintStackIr,
+    /// Propagate global values to other globals (useful for tests).
+    PropagateGlobalsGlobally,
     /// Removes operations incompatible with js.
     RemoveNonJsOps,
     /// Removes imports and replaces them with nops.
@@ -225,6 +239,8 @@ pub enum Pass {
     Roundtrip,
     /// Instrument loads and stores to check for invalid behavior.
     SafeHeap,
+    /// Write data segments to a file and strip them from the module.
+    SeparateDataSegments,
     /// Sets specified globals to specified values.
     SetGlobals,
     /// Remove params from function signature types where possible.
@@ -263,6 +279,10 @@ pub enum Pass {
     Strip,
     /// Enforce limits on llvm's __stack_pointer global.
     StackCheck,
+    /// Gathers wasm strings to globals.
+    StringGathering,
+    /// Lowers wasm strings and operations to imports.
+    StringLowering,
     /// Strip debug info (including the names section).
     StripDebug,
     /// Strip dwarf debug info.
@@ -273,14 +293,24 @@ pub enum Pass {
     StripEh,
     /// Strip the wasm target features section.
     StripTargetFeatuers,
+    /// Translate old EH instructions to new ones.
+    TranslateToNewEh,
     /// Replace trapping operations with clamping semantics.
     TrapModeClamp,
     /// Replace trapping operations with js semantics.
     TrapModeJs,
     /// Merge types to their supertypes where possible.
     TypeMerging,
+    /// Mark all leaf types as final.
+    TypeFinalizing,
     /// Create new nominal types to help other optimizations.
     TypeSsa,
+    /// Mark all types as non-final (open).
+    TypeUnfinalizing,
+    /// Optimize trivial tuples away.
+    TupleOptimization,
+    /// Removes unnecessary subtyping relationships.
+    Unsubtyping,
     /// Removes local.tees, replacing them with sets and gets.
     Untee,
     /// Removes obviously unneeded code.
@@ -338,6 +368,7 @@ impl Pass {
             InliningOptimizing => "inlining-optimizing",
             IntrinsicLowering => "intrinsic-lowering",
             Jspi => "jspi",
+            LegalizeAndPruneJsInterface => "legalize-and-prune-js-interface",
             LegalizeJsInterface => "legalize-js-interface",
             LegalizeJsInterfaceMinimally => "legalize-js-interface-minimally",
             LocalCse => "local-cse",
@@ -365,12 +396,17 @@ impl Pass {
             MultiMemoryLoweringWithBoundsChecks => "multi-memory-lowering-with-bounds-checks",
             Nm => "nm",
             NameTypes => "name-types",
+            NoFullInline => "no-full-inline",
+            NoInline => "no-inline",
+            NoPartialInline => "no-partial-inline",
             OnceReduction => "once-reduction",
             OptimizeAddedConstants => "optimize-added-constants",
             OptimizeAddedConstantsPropagate => "optimize-added-constants-propagate",
             OptimizeCasts => "optimize-casts",
             OptimizeInstructions => "optimize-instructions",
+            OptimizeJ2cl => "optimize-j2cl",
             OptimizeStackIr => "optimize-stack-ir",
+            Outlining => "outlining",
             PickLoadSigns => "pick-load-signs",
             Poppify => "poppify",
             PostEmscripten => "post-emscripten",
@@ -385,6 +421,7 @@ impl Pass {
             PrintFunctionMap => "print-function-map",
             Symbolmap => "symbolmap",
             PrintStackIr => "print-stack-ir",
+            PropagateGlobalsGlobally => "propagate-globals-globally",
             RemoveNonJsOps => "remove-non-js-ops",
             RemoveImports => "remove-imports",
             RemoveMemory => "remove-memory",
@@ -402,6 +439,7 @@ impl Pass {
             Roundtrip => "roundtrip",
             SafeHeap => "safe-heap",
             SetGlobals => "set-globals",
+            SeparateDataSegments => "separate-data-segments",
             SignaturePruning => "signature-pruning",
             SignatureRefining => "signature-refining",
             SignextLowering => "signext-lowering",
@@ -420,6 +458,8 @@ impl Pass {
             SsaNomerge => "ssa-nomerge",
             Strip => "strip",
             StackCheck => "stack-check",
+            StringGathering => "string-gathering",
+            StringLowering => "string-lowering",
             StripDebug => "strip-debug",
             StripDwarf => "strip-dwarf",
             StripProducers => "strip-producers",
@@ -427,8 +467,13 @@ impl Pass {
             StripTargetFeatuers => "strip-target-features",
             TrapModeClamp => "trap-mode-clamp",
             TrapModeJs => "trap-mode-js",
+            TranslateToNewEh => "translate-to-new-eh",
+            TypeFinalizing => "type-finalizing",
             TypeMerging => "type-merging",
             TypeSsa => "type-ssa",
+            TypeUnfinalizing => "type-unfinalizing",
+            TupleOptimization => "tuple-optimization",
+            Unsubtyping => "unsubtyping",
             Untee => "untee",
             Vacuum => "vacuum",
         }

@@ -74,9 +74,6 @@ fn build_rust_wasm_opt() -> Result<()> {
     cmd.current_dir(dirs.workspace)
         .args(["build", "-p", "wasm-opt", "--release"]);
 
-    #[cfg(feature = "dwarf")]
-    cmd.args(["--features", "dwarf"]);
-
     let cargo_status = cmd.status()?;
 
     if !cargo_status.success() {

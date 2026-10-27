@@ -119,13 +119,11 @@
 //! same code path for executing the `wasm-opt` CLI, and the crate-based API.
 //!
 //!
-//! ## Cargo features
+//! ## DWARF support
 //!
-//! Enabled by default, the `dwarf` feature enables passes related to DWARF
-//! debug info. When enabled, this crate includes C++ code from the LLVM project.
-//! This can cause duplicate symbol linkage errors when _also_ linking to LLVM.
-//! When disabled, this code is not built, so can link successfully to LLVM,
-//! but the Binaryen DWARF passes will do nothing.
+//! DWARF debug info support is always enabled. The C++ code from the LLVM
+//! project that it needs is compiled into the `binaryen_llvm` namespace, so it
+//! does not cause duplicate symbol errors when linking against LLVM.
 
 // Most of the API surface is exported here.
 //
