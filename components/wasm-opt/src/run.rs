@@ -93,11 +93,11 @@ impl OptimizationOptions {
         outfile_sourcemap: Option<impl AsRef<Path>>,
         sourcemap_url: Option<impl AsRef<str>>,
     ) -> Result<(), OptimizationError> {
-        let infile: &Path = infile.as_ref();
-        let infile_sourcemap: Option<&Path> = infile_sourcemap.as_ref().map(AsRef::as_ref);
-        let outfile: &Path = outfile.as_ref();
-        let outfile_sourcemap: Option<&Path> = outfile_sourcemap.as_ref().map(AsRef::as_ref);
-        let sourcemap_url: Option<&str> = sourcemap_url.as_ref().map(AsRef::as_ref);
+        let infile = infile.as_ref();
+        let infile_sourcemap = infile_sourcemap.as_ref().map(AsRef::as_ref);
+        let outfile = outfile.as_ref();
+        let outfile_sourcemap = outfile_sourcemap.as_ref().map(AsRef::as_ref);
+        let sourcemap_url = sourcemap_url.as_ref().map(AsRef::as_ref);
 
         if infile.as_os_str().is_empty() || infile == Path::new("-") {
             return Err(OptimizationError::InvalidStdinPath);
@@ -143,7 +143,7 @@ impl OptimizationOptions {
         }
 
         {
-            let mut writer = ModuleWriter::new();
+            let mut writer = ModuleWriter::new(&self.translate_pass_options());
             writer.set_debug_info(self.passopts.debug_info);
 
             if let Some(filename) = outfile_sourcemap {
@@ -183,22 +183,28 @@ impl OptimizationOptions {
             pass_runner.add_default_optimization_passes();
         }
 
-        self.passes
-            .more_passes
-            .iter()
-            .for_each(|pass| pass_runner.add(pass.name()));
+        for pass in &self.passes.more_passes {
+            match pass {
+                PassArg::Name(pass_name) => {
+                    pass_runner.add(pass_name.into());
+                }
+                PassArg::Arg(pass_name, pass_arg) => {
+                    pass_runner.add_with_argument(pass_name.into(), pass_arg.as_str());
+                }
+            }
+        }
 
         pass_runner.run();
     }
 
     fn run_until_convergence(&self, m: &mut Module) -> anyhow::Result<()> {
-        let mut last_size = Self::get_module_size(m)?;
+        let mut last_size = self.get_module_size(m)?;
         let mut current_size;
 
         loop {
             self.create_and_run_pass_runner(m);
 
-            current_size = Self::get_module_size(m)?;
+            current_size = self.get_module_size(m)?;
 
             if current_size >= last_size {
                 break;
@@ -210,11 +216,11 @@ impl OptimizationOptions {
         Ok(())
     }
 
-    fn get_module_size(m: &mut Module) -> anyhow::Result<usize> {
+    fn get_module_size(&self, m: &mut Module) -> anyhow::Result<usize> {
         let tempdir = tempfile::tempdir()?;
         let temp_outfile = tempdir.path().join("wasm_opt_temp_outfile.wasm");
 
-        let mut writer = ModuleWriter::new();
+        let mut writer = ModuleWriter::new(&self.translate_pass_options());
         writer.write_binary(m, &temp_outfile)?;
 
         let file_size = fs::read(&temp_outfile)?.len();
@@ -229,29 +235,57 @@ impl OptimizationOptions {
     }
 
     fn translate_pass_options(&self) -> BasePassOptions {
+        let Self {
+            passopts:
+                PassOptions {
+                    validate,
+                    validate_globally,
+                    optimize_level,
+                    shrink_level,
+                    traps_never_happen,
+                    low_memory_unused,
+                    fast_math,
+                    zero_filled_memory,
+                    debug_info,
+                    generate_stack_ir,
+                    optimize_stack_ir,
+                    arguments,
+                    ..
+                },
+            inlining:
+                InliningOptions {
+                    always_inline_max_size,
+                    one_caller_inline_max_size,
+                    flexible_inline_max_size,
+                    allow_functions_with_loops,
+                    partial_inlining_ifs,
+                },
+            ..
+        } = self;
         let mut opts = BasePassOptions::new();
 
-        opts.set_validate(self.passopts.validate);
-        opts.set_validate_globally(self.passopts.validate_globally);
-        opts.set_optimize_level(self.passopts.optimize_level as i32);
-        opts.set_shrink_level(self.passopts.shrink_level as i32);
-        opts.set_traps_never_happen(self.passopts.traps_never_happen);
-        opts.set_low_memory_unused(self.passopts.low_memory_unused);
-        opts.set_fast_math(self.passopts.fast_math);
-        opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
-        opts.set_debug_info(self.passopts.debug_info);
+        opts.set_validate(*validate);
+        opts.set_validate_globally(*validate_globally);
+        opts.set_optimize_level(*optimize_level as i32);
+        opts.set_shrink_level(*shrink_level as i32);
+        opts.set_traps_never_happen(*traps_never_happen);
+        opts.set_low_memory_unused(*low_memory_unused);
+        opts.set_fast_math(*fast_math);
+        opts.set_zero_filled_memory(*zero_filled_memory);
+        opts.set_debug_info(*debug_info);
+        opts.set_generate_stack_ir(*generate_stack_ir);
+        opts.set_optimize_stack_ir(*optimize_stack_ir);
 
-        self.passopts
-            .arguments
+        arguments
             .iter()
             .for_each(|(key, value)| opts.set_arguments(key, value));
 
         let mut inlining = BaseInliningOptions::new();
-        inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
-        inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);
-        inlining.set_flexible_inline_max_size(self.inlining.flexible_inline_max_size);
-        inlining.set_allow_functions_with_loops(self.inlining.allow_functions_with_loops);
-        inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
+        inlining.set_always_inline_max_size(*always_inline_max_size);
+        inlining.set_one_caller_inline_max_size(*one_caller_inline_max_size);
+        inlining.set_flexible_inline_max_size(*flexible_inline_max_size);
+        inlining.set_allow_functions_with_loops(*allow_functions_with_loops);
+        inlining.set_partial_inlining_ifs(*partial_inlining_ifs);
 
         opts.set_inlining_options(inlining);
 
@@ -259,10 +293,10 @@ impl OptimizationOptions {
     }
 }
 
-fn will_remove_debug_info(passes: &[Pass]) -> bool {
+fn will_remove_debug_info(passes: &[PassArg]) -> bool {
     passes
         .iter()
-        .any(|pass| PassRunner::pass_removes_debug_info(pass.name()) == true)
+        .any(|pass| PassRunner::pass_removes_debug_info(pass.name().into()))
 }
 
 fn convert_feature_sets(features: &Features) -> (BaseFeatureSet, BaseFeatureSet) {
@@ -300,7 +334,7 @@ fn convert_feature_sets(features: &Features) -> (BaseFeatureSet, BaseFeatureSet)
 
 fn convert_feature(feature: &Feature) -> BaseFeature {
     match feature {
-        Feature::None => BaseFeature::None,
+        Feature::None | Feature::Mvp => BaseFeature::None,
         Feature::Atomics => BaseFeature::Atomics,
         Feature::MutableGlobals => BaseFeature::MutableGlobals,
         Feature::TruncSat => BaseFeature::TruncSat,
@@ -317,7 +351,11 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
         Feature::MultiMemory => BaseFeature::MultiMemory,
-        Feature::Mvp => BaseFeature::None,
+        Feature::TypedContinuations => BaseFeature::TypedContinuations,
+        Feature::SharedEverything => BaseFeature::SharedEverything,
+        Feature::Fp16 => BaseFeature::Fp16,
+        Feature::BulkMemoryOpt => BaseFeature::BulkMemoryOpt,
+        Feature::CallIndirectOverlong => BaseFeature::CallIndirectOverlong,
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,
     }

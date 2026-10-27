@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt-sys"
-version = "0.116.0"
+version = "0.121.0"
 description = "Native wasm-opt build"
 license = "MIT / Apache-2.0"
 edition = "2018"
@@ -10,12 +10,12 @@ readme = "README.md"
 links = "binaryen"
 
 [build-dependencies]
-anyhow = "1.0.58"
-cc = { version = "1.0.73", features = ["parallel"] }
-cxx-build = "1.0.79"
+anyhow = "1.0.98"
+cc = { version = "1.2.21", features = ["parallel"] }
+cxx-build = "1.0.158"
 
 [dependencies]
-cxx = "1.0.79"
+cxx = "1.0.158"
 
 [features]
 default = ["dwarf"]

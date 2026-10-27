@@ -19,24 +19,20 @@ static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
 
 #[test]
 fn all_passes_correct() -> anyhow::Result<()> {
-    let mut passes_via_base_rs = HashSet::<String>::new();
-    pass_registry::get_registered_names()
-        .iter()
-        .for_each(|name| {
-            if !is_pass_hidden(name) {
-                passes_via_base_rs.insert(name.to_string());
-            }
-        });
+    let passes_via_base_rs = pass_registry::get_registered_names()
+        .into_iter()
+        .filter(|name| !is_pass_hidden(name))
+        .collect::<HashSet<_>>();
 
-    let mut passes_via_enum = HashSet::<String>::new();
+    let passes_via_enum = Pass::iter()
+        .map(|item| item.to_string())
+        .collect::<HashSet<_>>();
 
-    Pass::iter().for_each(|item| {
-        passes_via_enum.insert(item.name().to_string());
-    });
+    let diff = passes_via_base_rs
+        .difference(&passes_via_enum)
+        .collect::<Vec<_>>();
 
-    let diff: Vec<_> = passes_via_base_rs.difference(&passes_via_enum).collect();
-
-    println!("diff: {:?}", diff);
+    println!("diff: {diff:?}");
 
     assert_eq!(passes_via_base_rs, passes_via_enum);
 
@@ -97,6 +93,7 @@ fn test_optimization_options_os() -> anyhow::Result<()> {
     Ok(())
 }
 
+// TODO: Figure out how to fix, or if this is still even needed
 #[test]
 fn optimization_read_module_error_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;

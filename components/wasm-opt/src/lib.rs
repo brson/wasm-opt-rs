@@ -1,3 +1,5 @@
+#![allow(clippy::new_without_default)]
+
 //! Rust bindings to the `wasm-opt` WebAssembly optimizer.
 //!
 //! `wasm-opt` is a component of the [Binaryen] toolkit

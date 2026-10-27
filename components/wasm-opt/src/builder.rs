@@ -121,8 +121,8 @@ impl OptimizationOptions {
     }
 
     /// Adds a pass to [`Passes::more_passes`].
-    pub fn add_pass(&mut self, value: Pass) -> &mut Self {
-        self.passes.more_passes.push(value);
+    pub fn add_pass(&mut self, value: impl Into<PassArg>) -> &mut Self {
+        self.passes.more_passes.push(value.into());
         self
     }
 

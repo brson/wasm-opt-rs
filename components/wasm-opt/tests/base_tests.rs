@@ -16,6 +16,7 @@ static MULTISIG_WASM: &[u8] = include_bytes!("ink_example_multisig.wasm");
 fn read_write_from_unicode_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("unicode-α℗$∞ℳ-").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -25,7 +26,7 @@ fn read_write_from_unicode_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_binary(&path, &mut m, None)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
@@ -33,7 +34,7 @@ fn read_write_from_unicode_works() -> anyhow::Result<()> {
     let mut another_reader = ModuleReader::new();
     another_reader.read_binary(&new_file, &mut another_m, None)?;
 
-    let mut another_writer = ModuleWriter::new();
+    let mut another_writer = ModuleWriter::new(&pass_options);
     let another_new_file = temp_dir
         .path()
         .join("hello_world_by_another_module_writer.wasm");
@@ -51,6 +52,7 @@ fn read_write_from_unicode_works() -> anyhow::Result<()> {
 fn read_write_text_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wat");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -60,7 +62,7 @@ fn read_write_text_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_text(&path, &mut m)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wat");
     writer.write_text(&mut m, &new_file)?;
 
@@ -68,7 +70,7 @@ fn read_write_text_works() -> anyhow::Result<()> {
     let mut another_reader = ModuleReader::new();
     another_reader.read_text(&new_file, &mut another_m)?;
 
-    let mut another_writer = ModuleWriter::new();
+    let mut another_writer = ModuleWriter::new(&pass_options);
     let another_new_file = temp_dir
         .path()
         .join("hello_world_by_another_module_writer.wat");
@@ -86,6 +88,7 @@ fn read_write_text_works() -> anyhow::Result<()> {
 fn read_write_binary_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -95,7 +98,7 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_binary(&path, &mut m, None)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
@@ -103,7 +106,7 @@ fn read_write_binary_works() -> anyhow::Result<()> {
     let mut another_reader = ModuleReader::new();
     another_reader.read_binary(&new_file, &mut another_m, None)?;
 
-    let mut another_writer = ModuleWriter::new();
+    let mut another_writer = ModuleWriter::new(&pass_options);
     let another_new_file = temp_dir
         .path()
         .join("hello_world_by_another_module_writer.wasm");
@@ -185,6 +188,7 @@ fn map_parse_exception_works() -> anyhow::Result<()> {
 fn pass_runner_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -195,7 +199,7 @@ fn pass_runner_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_binary(&path, &mut m, None)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
@@ -209,7 +213,7 @@ fn pass_runner_works() -> anyhow::Result<()> {
     pass_runner.run();
     drop(pass_runner);
 
-    let mut another_writer = ModuleWriter::new();
+    let mut another_writer = ModuleWriter::new(&pass_options);
     let another_new_file = temp_dir
         .path()
         .join("hello_world_by_another_module_writer.wasm");
@@ -227,6 +231,7 @@ fn pass_runner_works() -> anyhow::Result<()> {
 fn pass_options_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("hello_world.wasm");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -237,7 +242,7 @@ fn pass_options_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_binary(&path, &mut m, None)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir.path().join("hello_world_by_module_writer.wasm");
     writer.write_binary(&mut m, &new_file)?;
 
@@ -255,7 +260,11 @@ fn pass_options_works() -> anyhow::Result<()> {
     pass_runner.run();
     drop(pass_runner);
 
-    let mut writer_0 = ModuleWriter::new();
+    let mut pass_options = PassOptions::new();
+    pass_options.set_optimize_level(2);
+    pass_options.set_shrink_level(1);
+
+    let mut writer_0 = ModuleWriter::new(&pass_options);
     let file_0 = temp_dir.path().join("hello_world_by_module_writer_0.wasm");
     writer_0.write_binary(&mut m_0, &file_0)?;
 
@@ -281,7 +290,10 @@ fn pass_options_works() -> anyhow::Result<()> {
     pass_runner.run();
     drop(pass_runner);
 
-    let mut writer_1 = ModuleWriter::new();
+    let mut pass_options = PassOptions::new();
+    pass_options.set_optimize_level(5);
+    pass_options.set_shrink_level(5);
+    let mut writer_1 = ModuleWriter::new(&pass_options);
     let file_1 = temp_dir.path().join("hello_world_by_module_writer_1.wasm");
     writer_1.write_binary(&mut m_1, &file_1)?;
 
@@ -305,7 +317,12 @@ fn pass_options_works() -> anyhow::Result<()> {
     pass_runner.run();
     drop(pass_runner);
 
-    let mut writer_2 = ModuleWriter::new();
+    let mut pass_options = PassOptions::new();
+
+    pass_options.set_optimize_level(2_000_000_000);
+    pass_options.set_shrink_level(2_000_000_000);
+
+    let mut writer_2 = ModuleWriter::new(&pass_options);
     let file_2 = temp_dir.path().join("hello_world_by_module_writer_2.wasm");
     writer_2.write_binary(&mut m_2, &file_2)?;
 
@@ -321,6 +338,7 @@ fn pass_options_works() -> anyhow::Result<()> {
 fn pass_runner_add_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let path = temp_dir.path().join("ink_example_multisig.wasm");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -331,7 +349,7 @@ fn pass_runner_add_works() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_binary(&path, &mut m, None)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir
         .path()
         .join("ink_example_multisig_by_module_writer.wasm");
@@ -347,7 +365,7 @@ fn pass_runner_add_works() -> anyhow::Result<()> {
     pass_runner.run();
     drop(pass_runner);
 
-    let mut another_writer = ModuleWriter::new();
+    let mut another_writer = ModuleWriter::new(&pass_options);
     let another_new_file = temp_dir
         .path()
         .join("ink_example_multisig_by_another_module_writer.wasm");
@@ -402,6 +420,7 @@ fn read_file_not_exists() -> anyhow::Result<()> {
 fn write_file_path_not_exists() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm-opt").tempdir()?;
     let path = temp_dir.path().join("hello_world.wat");
+    let pass_options = PassOptions::new();
 
     let temp_file = File::create(&path)?;
     let mut buf_writer = BufWriter::new(&temp_file);
@@ -411,7 +430,7 @@ fn write_file_path_not_exists() -> anyhow::Result<()> {
     let mut reader = ModuleReader::new();
     reader.read_text(&path, &mut m)?;
 
-    let mut writer = ModuleWriter::new();
+    let mut writer = ModuleWriter::new(&pass_options);
     let new_file = temp_dir
         .path()
         .join("badpath")

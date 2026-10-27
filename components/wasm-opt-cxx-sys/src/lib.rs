@@ -77,7 +77,7 @@ pub mod wasm {
     unsafe extern "C++" {
         type ModuleWriter;
 
-        fn newModuleWriter() -> UniquePtr<ModuleWriter>;
+        fn newModuleWriter(options: &PassOptions) -> UniquePtr<ModuleWriter>;
 
         fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
@@ -102,6 +102,8 @@ pub mod wasm {
         fn getRegisteredNames() -> UniquePtr<CxxVector<CxxString>>;
 
         fn getPassDescription(name: Pin<&mut CxxString>) -> UniquePtr<CxxString>;
+
+        fn containsPass(name: &CxxString) -> bool;
 
         fn isPassHidden(name: Pin<&mut CxxString>) -> bool;
     }
@@ -147,6 +149,10 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
 
+        fn setGenerateStackIR(self: Pin<&mut Self>, generateStackIR: bool);
+
+        fn setOptimizeStackIR(self: Pin<&mut Self>, optimizeStackIR: bool);
+
         fn setArguments(self: Pin<&mut Self>, key: Pin<&mut CxxString>, value: Pin<&mut CxxString>);
     }
 
@@ -175,16 +181,22 @@ pub mod wasm {
     }
 
     unsafe extern "C++" {
-        type PassRunner<'wasm>;
+        type PassRunner;
 
-        fn newPassRunner<'wasm>(wasm: Pin<&'wasm mut Module>) -> UniquePtr<PassRunner<'wasm>>;
+        fn newPassRunner(wasm: Pin<&mut Module>) -> UniquePtr<PassRunner>;
 
-        fn newPassRunnerWithOptions<'wasm>(
-            wasm: Pin<&'wasm mut Module>,
+        fn newPassRunnerWithOptions(
+            wasm: Pin<&mut Module>,
             options: UniquePtr<PassOptions>,
-        ) -> UniquePtr<PassRunner<'wasm>>;
+        ) -> UniquePtr<PassRunner>;
 
         fn add(self: Pin<&mut Self>, pass_name: Pin<&mut CxxString>);
+
+        fn addWithArgument(
+            self: Pin<&mut Self>,
+            pass_name: Pin<&mut CxxString>,
+            pass_arg: Pin<&mut CxxString>,
+        );
 
         fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 

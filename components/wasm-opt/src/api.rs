@@ -138,6 +138,17 @@ pub struct PassOptions {
     ///
     /// Default: `false`.
     pub debug_info: bool,
+    /// Whether to generate StackIR during binary writing. This is on by default
+    /// in -O2 and above.
+    ///
+    /// Default: `false`.
+    pub generate_stack_ir: bool,
+    /// Whether to optimize StackIR during binary writing. How we optimize depends
+    /// on other optimization flags like optimizeLevel. This is on by default in
+    /// -O2 and above.
+    ///
+    /// Default: `false`.
+    pub optimize_stack_ir: bool,
     /// Additional pass-specific arguments.
     pub arguments: HashMap<String, String>,
 }
@@ -148,8 +159,9 @@ pub struct PassOptions {
 ///
 /// See the documentation of various [`OptimizationOptions`]
 /// constructors for a general description of how these behave.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub enum OptimizeLevel {
+    #[default]
     Level0 = 0,
     Level1 = 1,
     Level2 = 2,
@@ -163,11 +175,33 @@ pub enum OptimizeLevel {
 ///
 /// See the documentation of various [`OptimizationOptions`]
 /// constructors for a general description of how these behave.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub enum ShrinkLevel {
+    #[default]
     Level0 = 0,
     Level1 = 1,
     Level2 = 2,
+}
+
+#[derive(Clone, Debug)]
+pub enum PassArg {
+    Name(Pass),
+    Arg(Pass, String),
+}
+
+impl PassArg {
+    pub fn name(&self) -> &Pass {
+        match self {
+            Self::Name(name) => name,
+            Self::Arg(name, _) => name,
+        }
+    }
+}
+
+impl From<Pass> for PassArg {
+    fn from(pass: Pass) -> Self {
+        Self::Name(pass)
+    }
 }
 
 /// The set of optimization passes to apply.
@@ -176,7 +210,7 @@ pub struct Passes {
     /// Apply the default set of optimization passes.
     pub add_default_passes: bool,
     /// Additional passes to apply.
-    pub more_passes: Vec<Pass>,
+    pub more_passes: Vec<PassArg>,
 }
 
 /// Which wasm [`Feature`]s to enable and disable.
@@ -191,12 +225,13 @@ pub struct Features {
 }
 
 /// The set of features to apply before applying custom features.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum FeatureBaseline {
     /// The default Binaryen feature set.
     ///
     /// Enables [`Feature::Default`].
     /// Disables [`Feature::None`].
+    #[default]
     Default,
     /// Only allow WebAssembly MVP features.
     ///
@@ -363,20 +398,10 @@ impl Default for PassOptions {
             fast_math: false,
             zero_filled_memory: false,
             debug_info: false,
+            generate_stack_ir: false,
+            optimize_stack_ir: false,
             arguments: HashMap::<String, String>::new(),
         }
-    }
-}
-
-impl Default for OptimizeLevel {
-    fn default() -> OptimizeLevel {
-        OptimizeLevel::Level0
-    }
-}
-
-impl Default for ShrinkLevel {
-    fn default() -> ShrinkLevel {
-        ShrinkLevel::Level0
     }
 }
 
@@ -386,11 +411,5 @@ impl Default for Passes {
             add_default_passes: true,
             more_passes: vec![],
         }
-    }
-}
-
-impl Default for FeatureBaseline {
-    fn default() -> FeatureBaseline {
-        FeatureBaseline::Default
     }
 }

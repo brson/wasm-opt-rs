@@ -1,6 +1,6 @@
 [package]
 name = "wasm-opt"
-version = "0.116.1"
+version = "0.121.0"
 description = "wasm-opt bindings"
 license = "MIT / Apache-2.0"
 edition = "2018"
@@ -10,14 +10,13 @@ categories = ["wasm"]
 readme = "README.md"
 
 [dependencies]
-anyhow = "1.0.58"
-libc = "0.2.126"
-wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.116.0", default-features = false }
-wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.116.0" }
-strum = "0.24"
-strum_macros = "0.24"
-thiserror = "1.0.32"
-tempfile = "3.3.0"
+anyhow = "1.0.98"
+libc = "0.2.172"
+wasm-opt-sys = { path = "../wasm-opt-sys", version = "0.121.0", default-features = false }
+wasm-opt-cxx-sys = { path = "../wasm-opt-cxx-sys", version = "0.121.0" }
+strum = { version = "0.27.1", features = ["derive"] }
+thiserror = "2.0.12"
+tempfile = "3.19.1"
 
 [features]
 default = ["dwarf"]

@@ -3,7 +3,7 @@ use wocxx::cxx::let_cxx_string;
 use wocxx::{colors, cxx, wasm};
 
 use std::path::Path;
-use strum_macros::EnumIter;
+use strum::EnumIter;
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
@@ -54,7 +54,7 @@ impl ModuleReader {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let source_map_filename = source_map_filename.unwrap_or(&Path::new(""));
+        let source_map_filename = source_map_filename.unwrap_or(Path::new(""));
         let source_map_filename = convert_path_to_u8(source_map_filename)?;
         let_cxx_string!(source_map_filename = source_map_filename);
 
@@ -71,7 +71,7 @@ impl ModuleReader {
         let path = convert_path_to_u8(path)?;
         let_cxx_string!(path = path);
 
-        let source_map_filename = source_map_filename.unwrap_or(&Path::new(""));
+        let source_map_filename = source_map_filename.unwrap_or(Path::new(""));
         let source_map_filename = convert_path_to_u8(source_map_filename)?;
         let_cxx_string!(source_map_filename = source_map_filename);
 
@@ -83,8 +83,10 @@ impl ModuleReader {
 pub struct ModuleWriter(cxx::UniquePtr<wasm::ModuleWriter>);
 
 impl ModuleWriter {
-    pub fn new() -> ModuleWriter {
-        ModuleWriter(wasm::newModuleWriter())
+    pub fn new(options: &PassOptions) -> ModuleWriter {
+        ModuleWriter(wasm::newModuleWriter(
+            options.0.as_ref().expect("PassOptions"),
+        ))
     }
 
     pub fn set_debug_info(&mut self, debug: bool) {
@@ -132,6 +134,8 @@ impl ModuleWriter {
 }
 
 pub mod pass_registry {
+    use std::ops::Deref;
+
     use wasm_opt_cxx_sys as wocxx;
     use wocxx::cxx::let_cxx_string;
     use wocxx::wasm;
@@ -155,6 +159,12 @@ pub mod pass_registry {
         let description = description.as_ref().expect("non-null");
 
         description.to_str().expect("utf8").to_string()
+    }
+
+    pub fn contains_pass(name: &str) -> bool {
+        let_cxx_string!(name = name);
+
+        wasm::containsPass(name.deref())
     }
 
     /// Aborts if `name` is invalid.
@@ -255,6 +265,16 @@ impl PassOptions {
         this.setDebugInfo(debug_info);
     }
 
+    pub fn set_generate_stack_ir(&mut self, generate_stack_ir: bool) {
+        let this = self.0.pin_mut();
+        this.setGenerateStackIR(generate_stack_ir);
+    }
+
+    pub fn set_optimize_stack_ir(&mut self, optimize_stack_ir: bool) {
+        let this = self.0.pin_mut();
+        this.setOptimizeStackIR(optimize_stack_ir);
+    }
+
     pub fn set_arguments(&mut self, key: &str, value: &str) {
         let_cxx_string!(key = key);
         let_cxx_string!(value = value);
@@ -289,7 +309,7 @@ impl FeatureSet {
     pub fn has(&self, features: &FeatureSet) -> bool {
         //let this = self.0.pin();
         //let other = features.0.pin();
-        self.0.has(&*features.0)
+        self.0.has(&features.0)
     }
 
     pub fn as_int(&self) -> u32 {
@@ -300,7 +320,7 @@ impl FeatureSet {
 pub fn get_feature_array() -> Vec<u32> {
     let f = wasm::getFeatureArray();
 
-    let feature_vec: Vec<u32> = f.iter().map(|f| *f).collect();
+    let feature_vec: Vec<u32> = f.iter().copied().collect();
 
     feature_vec
 }
@@ -324,24 +344,33 @@ pub enum Feature {
     ExtendedConst = 1 << 13,
     Strings = 1 << 14,
     MultiMemory = 1 << 15,
+    TypedContinuations = 1 << 16,
+    SharedEverything = 1 << 17,
+    Fp16 = 1 << 18,
+    // Just the memory.copy and fill operations
+    BulkMemoryOpt = 1 << 19,
+    // This features is a no-op for compatibility. Having it in this list means
+    // that we can automatically generate tool flags that set it, but otherwise
+    // it does nothing. Binaryen always accepts LEB call-indirect encodings.
+    CallIndirectOverlong = 1 << 20,
     // MVP has the same value as None.
     // Mvp = 0,
-    Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
+    Default = (1 << 5) | (1 << 1), // SignExt | MutableGlobals,
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
-    All = (1 << 16) - 1,
+    All = (1 << 21) - 1,
 }
 
-pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);
+pub struct PassRunner(cxx::UniquePtr<wasm::PassRunner>);
 
-impl<'wasm> PassRunner<'wasm> {
-    pub fn new(wasm: &'wasm mut Module) -> PassRunner<'wasm> {
+impl PassRunner {
+    pub fn new(wasm: &mut Module) -> PassRunner {
         let wasm = wasm.0.pin_mut();
         PassRunner(wasm::newPassRunner(wasm))
     }
 
-    pub fn new_with_options(wasm: &'wasm mut Module, options: PassOptions) -> PassRunner<'wasm> {
+    pub fn new_with_options(wasm: &mut Module, options: PassOptions) -> PassRunner {
         let wasm = wasm.0.pin_mut();
         PassRunner(wasm::newPassRunnerWithOptions(wasm, options.0))
     }
@@ -351,6 +380,14 @@ impl<'wasm> PassRunner<'wasm> {
 
         let this = self.0.pin_mut();
         this.add(pass_name);
+    }
+
+    pub fn add_with_argument(&mut self, pass_name: &str, pass_arg: &str) {
+        let_cxx_string!(pass_name = pass_name);
+        let_cxx_string!(pass_arg = pass_arg);
+
+        let this = self.0.pin_mut();
+        this.addWithArgument(pass_name, pass_arg);
     }
 
     pub fn add_default_optimization_passes(&mut self) {
@@ -387,6 +424,7 @@ pub fn check_pass_options_defaults_os(pass_options: PassOptions) -> bool {
 }
 
 // FIXME binaryen unicode path handling is broken on windows
+// TODO: How do I fix this?
 fn convert_path_to_u8(path: &Path) -> Result<&[u8], cxx::Exception> {
     #[cfg(unix)]
     let path = path.as_os_str().as_bytes();

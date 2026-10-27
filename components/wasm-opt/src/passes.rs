@@ -1,5 +1,5 @@
 use crate::base::pass_registry;
-use strum_macros::EnumIter;
+use strum::{Display, EnumIter, EnumString, IntoStaticStr};
 
 /// A Binaryen optimization pass.
 ///
@@ -7,7 +7,8 @@ use strum_macros::EnumIter;
 /// `wasm-opt`, but with Rust capitalization conventions.
 // Keep these in the same order as PassRegistry::registerPasses
 #[non_exhaustive]
-#[derive(Clone, Debug, EnumIter)]
+#[derive(Clone, Debug, EnumIter, EnumString, IntoStaticStr, Display)]
+#[strum(serialize_all = "kebab-case")]
 pub enum Pass {
     /// Lower unaligned loads and stores to smaller aligned ones.
     AlignmentLowering,
@@ -33,12 +34,16 @@ pub enum Pass {
     ConstHoisting,
     /// Propagate constant struct field values.
     Cfp,
+    /// Propagate constant struct field values, using ref.test.
+    CfpReftest,
     /// Removes unreachable code.
     Dce,
     /// Forces all loads and stores to have alignment 1.
     Dealign,
+    /// Propagate debug location from parents or previous siblings to child nodes.
+    PropagateDebugLocs,
     /// Instrument the wasm to convert NaNs into 0 at runtime.
-    DeNan,
+    Denan,
     /// Turns indirect calls into direct ones.
     Directize,
     /// Discards global effect info.
@@ -46,13 +51,15 @@ pub enum Pass {
     /// Optimizes using the DataFlow SSA IR.
     Dfo,
     /// Dump DWARF debug info sections from the read binary.
-    DwarfDump,
+    Dwarfdump,
     /// Removes duplicate imports.
     DuplicateImportElimination,
     /// Removes duplicate functions.
     DuplicateFunctionElimination,
     /// Emit the target features section in the output.
     EmitTargetFeatures,
+    /// Modify the wasm (destructively) for closed-world.
+    EncloseWorld,
     /// Leaves just one function (useful for debugging).
     ExtractFunction,
     /// Leaves just one function selected by index.
@@ -60,7 +67,7 @@ pub enum Pass {
     /// Flattens out code, removing nesting.
     Flatten,
     /// Emulates function pointer casts, allowing incorrect indirect calls to (sometimes) work.
-    FpCastEmu,
+    FpcastEmu,
     /// Reports function metrics.
     FuncMetrics,
     /// Generate dynCall fuctions used by emscripten ABI.
@@ -69,14 +76,12 @@ pub enum Pass {
     GenerateI64Dyncalls,
     /// Generate global effect info (helps later passes).
     GenerateGlobalEffects,
-    /// Generate Stack IR.
-    GenerateStackIr,
     /// Refine the types of globals.
     GlobalRefining,
-    /// Globally optimize GC types.
-    Gto,
     /// Globally optimize struct values.
     Gsi,
+    /// Globally optimize GC types.
+    Gto,
     /// Grand unified flow analyses.
     ///
     /// Optimize the entire program using information about what content can actually appear in each location.
@@ -85,10 +90,17 @@ pub enum Pass {
     GufaCastAll,
     /// Gufa plus local optimizations in functions we modified.
     GufaOptimizing,
+    /// Optimizes J2CL specific constructs.
+    OptimizeJ2cl,
+    /// Merges itable structures into vtables to make types more compact.
+    MergeJ2clItables,
     /// Apply more specific subtypes to type fields where possible.
     TypeRefining,
     /// Replace GC allocations with locals.
+    #[strum(serialize = "heap2local")]
     Heap2Local,
+    /// Optimize heap (GC) stores.
+    HeapStoreOptimization,
     /// Inline __original_main into main.
     InlineMain,
     /// Inline functions (you probably want inlining-optimizing).
@@ -101,8 +113,8 @@ pub enum Pass {
     Jspi,
     /// Legalizes i64 types on the import/export boundary.
     LegalizeJsInterface,
-    /// Legalizes i64 types on the import/export boundary in a minimal manner, only on things only JS will call.
-    LegalizeJsInterfaceMinimally,
+    /// Legalizes the import/export boundary and prunes when needed.
+    LegalizeAndPruneJsInterface,
     /// Common subexpression elimination inside basic blocks.
     LocalCse,
     /// Apply more specific subtypes to locals where possible.
@@ -111,6 +123,8 @@ pub enum Pass {
     LogExecution,
     /// Lower all uses of i64s to use i32s instead.
     I64ToI32Lowering,
+    /// Instrument the build with code to intercept specific function calls.
+    TraceCalls,
     /// Instrument the build with code to intercept all loads and stores.
     InstrumentLocals,
     /// Instrument the build with code to intercept all loads and stores.
@@ -121,6 +135,10 @@ pub enum Pass {
     LimitSegments,
     /// Lower loads and stores to a 64-bit memory to instead use a 32-bit one.
     Memory64Lowering,
+    /// Alias for memory64-lowering.
+    Table64Lowering,
+    /// Lower memory.copy and memory.fill to wasm mvp and disable the bulk-memory feature.
+    LlvmMemoryCopyFillLowering,
     /// Packs memory into separate segments, skipping zeros.
     MemoryPacking,
     /// Merges blocks to their parents.
@@ -137,6 +155,8 @@ pub enum Pass {
     MinifyImportsAndExports,
     /// Minifies both import and export names, and emits a mapping to the minified ones, and minifies the modules as well.
     MinifyImportsAndExportsAndModules,
+    /// Split types into minimal recursion groups.
+    MinimizeRecGroups,
     /// Apply the assumption that asyncify imports always unwind, and we never rewind.
     ModAsyncifyAlwaysAndOnlyUnwind,
     /// Apply the assumption that asyncify never unwinds.
@@ -153,6 +173,14 @@ pub enum Pass {
     Nm,
     /// (Re)name all heap types.
     NameTypes,
+    /// Mark functions as no-inline.
+    NoInline,
+    /// Mark functions as no-inline (for full inlining only).
+    NoFullInline,
+    /// Mark functions as no-inline (for partial inlining only).
+    NoPartialInline,
+    /// Lower nontrapping float-to-int operations to wasm mvp and disable the nontrapping fptoint feature.
+    LlvmNontrappingFptointLowering,
     /// Reduces calls to code that only runs once.
     OnceReduction,
     /// Optimizes added constants into load/store offsets.
@@ -163,8 +191,10 @@ pub enum Pass {
     OptimizeCasts,
     /// Optimizes instruction combinations.
     OptimizeInstructions,
-    /// Optimize Stack IR.
-    OptimizeStackIr,
+    /// Outline instructions.
+    /// TODO: This is gated behind conditional compilation in the CPP.
+    /// Need to figure out how to handle that on the rust end.
+    Outlining,
     /// Pick load signs based on their uses.
     PickLoadSigns,
     /// Tranform Binaryen IR into Poppy IR.
@@ -191,8 +221,8 @@ pub enum Pass {
     PrintFunctionMap,
     /// (Alias for print-function-map).
     Symbolmap,
-    /// Print out Stack IR (useful for internal debugging).
-    PrintStackIr,
+    /// Propagate global values to other globals (useful for tests).
+    PropagateGlobalsGlobally,
     /// Removes operations incompatible with js.
     RemoveNonJsOps,
     /// Removes imports and replaces them with nops.
@@ -216,7 +246,7 @@ pub enum Pass {
     /// Sorts globals by access frequency.
     ReorderGlobals,
     /// Sorts locals by access frequency.
-    RecorderLocals,
+    ReorderLocals,
     /// Re-optimize control flow using the relooper algorithm.
     Rereloop,
     /// Remove redundant local.sets.
@@ -227,6 +257,8 @@ pub enum Pass {
     SafeHeap,
     /// Sets specified globals to specified values.
     SetGlobals,
+    /// Write data segments to a file and strip them from the module.
+    SeparateDataSegments,
     /// Remove params from function signature types where possible.
     SignaturePruning,
     /// Apply more specific subtypes to signature types where possible.
@@ -259,6 +291,14 @@ pub enum Pass {
     Ssa,
     /// Ssa-ify variables so that they have a single assignment, ignoring merges.
     SsaNomerge,
+    /// Gathers wasm strings to globals.
+    StringGathering,
+    /// Lowers wasm strings and operations to imports.
+    StringLowering,
+    /// Same as string-lowering, but encodes well-formed strings as magic imports.
+    StringLoweringMagicImports,
+    /// Same as string-lowering-magic-imports, but raise a fatal error if there are invalid strings.
+    StringLoweringMagicImportsAssert,
     /// Deprecated; same as strip-debug.
     Strip,
     /// Enforce limits on llvm's __stack_pointer global.
@@ -272,15 +312,27 @@ pub enum Pass {
     /// Strip EH instructions.
     StripEh,
     /// Strip the wasm target features section.
-    StripTargetFeatuers,
+    StripTargetFeatures,
+    /// Deprecated; same as translate-to-exnref.
+    TranslateToNewEh,
+    /// Translate old Phase 3 EH instructions to new ones with exnref.
+    TranslateToExnref,
     /// Replace trapping operations with clamping semantics.
     TrapModeClamp,
     /// Replace trapping operations with js semantics.
     TrapModeJs,
+    /// Optimize trivial tuples away.
+    TupleOptimization,
+    /// Mark all leaf types as final.
+    TypeFinalizing,
     /// Merge types to their supertypes where possible.
     TypeMerging,
     /// Create new nominal types to help other optimizations.
     TypeSsa,
+    /// Mark all types as non-final (open).
+    TypeUnfinalizing,
+    /// Removes unnecessary subtyping relationships.
+    Unsubtyping,
     /// Removes local.tees, replacing them with sets and gets.
     Untee,
     /// Removes obviously unneeded code.
@@ -288,155 +340,9 @@ pub enum Pass {
 }
 
 impl Pass {
-    /// Returns the name of the pass.
-    ///
-    /// This is the same name used by Binaryen to identify the pass on the command line.
-    pub fn name(&self) -> &'static str {
-        use Pass::*;
-        match self {
-            AlignmentLowering => "alignment-lowering",
-            Asyncify => "asyncify",
-            AvoidReinterprets => "avoid-reinterprets",
-            Dae => "dae",
-            DaeOptimizing => "dae-optimizing",
-            AbstractTypeRefining => "abstract-type-refining",
-            CoalesceLocals => "coalesce-locals",
-            CoalesceLocalsLearning => "coalesce-locals-learning",
-            CodePushing => "code-pushing",
-            CodeFolding => "code-folding",
-            ConstHoisting => "const-hoisting",
-            Cfp => "cfp",
-            Dce => "dce",
-            Dealign => "dealign",
-            DeNan => "denan",
-            DiscardGlobalEffects => "discard-global-effects",
-            Directize => "directize",
-            Dfo => "dfo",
-            DwarfDump => "dwarfdump",
-            DuplicateImportElimination => "duplicate-import-elimination",
-            DuplicateFunctionElimination => "duplicate-function-elimination",
-            EmitTargetFeatures => "emit-target-features",
-            ExtractFunction => "extract-function",
-            ExtractFunctionIndex => "extract-function-index",
-            Flatten => "flatten",
-            FpCastEmu => "fpcast-emu",
-            FuncMetrics => "func-metrics",
-            GenerateDyncalls => "generate-dyncalls",
-            GenerateI64Dyncalls => "generate-i64-dyncalls",
-            GenerateGlobalEffects => "generate-global-effects",
-            GenerateStackIr => "generate-stack-ir",
-            GlobalRefining => "global-refining",
-            Gto => "gto",
-            Gsi => "gsi",
-            Gufa => "gufa",
-            GufaCastAll => "gufa-cast-all",
-            GufaOptimizing => "gufa-optimizing",
-            TypeRefining => "type-refining",
-            Heap2Local => "heap2local",
-            InlineMain => "inline-main",
-            Inlining => "inlining",
-            InliningOptimizing => "inlining-optimizing",
-            IntrinsicLowering => "intrinsic-lowering",
-            Jspi => "jspi",
-            LegalizeJsInterface => "legalize-js-interface",
-            LegalizeJsInterfaceMinimally => "legalize-js-interface-minimally",
-            LocalCse => "local-cse",
-            LocalSubtyping => "local-subtyping",
-            LogExecution => "log-execution",
-            I64ToI32Lowering => "i64-to-i32-lowering",
-            InstrumentLocals => "instrument-locals",
-            InstrumentMemory => "instrument-memory",
-            Licm => "licm",
-            LimitSegments => "limit-segments",
-            Memory64Lowering => "memory64-lowering",
-            MemoryPacking => "memory-packing",
-            MergeBlocks => "merge-blocks",
-            MergeSimilarFunctions => "merge-similar-functions",
-            MergeLocals => "merge-locals",
-            Metrics => "metrics",
-            MinifyImports => "minify-imports",
-            MinifyImportsAndExports => "minify-imports-and-exports",
-            MinifyImportsAndExportsAndModules => "minify-imports-and-exports-and-modules",
-            ModAsyncifyAlwaysAndOnlyUnwind => "mod-asyncify-always-and-only-unwind",
-            ModAsyncifyNeverUnwind => "mod-asyncify-never-unwind",
-            Monomorphize => "monomorphize",
-            MonomorphizeAlways => "monomorphize-always",
-            MultiMemoryLowering => "multi-memory-lowering",
-            MultiMemoryLoweringWithBoundsChecks => "multi-memory-lowering-with-bounds-checks",
-            Nm => "nm",
-            NameTypes => "name-types",
-            OnceReduction => "once-reduction",
-            OptimizeAddedConstants => "optimize-added-constants",
-            OptimizeAddedConstantsPropagate => "optimize-added-constants-propagate",
-            OptimizeCasts => "optimize-casts",
-            OptimizeInstructions => "optimize-instructions",
-            OptimizeStackIr => "optimize-stack-ir",
-            PickLoadSigns => "pick-load-signs",
-            Poppify => "poppify",
-            PostEmscripten => "post-emscripten",
-            OptimizeForJs => "optimize-for-js",
-            Precompute => "precompute",
-            PrecomputePropagate => "precompute-propagate",
-            Print => "print",
-            PrintMinified => "print-minified",
-            PrintFeatures => "print-features",
-            PrintFull => "print-full",
-            PrintCallGraph => "print-call-graph",
-            PrintFunctionMap => "print-function-map",
-            Symbolmap => "symbolmap",
-            PrintStackIr => "print-stack-ir",
-            RemoveNonJsOps => "remove-non-js-ops",
-            RemoveImports => "remove-imports",
-            RemoveMemory => "remove-memory",
-            RemoveUnusedBrs => "remove-unused-brs",
-            RemoveUnusedModuleElements => "remove-unused-module-elements",
-            RemoveUnusedNonfunctionModuleElements => "remove-unused-nonfunction-module-elements",
-            RemoveUnusedNames => "remove-unused-names",
-            RemoveUnusedTypes => "remove-unused-types",
-            ReorderFunctionsByName => "reorder-functions-by-name",
-            ReorderFunctions => "reorder-functions",
-            ReorderGlobals => "reorder-globals",
-            RecorderLocals => "reorder-locals",
-            Rereloop => "rereloop",
-            Rse => "rse",
-            Roundtrip => "roundtrip",
-            SafeHeap => "safe-heap",
-            SetGlobals => "set-globals",
-            SignaturePruning => "signature-pruning",
-            SignatureRefining => "signature-refining",
-            SignextLowering => "signext-lowering",
-            SimplifyGlobals => "simplify-globals",
-            SimplifyGlobalsOptimizing => "simplify-globals-optimizing",
-            SimplifyLocals => "simplify-locals",
-            SimplifyLocalsNonesting => "simplify-locals-nonesting",
-            SimplifyLocalsNotee => "simplify-locals-notee",
-            SimplifyLocalsNostructure => "simplify-locals-nostructure",
-            SimplifyLocalsNoteeNostructure => "simplify-locals-notee-nostructure",
-            Souperify => "souperify",
-            SouperifySingleUse => "souperify-single-use",
-            SpillPointers => "spill-pointers",
-            StubUnsupportedJs => "stub-unsupported-js",
-            Ssa => "ssa",
-            SsaNomerge => "ssa-nomerge",
-            Strip => "strip",
-            StackCheck => "stack-check",
-            StripDebug => "strip-debug",
-            StripDwarf => "strip-dwarf",
-            StripProducers => "strip-producers",
-            StripEh => "strip-eh",
-            StripTargetFeatuers => "strip-target-features",
-            TrapModeClamp => "trap-mode-clamp",
-            TrapModeJs => "trap-mode-js",
-            TypeMerging => "type-merging",
-            TypeSsa => "type-ssa",
-            Untee => "untee",
-            Vacuum => "vacuum",
-        }
-    }
-
     /// Get Binaryen's description of the pass.
     pub fn description(&self) -> String {
         // NB: This will abort if the name is invalid
-        pass_registry::get_pass_description(self.name())
+        pass_registry::get_pass_description(self.into())
     }
 }

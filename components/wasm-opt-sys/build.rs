@@ -1,8 +1,11 @@
 use cxx_build::CFG;
-use std::fmt::Write as FmtWrite;
-use std::fs::{self, File};
-use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::{Path, PathBuf};
+use std::{
+    fmt::Write as FmtWrite,
+    fs::{self, File},
+    io::{BufRead, BufReader, BufWriter, Write},
+    iter::once,
+    path::{Path, PathBuf},
+};
 
 fn main() -> anyhow::Result<()> {
     check_cxx17_support()?;
@@ -36,7 +39,10 @@ fn main() -> anyhow::Result<()> {
     // include from these same dirs.
     CFG.exported_header_dirs.push(&src_dir);
     CFG.exported_header_dirs.push(&tools_dir);
-    CFG.exported_header_dirs.push(&output_dir);
+    CFG.exported_header_dirs.push(output_dir);
+
+    let fp16_dir = binaryen_dir.join("third_party/FP16/include");
+    CFG.exported_header_dirs.push(&fp16_dir);
 
     #[cfg(feature = "dwarf")]
     {
@@ -155,19 +161,19 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let wasm_files = [
         "literal.cpp",
         "parsing.cpp",
+        "source-map.cpp",
         "wasm-binary.cpp",
         "wasm-debug.cpp",
         "wasm-emscripten.cpp",
         "wasm-interpreter.cpp",
-        "wasm-ir-builder.cpp",
         "wasm-io.cpp",
+        "wasm-ir-builder.cpp",
+        "wasm-stack-opts.cpp",
         "wasm-stack.cpp",
-        "wasm-s-parser.cpp",
+        "wasm-type-shape.cpp",
         "wasm-type.cpp",
         "wasm-validator.cpp",
         "wasm.cpp",
-        "wat-lexer.cpp",
-        "wat-parser.cpp",
     ];
     let wasm_files = wasm_files.iter().map(|f| wasm_dir.join(f));
 
@@ -179,20 +185,26 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "debug.cpp",
         "dfa_minimization.cpp",
         "file.cpp",
+        "istring.cpp",
+        "name.cpp",
+        "path.cpp",
         "safe_integer.cpp",
+        "string.cpp",
+        "suffix_tree_node.cpp",
+        "suffix_tree.cpp",
         "threads.cpp",
         "utilities.cpp",
-        "istring.cpp",
     ];
     let support_files = support_files.iter().map(|f| support_dir.join(f));
 
     let ir_dir = src_dir.join("ir");
     let ir_files = [
+        "debuginfo.cpp",
         "drop.cpp",
         "eh-utils.cpp",
-        "ExpressionManipulator.cpp",
-        "ExpressionAnalyzer.cpp",
         "export-utils.cpp",
+        "ExpressionAnalyzer.cpp",
+        "ExpressionManipulator.cpp",
         "LocalGraph.cpp",
         "LocalStructuralDominance.cpp",
         "lubs.cpp",
@@ -202,6 +214,7 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         "possible-contents.cpp",
         "properties.cpp",
         "ReFinalize.cpp",
+        "return-utils.cpp",
         "stack-utils.cpp",
         "table-utils.cpp",
         "type-updating.cpp",
@@ -212,16 +225,30 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let passes_files = get_files_from_dir(&passes_dir)?;
 
     let fuzzing_dir = src_dir.join("tools/fuzzing");
-    let fuzzing_files = ["fuzzing.cpp", "random.cpp", "heap-types.cpp"];
+    let fuzzing_files = ["fuzzing.cpp", "heap-types.cpp", "random.cpp"];
     let fuzzing_files = fuzzing_files.iter().map(|f| fuzzing_dir.join(f));
 
     let asmjs_dir = src_dir.join("asmjs");
-    let asmjs_files = ["asm_v_wasm.cpp", "shared-constants.cpp"];
+    let asmjs_files = ["asm_v_wasm.cpp", "asmangle.cpp", "shared-constants.cpp"];
     let asmjs_files = asmjs_files.iter().map(|f| asmjs_dir.join(f));
 
     let cfg_dir = src_dir.join("cfg");
     let cfg_files = ["Relooper.cpp"];
     let cfg_files = cfg_files.iter().map(|f| cfg_dir.join(f));
+
+    let parser_dir = src_dir.join("parser");
+    let parser_files = [
+        "context-decls.cpp",
+        "context-defs.cpp",
+        "lexer.cpp",
+        "parse-1-decls.cpp",
+        "parse-2-typedefs.cpp",
+        "parse-3-implicit-types.cpp",
+        "parse-4-module-types.cpp",
+        "parse-5-defs.cpp",
+        "wat-parser.cpp",
+    ];
+    let parser_files = parser_files.iter().map(|f| parser_dir.join(f));
 
     let file_intrinsics = disambiguate_file(&ir_dir.join("intrinsics.cpp"), "intrinsics-ir.cpp")?;
 
@@ -235,7 +262,8 @@ fn get_src_files(src_dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         .chain(fuzzing_files)
         .chain(asmjs_files)
         .chain(cfg_files)
-        .chain(Some(file_intrinsics).into_iter())
+        .chain(parser_files)
+        .chain(once(file_intrinsics))
         .collect();
 
     Ok(src_files)
@@ -344,7 +372,7 @@ fn create_config_header() -> anyhow::Result<()> {
     let output_dir = Path::new(&output_dir);
     let config_file = output_dir.join("config.h");
 
-    let config_text = "#define PROJECT_VERSION \"116 (version_116)\"";
+    let config_text = "#define PROJECT_VERSION \"121 (version_121)\"";
 
     fs::write(&config_file, config_text)?;
 
@@ -425,8 +453,8 @@ fn get_llvm_files(llvm_dir: &Path) -> anyhow::Result<[PathBuf; 63]> {
         llvm_dir.join("MD5.cpp"),
         llvm_dir.join("MemoryBuffer.cpp"),
         llvm_dir.join("NativeFormatting.cpp"),
-        llvm_dir.join("ObjectFile.cpp"),
         llvm_dir.join("obj2yaml_Error.cpp"),
+        llvm_dir.join("ObjectFile.cpp"),
         llvm_dir.join("Optional.cpp"),
         llvm_dir.join("Path.cpp"),
         llvm_dir.join("raw_ostream.cpp"),
