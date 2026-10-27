@@ -1,6 +1,6 @@
 use crate::api::*;
 use crate::base::{
-    validate_wasm, Feature as BaseFeature, FeatureSet as BaseFeatureSet,
+    validate_wasm_with_options, Feature as BaseFeature, FeatureSet as BaseFeatureSet,
     InliningOptions as BaseInliningOptions, Module, ModuleReader, ModuleWriter,
     PassOptions as BasePassOptions, PassRunner,
 };
@@ -123,8 +123,14 @@ impl OptimizationOptions {
             })?;
         }
 
+        if !self.preserve_type_order {
+            m.clear_type_indices();
+        }
+
         {
-            if self.passopts.validate && !validate_wasm(&mut m) {
+            let passopts = self.translate_pass_options();
+
+            if self.passopts.validate && !validate_wasm_with_options(&mut m, &passopts) {
                 return Err(OptimizationError::ValidateWasmInput);
             }
 
@@ -137,14 +143,13 @@ impl OptimizationOptions {
                     })?;
             }
 
-            if self.passopts.validate && !validate_wasm(&mut m) {
+            if self.passopts.validate && !validate_wasm_with_options(&mut m, &passopts) {
                 return Err(OptimizationError::ValidateWasmOutput);
             }
         }
 
         {
-            let mut writer = ModuleWriter::new();
-            writer.set_debug_info(self.passopts.debug_info);
+            let mut writer = self.create_writer();
 
             if let Some(filename) = outfile_sourcemap {
                 writer
@@ -183,22 +188,27 @@ impl OptimizationOptions {
             pass_runner.add_default_optimization_passes();
         }
 
-        self.passes
-            .more_passes
-            .iter()
-            .for_each(|pass| pass_runner.add(pass.name()));
+        self.passes.more_passes.iter().for_each(|pass| {
+            // A pass argument with the same name as the pass is the
+            // argument of that pass, e.g. the function name for the
+            // `extract-function` pass.
+            match self.passopts.arguments.get(pass.name()) {
+                Some(arg) => pass_runner.add_with_arg(pass.name(), arg),
+                None => pass_runner.add(pass.name()),
+            }
+        });
 
         pass_runner.run();
     }
 
     fn run_until_convergence(&self, m: &mut Module) -> anyhow::Result<()> {
-        let mut last_size = Self::get_module_size(m)?;
+        let mut last_size = self.get_module_size(m)?;
         let mut current_size;
 
         loop {
             self.create_and_run_pass_runner(m);
 
-            current_size = Self::get_module_size(m)?;
+            current_size = self.get_module_size(m)?;
 
             if current_size >= last_size {
                 break;
@@ -210,16 +220,42 @@ impl OptimizationOptions {
         Ok(())
     }
 
-    fn get_module_size(m: &mut Module) -> anyhow::Result<usize> {
+    fn get_module_size(&self, m: &mut Module) -> anyhow::Result<usize> {
         let tempdir = tempfile::tempdir()?;
         let temp_outfile = tempdir.path().join("wasm_opt_temp_outfile.wasm");
 
-        let mut writer = ModuleWriter::new();
+        let mut writer = self.create_writer();
         writer.write_binary(m, &temp_outfile)?;
 
         let file_size = fs::read(&temp_outfile)?.len();
 
         Ok(file_size)
+    }
+
+    fn create_writer(&self) -> ModuleWriter {
+        let mut writer = ModuleWriter::new();
+        writer.set_debug_info(self.passopts.debug_info);
+
+        let (generate_stack_ir, optimize_stack_ir) = self.stack_ir_options();
+        writer.set_stack_ir_options(
+            generate_stack_ir,
+            optimize_stack_ir,
+            self.passopts.optimize_level as i32,
+            self.passopts.shrink_level as i32,
+        );
+
+        writer
+    }
+
+    /// Mirrors the CLI's StackIR defaults: enabled at `-O2`/`-Os` and above
+    /// unless `allow_stack_ir` is disabled.
+    fn stack_ir_options(&self) -> (bool, bool) {
+        let auto = self.allow_stack_ir
+            && (self.passopts.optimize_level as i32 >= 2 || self.passopts.shrink_level as i32 >= 1);
+        let generate = self.generate_stack_ir || self.optimize_stack_ir || auto;
+        let optimize = self.optimize_stack_ir || auto;
+
+        (generate, optimize)
     }
 
     fn apply_features(&self, m: &mut Module) {
@@ -233,6 +269,7 @@ impl OptimizationOptions {
 
         opts.set_validate(self.passopts.validate);
         opts.set_validate_globally(self.passopts.validate_globally);
+        opts.set_world_mode(self.passopts.world_mode == WorldMode::Closed);
         opts.set_optimize_level(self.passopts.optimize_level as i32);
         opts.set_shrink_level(self.passopts.shrink_level as i32);
         opts.set_traps_never_happen(self.passopts.traps_never_happen);
@@ -250,6 +287,7 @@ impl OptimizationOptions {
         inlining.set_always_inline_max_size(self.inlining.always_inline_max_size);
         inlining.set_one_caller_inline_max_size(self.inlining.one_caller_inline_max_size);
         inlining.set_flexible_inline_max_size(self.inlining.flexible_inline_max_size);
+        inlining.set_max_combined_binary_size(self.inlining.max_combined_binary_size);
         inlining.set_allow_functions_with_loops(self.inlining.allow_functions_with_loops);
         inlining.set_partial_inlining_ifs(self.inlining.partial_inlining_ifs);
 
@@ -317,7 +355,18 @@ fn convert_feature(feature: &Feature) -> BaseFeature {
         Feature::ExtendedConst => BaseFeature::ExtendedConst,
         Feature::Strings => BaseFeature::Strings,
         Feature::MultiMemory => BaseFeature::MultiMemory,
-        Feature::TypedContinuations => BaseFeature::TypedContinuations,
+        Feature::StackSwitching => BaseFeature::StackSwitching,
+        Feature::SharedEverything => BaseFeature::SharedEverything,
+        Feature::Fp16 => BaseFeature::Fp16,
+        Feature::BulkMemoryOpt => BaseFeature::BulkMemoryOpt,
+        Feature::CallIndirectOverlong => BaseFeature::CallIndirectOverlong,
+        Feature::CustomDescriptors => BaseFeature::CustomDescriptors,
+        Feature::AcquireReleaseAtomics => BaseFeature::AcquireReleaseAtomics,
+        Feature::CustomPageSizes => BaseFeature::CustomPageSizes,
+        Feature::Multibyte => BaseFeature::Multibyte,
+        Feature::WideArithmetic => BaseFeature::WideArithmetic,
+        Feature::CompactImports => BaseFeature::CompactImports,
+        Feature::RelaxedAtomics => BaseFeature::RelaxedAtomics,
         Feature::Mvp => BaseFeature::None,
         Feature::Default => BaseFeature::Default,
         Feature::All => BaseFeature::All,

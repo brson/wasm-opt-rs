@@ -11,11 +11,11 @@ use wasm_opt::*;
 
 use std::error::Error;
 use std::fs::File;
-use std::io::BufWriter;
 use std::io::Write;
 use tempfile::Builder;
 
-static GARBAGE_FILE: &[u8] = include_bytes!("garbage_file.wat");
+/// Content that is neither a valid text module nor a valid binary module.
+static NOT_A_MODULE: &[u8] = b"this is not a wasm module\n";
 
 #[test]
 fn all_passes_correct() -> anyhow::Result<()> {
@@ -50,6 +50,7 @@ fn test_inlining_options_defaults() -> anyhow::Result<()> {
     inlining.set_always_inline_max_size(inlining_defaults.always_inline_max_size);
     inlining.set_one_caller_inline_max_size(inlining_defaults.one_caller_inline_max_size);
     inlining.set_flexible_inline_max_size(inlining_defaults.flexible_inline_max_size);
+    inlining.set_max_combined_binary_size(inlining_defaults.max_combined_binary_size);
     inlining.set_allow_functions_with_loops(inlining_defaults.allow_functions_with_loops);
     inlining.set_partial_inlining_ifs(inlining_defaults.partial_inlining_ifs);
 
@@ -64,6 +65,7 @@ fn test_pass_options_defaults() -> anyhow::Result<()> {
     let mut pass_options = BasePassOptions::new();
     pass_options.set_validate(pass_options_defaults.validate);
     pass_options.set_validate_globally(pass_options_defaults.validate_globally);
+    pass_options.set_world_mode(pass_options_defaults.world_mode == WorldMode::Closed);
     pass_options.set_optimize_level(pass_options_defaults.optimize_level as i32);
     pass_options.set_shrink_level(pass_options_defaults.shrink_level as i32);
     pass_options.set_traps_never_happen(pass_options_defaults.traps_never_happen);
@@ -84,6 +86,7 @@ fn test_optimization_options_os() -> anyhow::Result<()> {
     let mut pass_options = BasePassOptions::new();
     pass_options.set_validate(opts.passopts.validate);
     pass_options.set_validate_globally(opts.passopts.validate_globally);
+    pass_options.set_world_mode(opts.passopts.world_mode == WorldMode::Closed);
     pass_options.set_optimize_level(opts.passopts.optimize_level as i32);
     pass_options.set_shrink_level(opts.passopts.shrink_level as i32);
     pass_options.set_traps_never_happen(opts.passopts.traps_never_happen);
@@ -102,10 +105,10 @@ fn optimization_read_module_error_works() -> anyhow::Result<()> {
     let temp_dir = Builder::new().prefix("wasm_opt_tests").tempdir()?;
     let inpath = temp_dir.path().join("infile.wasm");
 
-    let file = File::create(&inpath)?;
-
-    let mut buf_writer = BufWriter::new(&file);
-    buf_writer.write_all(GARBAGE_FILE)?;
+    let mut file = File::create(&inpath)?;
+    file.write_all(NOT_A_MODULE)?;
+    file.flush()?;
+    drop(file);
 
     let outpath = temp_dir.path().join("outfile.wasm");
 

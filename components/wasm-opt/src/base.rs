@@ -18,6 +18,10 @@ impl Module {
     pub fn apply_features(&mut self, enabled_features: FeatureSet, disabled_features: FeatureSet) {
         wasm::applyFeatures(self.0.pin_mut(), enabled_features.0, disabled_features.0);
     }
+
+    pub fn clear_type_indices(&mut self) {
+        wasm::clearTypeIndices(self.0.pin_mut());
+    }
 }
 
 pub struct ModuleReader(cxx::UniquePtr<wasm::ModuleReader>);
@@ -90,6 +94,17 @@ impl ModuleWriter {
     pub fn set_debug_info(&mut self, debug: bool) {
         let this = self.0.pin_mut();
         this.setDebugInfo(debug);
+    }
+
+    pub fn set_stack_ir_options(
+        &mut self,
+        generate: bool,
+        optimize: bool,
+        optimize_level: i32,
+        shrink_level: i32,
+    ) {
+        let this = self.0.pin_mut();
+        this.setStackIROptions(generate, optimize, optimize_level, shrink_level);
     }
 
     pub fn set_source_map_filename(
@@ -187,6 +202,11 @@ impl InliningOptions {
         this.setFlexibleInlineMaxSize(size);
     }
 
+    pub fn set_max_combined_binary_size(&mut self, size: u32) {
+        let this = self.0.pin_mut();
+        this.setMaxCombinedBinarySize(size);
+    }
+
     pub fn set_allow_functions_with_loops(&mut self, allow: bool) {
         let this = self.0.pin_mut();
         this.setAllowFunctionsWithLoops(allow);
@@ -213,6 +233,11 @@ impl PassOptions {
     pub fn set_validate_globally(&mut self, validate: bool) {
         let this = self.0.pin_mut();
         this.setValidateGlobally(validate);
+    }
+
+    pub fn set_world_mode(&mut self, closed: bool) {
+        let this = self.0.pin_mut();
+        this.setWorldMode(closed);
     }
 
     pub fn set_optimize_level(&mut self, level: i32) {
@@ -324,14 +349,25 @@ pub enum Feature {
     ExtendedConst = 1 << 13,
     Strings = 1 << 14,
     MultiMemory = 1 << 15,
-    TypedContinuations = 1 << 16,
+    StackSwitching = 1 << 16,
+    SharedEverything = 1 << 17,
+    Fp16 = 1 << 18,
+    BulkMemoryOpt = 1 << 19,
+    CallIndirectOverlong = 1 << 20,
+    CustomDescriptors = 1 << 21,
+    AcquireReleaseAtomics = 1 << 22,
+    CustomPageSizes = 1 << 23,
+    Multibyte = 1 << 24,
+    WideArithmetic = 1 << 25,
+    CompactImports = 1 << 26,
+    RelaxedAtomics = 1 << 27,
     // MVP has the same value as None.
     // Mvp = 0,
     Default = 1 << 5 | 1 << 1, // SignExt | MutableGlobals,
     // GCNNLocals are opt-in: merely asking for "All" does not apply them. To
     // get all possible values use AllPossible. See setAll() below for more
     // details.
-    All = (1 << 17) - 1,
+    All = (1 << 28) - 1,
 }
 
 pub struct PassRunner<'wasm>(cxx::UniquePtr<wasm::PassRunner<'wasm>>);
@@ -354,6 +390,18 @@ impl<'wasm> PassRunner<'wasm> {
         this.add(pass_name);
     }
 
+    /// Adds a pass with an argument for that pass.
+    ///
+    /// The argument is the one the pass itself looks up, e.g. the function
+    /// name for the `extract-function` pass.
+    pub fn add_with_arg(&mut self, pass_name: &str, pass_arg: &str) {
+        let_cxx_string!(pass_name = pass_name);
+        let_cxx_string!(pass_arg = pass_arg);
+
+        let this = self.0.pin_mut();
+        this.add_with_arg(pass_name, pass_arg);
+    }
+
     pub fn add_default_optimization_passes(&mut self) {
         let this = self.0.pin_mut();
         this.addDefaultOptimizationPasses();
@@ -373,6 +421,10 @@ impl<'wasm> PassRunner<'wasm> {
 
 pub fn validate_wasm(wasm: &mut Module) -> bool {
     wasm::validateWasm(wasm.0.pin_mut())
+}
+
+pub fn validate_wasm_with_options(wasm: &mut Module, options: &PassOptions) -> bool {
+    wasm::validateWasmWithOptions(wasm.0.pin_mut(), &options.0)
 }
 
 pub fn check_inlining_options_defaults(inlining_options: InliningOptions) -> bool {

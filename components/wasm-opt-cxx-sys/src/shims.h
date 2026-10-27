@@ -1,7 +1,9 @@
 #ifndef wasmopt_shims_h
 #define wasmopt_shims_h
 
+#include "parsing.h"
 #include "pass.h"
+#include "source-map.h"
 #include "wasm-io.h"
 #include "support/colors.h"
 #include "wasm-validator.h"
@@ -40,6 +42,10 @@ namespace wasm_shims {
     wasm::WasmValidator v;
 
     return v.validate(wasm);
+  }
+
+  void clearTypeIndices(Module& wasm) {
+    wasm.typeIndices.clear();
   }
 }
 
@@ -83,10 +89,24 @@ namespace wasm_shims {
 
 namespace wasm_shims {
   struct ModuleWriter {
+    // The writer keeps a reference to the options, so they must outlive it.
+    wasm::PassOptions options;
     wasm::ModuleWriter inner;
+
+    ModuleWriter() : inner(options) {}
 
     void setDebugInfo(bool debug) {
       inner.setDebugInfo(debug);
+    }
+
+    void setStackIROptions(bool generate,
+                           bool optimize,
+                           int32_t optimizeLevel,
+                           int32_t shrinkLevel) {
+      options.generateStackIR = generate;
+      options.optimizeStackIR = optimize;
+      options.optimizeLevel = optimizeLevel;
+      options.shrinkLevel = shrinkLevel;
     }
 
     void setSourceMapFilename(std::string& source_map_filename) {
@@ -146,6 +166,10 @@ namespace wasm_shims {
       inner.flexibleInlineMaxSize = size;
     }
 
+    void setMaxCombinedBinarySize(uint32_t size) {
+      inner.maxCombinedBinarySize = size;
+    }
+
     void setAllowFunctionsWithLoops(bool allow) {
       inner.allowFunctionsWithLoops = allow;
     }
@@ -170,6 +194,10 @@ namespace wasm_shims {
 
     void setValidateGlobally(bool validate) {
       inner.validateGlobally = validate;
+    }
+
+    void setWorldMode(bool closed) {
+      inner.worldMode = closed ? wasm::WorldMode::Closed : wasm::WorldMode::Open;
     }
 
     void setOptimizeLevel(int32_t level) {
@@ -211,6 +239,12 @@ namespace wasm_shims {
 
   std::unique_ptr<PassOptions> newPassOptions() {
     return std::make_unique<PassOptions>();
+  }
+
+  bool validateWasmWithOptions(Module& wasm, const PassOptions& options) {
+    wasm::WasmValidator v;
+
+    return v.validate(wasm, options.inner);
   }
 }
 
@@ -263,7 +297,18 @@ namespace wasm_shims {
     f.push_back(wasm::FeatureSet::Feature::ExtendedConst);
     f.push_back(wasm::FeatureSet::Feature::Strings);
     f.push_back(wasm::FeatureSet::Feature::MultiMemory);
-    f.push_back(wasm::FeatureSet::Feature::TypedContinuations);
+    f.push_back(wasm::FeatureSet::Feature::StackSwitching);
+    f.push_back(wasm::FeatureSet::Feature::SharedEverything);
+    f.push_back(wasm::FeatureSet::Feature::FP16);
+    f.push_back(wasm::FeatureSet::Feature::BulkMemoryOpt);
+    f.push_back(wasm::FeatureSet::Feature::CallIndirectOverlong);
+    f.push_back(wasm::FeatureSet::Feature::CustomDescriptors);
+    f.push_back(wasm::FeatureSet::Feature::AcquireReleaseAtomics);
+    f.push_back(wasm::FeatureSet::Feature::CustomPageSizes);
+    f.push_back(wasm::FeatureSet::Feature::Multibyte);
+    f.push_back(wasm::FeatureSet::Feature::WideArithmetic);
+    f.push_back(wasm::FeatureSet::Feature::CompactImports);
+    f.push_back(wasm::FeatureSet::Feature::RelaxedAtomics);
     // This is not part of the Rust API because it has the same value as None.
     // f.push_back(wasm::FeatureSet::Feature::MVP);
     f.push_back(wasm::FeatureSet::Feature::Default);
@@ -287,6 +332,10 @@ namespace wasm_shims {
 
     void add(std::string& passName) {
       inner.add(std::move(passName));
+    }
+
+    void add_with_arg(std::string& passName, std::string& passArg) {
+      inner.add(std::move(passName), std::move(passArg));
     }
 
     void addDefaultOptimizationPasses() {
@@ -317,11 +366,12 @@ namespace wasm_shims {
 
     // The size assertion will fail when `InliningOptions` fields change,
     // which indicates the current test need to be updated.
-    assert(sizeof(inliningOptionsDefaults->inner) == 20);
+    assert(sizeof(inliningOptionsDefaults->inner) == 24);
     
     bool isEqual = (inlining->inner.alwaysInlineMaxSize == inliningOptionsDefaults->inner.alwaysInlineMaxSize)
       && (inlining->inner.oneCallerInlineMaxSize == inliningOptionsDefaults->inner.oneCallerInlineMaxSize)
       && (inlining->inner.flexibleInlineMaxSize == inliningOptionsDefaults->inner.flexibleInlineMaxSize)
+      && (inlining->inner.maxCombinedBinarySize == inliningOptionsDefaults->inner.maxCombinedBinarySize)
       && (inlining->inner.allowFunctionsWithLoops == inliningOptionsDefaults->inner.allowFunctionsWithLoops)
       && (inlining->inner.partialInliningIfs == inliningOptionsDefaults->inner.partialInliningIfs);
     
@@ -340,6 +390,7 @@ namespace wasm_shims {
     bool isEqual = (passOptions->inner.debug == passOptionsDefaults.debug)
       && (passOptions->inner.validate == passOptionsDefaults.validate)
       && (passOptions->inner.validateGlobally == passOptionsDefaults.validateGlobally)
+      && (passOptions->inner.worldMode == passOptionsDefaults.worldMode)
       && (passOptions->inner.optimizeLevel == passOptionsDefaults.optimizeLevel) 
       && (passOptions->inner.shrinkLevel == passOptionsDefaults.shrinkLevel)
       && (passOptions->inner.trapsNeverHappen == passOptionsDefaults.trapsNeverHappen)
@@ -351,6 +402,7 @@ namespace wasm_shims {
       && (passOptions->inner.inlining.alwaysInlineMaxSize == passOptionsDefaults.inlining.alwaysInlineMaxSize)
       && (passOptions->inner.inlining.oneCallerInlineMaxSize == passOptionsDefaults.inlining.oneCallerInlineMaxSize)
       && (passOptions->inner.inlining.flexibleInlineMaxSize == passOptionsDefaults.inlining.flexibleInlineMaxSize)
+      && (passOptions->inner.inlining.maxCombinedBinarySize == passOptionsDefaults.inlining.maxCombinedBinarySize)
       && (passOptions->inner.inlining.allowFunctionsWithLoops == passOptionsDefaults.inlining.allowFunctionsWithLoops)
       && (passOptions->inner.inlining.partialInliningIfs == passOptionsDefaults.inlining.partialInliningIfs);
    

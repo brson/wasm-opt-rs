@@ -22,6 +22,33 @@ impl OptimizationOptions {
         self
     }
 
+    /// Sets [`OptimizationOptions::preserve_type_order`].
+    pub fn preserve_type_order(&mut self, value: bool) -> &mut Self {
+        self.preserve_type_order = value;
+        self
+    }
+
+    /// Sets [`OptimizationOptions::allow_stack_ir`].
+    pub fn allow_stack_ir(&mut self, value: bool) -> &mut Self {
+        self.allow_stack_ir = value;
+        self
+    }
+
+    /// Sets [`OptimizationOptions::generate_stack_ir`].
+    pub fn generate_stack_ir(&mut self, value: bool) -> &mut Self {
+        self.generate_stack_ir = value;
+        self
+    }
+
+    /// Sets [`OptimizationOptions::optimize_stack_ir`].
+    pub fn optimize_stack_ir(&mut self, value: bool) -> &mut Self {
+        self.optimize_stack_ir = value;
+        if value {
+            self.generate_stack_ir = true;
+        }
+        self
+    }
+
     /// Sets [`InliningOptions::always_inline_max_size`].
     pub fn always_inline_max_size(&mut self, value: u32) -> &mut Self {
         self.inlining.always_inline_max_size = value;
@@ -37,6 +64,12 @@ impl OptimizationOptions {
     /// Sets [`InliningOptions::flexible_inline_max_size`].
     pub fn flexible_inline_max_size(&mut self, value: u32) -> &mut Self {
         self.inlining.flexible_inline_max_size = value;
+        self
+    }
+
+    /// Sets [`InliningOptions::max_combined_binary_size`].
+    pub fn max_combined_binary_size(&mut self, value: u32) -> &mut Self {
+        self.inlining.max_combined_binary_size = value;
         self
     }
 
@@ -62,6 +95,17 @@ impl OptimizationOptions {
     pub fn validate_globally(&mut self, value: bool) -> &mut Self {
         self.passopts.validate_globally = value;
         self
+    }
+
+    /// Sets [`PassOptions::world_mode`].
+    pub fn world_mode(&mut self, value: WorldMode) -> &mut Self {
+        self.passopts.world_mode = value;
+        self
+    }
+
+    /// Marks the module as closed world.
+    pub fn closed_world(&mut self) -> &mut Self {
+        self.world_mode(WorldMode::Closed)
     }
 
     /// Sets [`PassOptions::optimize_level`].

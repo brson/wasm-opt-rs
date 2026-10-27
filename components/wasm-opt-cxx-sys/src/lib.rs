@@ -42,6 +42,8 @@ pub mod wasm {
         fn newModule() -> UniquePtr<Module>;
 
         fn validateWasm(wasm: Pin<&mut Module>) -> bool;
+
+        fn clearTypeIndices(wasm: Pin<&mut Module>);
     }
 
     unsafe extern "C++" {
@@ -81,6 +83,14 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
+        fn setStackIROptions(
+            self: Pin<&mut Self>,
+            generate: bool,
+            optimize: bool,
+            optimize_level: i32,
+            shrink_level: i32,
+        );
+
         fn setSourceMapFilename(self: Pin<&mut Self>, source_map_filename: Pin<&mut CxxString>);
 
         fn setSourceMapUrl(self: Pin<&mut Self>, source_map_url: Pin<&mut CxxString>);
@@ -117,6 +127,8 @@ pub mod wasm {
 
         fn setFlexibleInlineMaxSize(self: Pin<&mut Self>, size: u32);
 
+        fn setMaxCombinedBinarySize(self: Pin<&mut Self>, size: u32);
+
         fn setAllowFunctionsWithLoops(self: Pin<&mut Self>, allow: bool);
 
         fn setPartialInliningIfs(self: Pin<&mut Self>, number: u32);
@@ -127,9 +139,13 @@ pub mod wasm {
 
         fn newPassOptions() -> UniquePtr<PassOptions>;
 
+        fn validateWasmWithOptions(wasm: Pin<&mut Module>, options: &PassOptions) -> bool;
+
         fn setValidate(self: Pin<&mut Self>, validate: bool);
 
         fn setValidateGlobally(self: Pin<&mut Self>, validate: bool);
+
+        fn setWorldMode(self: Pin<&mut Self>, closed: bool);
 
         fn setOptimizeLevel(self: Pin<&mut Self>, level: i32);
 
@@ -185,6 +201,12 @@ pub mod wasm {
         ) -> UniquePtr<PassRunner<'wasm>>;
 
         fn add(self: Pin<&mut Self>, pass_name: Pin<&mut CxxString>);
+
+        fn add_with_arg(
+            self: Pin<&mut Self>,
+            pass_name: Pin<&mut CxxString>,
+            pass_arg: Pin<&mut CxxString>,
+        );
 
         fn addDefaultOptimizationPasses(self: Pin<&mut Self>);
 

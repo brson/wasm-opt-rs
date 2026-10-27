@@ -27,6 +27,14 @@ pub struct OptimizationOptions {
     pub features: Features,
     /// Run passes to convergence, continuing while binary size decreases.
     pub converge: bool,
+    /// Preserve the input order of types.
+    pub preserve_type_order: bool,
+    /// Allow StackIR generation/optimization during writing.
+    pub allow_stack_ir: bool,
+    /// Force StackIR generation during writing.
+    pub generate_stack_ir: bool,
+    /// Force StackIR optimization during writing.  Implies `generate_stack_ir`.
+    pub optimize_stack_ir: bool,
 }
 
 /// Options for reading the unoptimized wasm module.
@@ -86,6 +94,10 @@ pub struct InliningOptions {
     ///
     /// Default: `20`.
     pub flexible_inline_max_size: u32,
+    /// The limit for the combined size of the code after inlining.
+    ///
+    /// Default: `400 * 1024`.
+    pub max_combined_binary_size: u32,
     /// Functions with loops are usually not inlined.
     ///
     /// Default: `false`.
@@ -94,6 +106,18 @@ pub struct InliningOptions {
     ///
     /// Default: `0`.
     pub partial_inlining_ifs: u32,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum WorldMode {
+    Open,
+    Closed,
+}
+
+impl Default for WorldMode {
+    fn default() -> WorldMode {
+        WorldMode::Open
+    }
 }
 
 /// Options that affect how optimization passes behave.
@@ -110,6 +134,10 @@ pub struct PassOptions {
     ///
     /// Default: `true`.
     pub validate_globally: bool,
+    /// Whether the module is open or closed world.
+    ///
+    /// Default: [`WorldMode::Open`].
+    pub world_mode: WorldMode,
     /// The amount of optimization to apply.
     ///
     /// The default depends on how [`OptimizationOptions`] is constructed.
@@ -221,6 +249,10 @@ impl OptimizationOptions {
             passes: Passes::default(),
             features: Features::default(),
             converge: false,
+            preserve_type_order: false,
+            allow_stack_ir: true,
+            generate_stack_ir: false,
+            optimize_stack_ir: false,
         }
     }
 
@@ -345,6 +377,7 @@ impl Default for InliningOptions {
             always_inline_max_size: 2,
             one_caller_inline_max_size: u32::MAX,
             flexible_inline_max_size: 20,
+            max_combined_binary_size: 400 * 1024,
             allow_functions_with_loops: false,
             partial_inlining_ifs: 0,
         }
@@ -356,6 +389,7 @@ impl Default for PassOptions {
         PassOptions {
             validate: true,
             validate_globally: true,
+            world_mode: WorldMode::default(),
             optimize_level: OptimizeLevel::default(),
             shrink_level: ShrinkLevel::default(),
             traps_never_happen: false,

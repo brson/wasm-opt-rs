@@ -752,11 +752,10 @@ fn wasm_to_wasm_enable_custom_features() -> Result<()> {
         "--enable-multivalue",
         "--enable-gc",
         "--enable-memory64",
-        "--enable-gc-nn-locals",
         "--enable-relaxed-simd",
         "--enable-extended-const",
         "--enable-strings",
-        "--enable-multi-memories",
+        "--enable-multimemory",
     ];
 
     run_test(TestArgs {
@@ -790,12 +789,49 @@ fn wasm_to_wasm_disable_custom_features() -> Result<()> {
         "--disable-multivalue",
         "--disable-gc",
         "--disable-memory64",
-        "--disable-gc-nn-locals",
         "--disable-relaxed-simd",
         "--disable-extended-const",
         "--disable-strings",
-        "--disable-multi-memories",
+        "--disable-multimemory",
     ];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_closed_world() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--closed-world"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_preserve_type_order() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["--preserve-type-order"];
 
     run_test(TestArgs {
         infile,
