@@ -157,6 +157,9 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             "--output-source-map-url" | "-osu" => {
                 sourcemap_url = Some(parse_unicode(&mut args)?);
             }
+            "--emit-exnref" | "--experimental-new-eh" => {
+                opts.emit_exnref();
+            }
 
             /* from optimization-options.h */
 
@@ -218,7 +221,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             "--inline-max-combined-binary-size" | "-imcbs" => {
                 opts.max_combined_binary_size(parse_u32(&mut args)?);
             }
-            "--one-caller-inline-max-function-size" | "-ocifms" => {
+            "--one-caller-inline-max-function-size" | "-ocimfs" => {
                 opts.one_caller_inline_max_size(parse_u32(&mut args)?);
             }
             "--inline-functions-with-loops" | "-ifwl" => {
@@ -226,6 +229,9 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             }
             "--partial-inlining-ifs" | "-pii" => {
                 opts.partial_inlining_ifs(parse_u32(&mut args)?);
+            }
+            "--ignore-implicit-traps" | "-iit" => {
+                opts.ignore_implicit_traps(true);
             }
             "--traps-never-happen" | "-tnh" => {
                 opts.traps_never_happen(true);
@@ -239,6 +245,10 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             "--zero-filled-memory" | "-uim" => {
                 opts.zero_filled_memory(true);
             }
+            "--skip-pass" | "-sp" => {
+                let pass = parse_unicode(&mut args)?;
+                opts.skip_pass(&pass);
+            }
 
             /* from tool-options.h */
 
@@ -247,6 +257,9 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             }
             "--all-features" | "-all" => {
                 opts.all_features();
+            }
+            "--emit-module-names" => {
+                opts.emit_module_names(true);
             }
             "--quiet" | "-q" => {
                 /* pass */
@@ -282,8 +295,6 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
             /* fallthrough */
 
             _ => {
-                // todo parse pass names w/ pass args (--pass-name=value).
-
                 if arg.starts_with("--enable-") {
                     let feature = &arg[9..];
                     if let Ok(feature) = Feature::from_str(feature) {
@@ -299,16 +310,33 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                         unsupported.push(OsString::from(arg));
                     }
                 } else {
+                    // Passes may be followed by an optional argument, e.g.
+                    // `--extract-function=foo`, which is equivalent to
+                    // `--extract-function --pass-arg=extract-function@foo`.
+                    let (pass_name, pass_arg) = match arg.split_once('=') {
+                        Some((name, value)) if name.starts_with("--") => (name, Some(value)),
+                        _ => (arg, None),
+                    };
+
                     let mut is_pass = false;
                     for pass in Pass::iter() {
-                        if is_pass_argument(arg, &pass) {
-                            opts.add_pass(pass);
+                        if is_pass_argument(pass_name, &pass) {
+                            match pass_arg {
+                                Some(value) => {
+                                    opts.set_pass_arg(pass.name(), value);
+                                    opts.add_pass(pass);
+                                }
+                                None => {
+                                    opts.add_pass(pass);
+                                }
+                            }
                             is_pass = true;
+                            break;
                         }
                     }
 
                     if !is_pass {
-                        if arg.starts_with("-") && arg.len() > 1 {
+                        if pass_name.starts_with("-") && pass_name.len() > 1 {
                             // Reject args that look like flags that we don't support.
                             unsupported.push(OsString::from(arg));
                         } else {

@@ -68,6 +68,7 @@ fn test_pass_options_defaults() -> anyhow::Result<()> {
     pass_options.set_world_mode(pass_options_defaults.world_mode == WorldMode::Closed);
     pass_options.set_optimize_level(pass_options_defaults.optimize_level as i32);
     pass_options.set_shrink_level(pass_options_defaults.shrink_level as i32);
+    pass_options.set_ignore_implicit_traps(pass_options_defaults.ignore_implicit_traps);
     pass_options.set_traps_never_happen(pass_options_defaults.traps_never_happen);
     pass_options.set_low_memory_unused(pass_options_defaults.low_memory_unused);
     pass_options.set_fast_math(pass_options_defaults.fast_math);
@@ -89,6 +90,7 @@ fn test_optimization_options_os() -> anyhow::Result<()> {
     pass_options.set_world_mode(opts.passopts.world_mode == WorldMode::Closed);
     pass_options.set_optimize_level(opts.passopts.optimize_level as i32);
     pass_options.set_shrink_level(opts.passopts.shrink_level as i32);
+    pass_options.set_ignore_implicit_traps(opts.passopts.ignore_implicit_traps);
     pass_options.set_traps_never_happen(opts.passopts.traps_never_happen);
     pass_options.set_low_memory_unused(opts.passopts.low_memory_unused);
     pass_options.set_fast_math(opts.passopts.fast_math);

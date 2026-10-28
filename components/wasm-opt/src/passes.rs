@@ -33,16 +33,18 @@ pub enum Pass {
     CodeFolding,
     /// Hoist repeated constants to a local.
     ConstHoisting,
-    /// Finds and uses mathematical constraints on locals.
-    ConstraintAnalysis,
     /// Propagate constant struct field values.
     Cfp,
     /// Propagate constant struct field values, using ref.test.
     CfpRetest,
+    /// Finds and uses mathematical constraints on locals.
+    ConstraintAnalysis,
     /// Removes unreachable code.
     Dce,
     /// Forces all loads and stores to have alignment 1.
     Dealign,
+    /// Propagate debug location from parents or previous siblings to child nodes.
+    PropagateDebugLocs,
     /// Instrument the wasm to convert NaNs into 0 at runtime.
     DeNan,
     /// Turns indirect calls into direct ones.
@@ -79,12 +81,12 @@ pub enum Pass {
     GenerateGlobalEffects,
     /// Refine the types of globals.
     GlobalRefining,
-    /// Globally optimize GC types.
-    Gto,
     /// Globally optimize struct values.
     Gsi,
     /// Globally optimize struct values, also emitting ref.cast_desc_eq.
     GsiDescCast,
+    /// Globally optimize GC types.
+    Gto,
     /// Grand unified flow analyses.
     ///
     /// Optimize the entire program using information about what content can actually appear in each location.
@@ -93,6 +95,10 @@ pub enum Pass {
     GufaCastAll,
     /// Gufa plus local optimizations in functions we modified.
     GufaOptimizing,
+    /// Optimizes J2CL specific constructs.
+    OptimizeJ2cl,
+    /// Merges itable structures into vtables to make types more compact.
+    MergeJ2clItables,
     /// Apply more specific subtypes to type fields where possible.
     TypeRefining,
     /// Apply more specific subtypes to type fields where possible (using GUFA).
@@ -109,10 +115,10 @@ pub enum Pass {
     InliningOptimizing,
     /// Lower away binaryen intrinsics.
     IntrinsicLowering,
-    /// Legalizes the import/export boundary and prunes when needed.
-    LegalizeAndPruneJsInterface,
     /// Legalizes i64 types on the import/export boundary.
     LegalizeJsInterface,
+    /// Legalizes the import/export boundary and prunes when needed.
+    LegalizeAndPruneJsInterface,
     /// Common subexpression elimination inside basic blocks.
     LocalCse,
     /// Apply more specific subtypes to locals where possible.
@@ -121,38 +127,36 @@ pub enum Pass {
     LogExecution,
     /// Lower all uses of i64s to use i32s instead.
     I64ToI32Lowering,
+    /// Instrument the build with code to intercept specific function calls.
+    TraceCalls,
+    /// Instrument branch hints so we can see which guessed right.
+    InstrumentBranchHints,
     /// Instrument the build with code to intercept all loads and stores.
     InstrumentLocals,
     /// Instrument the build with code to intercept all loads and stores.
     InstrumentMemory,
-    /// Instrument branch hints so we can see which guessed right.
-    InstrumentBranchHints,
     /// Loop invariant code motion.
     Licm,
-    /// Lower memory.copy and memory.fill to wasm mvp and disable the bulk-memory feature.
-    LlvmMemoryCopyFillLowering,
-    /// Lower nontrapping float-to-int operations to wasm mvp and disable the nontrapping fptoint feature.
-    LlvmNontrappingFptointLowering,
     /// Attempt to merge segments to fit within web limits.
     LimitSegments,
     /// Make structs and arrays shared and functions unshared.
     MakeSharedObjects,
+    /// Mark JS called functions (using configureAll) as doing so.
+    MarkJsCalled,
     /// Lower loads and stores to a 64-bit memory to instead use a 32-bit one.
     Memory64Lowering,
-    /// Lower 64-bit tables to 32-bit ones.
+    /// Alias for `memory64-lowering`.
     Table64Lowering,
+    /// Lower memory.copy and memory.fill to wasm mvp and disable the bulk-memory feature.
+    LlvmMemoryCopyFillLowering,
     /// Packs memory into separate segments, skipping zeros.
     MemoryPacking,
     /// Merges blocks to their parents.
     MergeBlocks,
     /// Merges similar functions when benefical.
     MergeSimilarFunctions,
-    /// Merges itable structures into vtables to make types more compact.
-    MergeJ2clItables,
     /// Merges locals when beneficial.
     MergeLocals,
-    /// Split types into minimal recursion groups.
-    MinimizeRecGroups,
     /// Reports metrics.
     Metrics,
     /// Minifies import names (only those, and not export names), and emits a mapping to the minified ones.
@@ -161,6 +165,8 @@ pub enum Pass {
     MinifyImportsAndExports,
     /// Minifies both import and export names, and emits a mapping to the minified ones, and minifies the modules as well.
     MinifyImportsAndExportsAndModules,
+    /// Split types into minimal recursion groups.
+    MinimizeRecGroups,
     /// Creates specialized versions of functions.
     Monomorphize,
     /// Creates specialized versions of functions (even if unhelpful).
@@ -173,14 +179,14 @@ pub enum Pass {
     Nm,
     /// (Re)name all heap types.
     NameTypes,
-    /// Mark functions as no-inline (for full inlining only).
-    NoFullInline,
     /// Mark functions as no-inline.
     NoInline,
+    /// Mark functions as no-inline (for full inlining only).
+    NoFullInline,
     /// Mark functions as no-inline (for partial inlining only).
     NoPartialInline,
-    /// Mark JS called functions (using configureAll) as doing so.
-    MarkJsCalled,
+    /// Lower nontrapping float-to-int operations to wasm mvp and disable the nontrapping fptoint feature.
+    LlvmNontrappingFptointLowering,
     /// Reduces calls to code that only runs once.
     OnceReduction,
     /// Optimizes added constants into load/store offsets.
@@ -191,8 +197,6 @@ pub enum Pass {
     OptimizeCasts,
     /// Optimizes instruction combinations.
     OptimizeInstructions,
-    /// Optimizes J2CL specific constructs.
-    OptimizeJ2cl,
     /// Outline instructions.
     Outlining,
     /// Pick load signs based on their uses.
@@ -215,32 +219,30 @@ pub enum Pass {
     PrintFeatures,
     /// Print in full s-expression format.
     PrintFull,
+    /// Print boundary in JSON format.
+    PrintBoundary,
     /// Print call graph.
     PrintCallGraph,
     /// Print a map of function indexes to names.
     PrintFunctionMap,
-    /// Print boundary in JSON format.
-    PrintBoundary,
     /// (Alias for print-function-map).
     Symbolmap,
-    /// Propagate debug location from parents or previous siblings to child nodes.
-    PropagateDebugLocs,
     /// Propagate global values to other globals (useful for tests).
     PropagateGlobalsGlobally,
     /// Removes operations incompatible with js.
     RemoveNonJsOps,
-    /// Removes imports and replaces them with nops.
-    RemoveImports,
-    /// Removes exports using a wildcard.
-    RemoveExports,
-    /// Removes exports of empty functions.
-    RemoveEmptyFunctionExports,
-    /// Removes memory segments.
-    RemoveMemory,
-    /// Removes memory initialization.
-    RemoveMemoryInit,
     /// Replaces relaxed SIMD instructions with unreachable.
     RemoveRelaxedSimd,
+    /// Removes exports of empty functions.
+    RemoveEmptyFunctionExports,
+    /// Removes exports using a wildcard.
+    RemoveExports,
+    /// Removes imports and replaces them with nops.
+    RemoveImports,
+    /// Removes memory initialization.
+    RemoveMemoryInit,
+    /// Removes memory initialization (legacy name; same as `remove-memory-init`).
+    RemoveMemory,
     /// Removes breaks from locations that are not needed.
     RemoveUnusedBrs,
     /// Removes unused module elements.
@@ -269,10 +271,10 @@ pub enum Pass {
     Roundtrip,
     /// Instrument loads and stores to check for invalid behavior.
     SafeHeap,
-    /// Write data segments to a file and strip them from the module.
-    SeparateDataSegments,
     /// Sets specified globals to specified values.
     SetGlobals,
+    /// Write data segments to a file and strip them from the module.
+    SeparateDataSegments,
     /// Remove params from function signature types where possible.
     SignaturePruning,
     /// Apply more specific subtypes to signature types where possible.
@@ -305,20 +307,22 @@ pub enum Pass {
     Ssa,
     /// Ssa-ify variables so that they have a single assignment, ignoring merges.
     SsaNomerge,
-    /// Deprecated; same as strip-debug.
-    Strip,
-    /// Enforce limits on llvm's __stack_pointer global.
-    StackCheck,
     /// Gathers wasm strings to globals.
     StringGathering,
-    /// Lowers wasm strings and operations to imports.
-    StringLowering,
     /// Lift string imports to wasm strings.
     StringLifting,
+    /// Lowers wasm strings and operations to imports.
+    StringLowering,
     /// Same as string-lowering, but encodes well-formed strings as magic imports.
     StringLoweringMagicImports,
     /// Same as string-lowering-magic-imports, but raise a fatal error if there are invalid strings.
     StringLoweringMagicImportsAssert,
+    /// Deprecated; same as strip-debug.
+    Strip,
+    /// Enforce limits on llvm's __stack_pointer global.
+    StackCheck,
+    /// Convert calls in tail position to return calls.
+    TailCall,
     /// Strip debug info (including the names section).
     StripDebug,
     /// Strip dwarf debug info.
@@ -331,24 +335,20 @@ pub enum Pass {
     StripTargetFeatuers,
     /// Strip all toolchain-specific code annotations.
     StripToolchainAnnotations,
-    /// Convert calls in tail position to return calls.
-    TailCall,
-    /// Translate old EH instructions to new ones.
+    /// Deprecated; same as `translate-to-exnref`.
     TranslateToNewEh,
     /// Translate old Phase 3 EH instructions to new ones with exnref.
     TranslateToExnref,
-    /// Instrument the build with code to intercept specific function calls.
-    TraceCalls,
-    /// Merge types to their supertypes where possible.
-    TypeMerging,
+    /// Optimize trivial tuples away.
+    TupleOptimization,
     /// Mark all leaf types as final.
     TypeFinalizing,
+    /// Merge types to their supertypes where possible.
+    TypeMerging,
     /// Create new nominal types to help other optimizations.
     TypeSsa,
     /// Mark all types as non-final (open).
     TypeUnfinalizing,
-    /// Optimize trivial tuples away.
-    TupleOptimization,
     /// Removes unnecessary subtyping relationships.
     Unsubtyping,
     /// Removes local.tees, replacing them with sets and gets.

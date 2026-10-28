@@ -99,6 +99,10 @@ namespace wasm_shims {
       inner.setDebugInfo(debug);
     }
 
+    void setEmitModuleName(bool emit) {
+      inner.setEmitModuleName(emit);
+    }
+
     void setStackIROptions(bool generate,
                            bool optimize,
                            int32_t optimizeLevel,
@@ -212,6 +216,10 @@ namespace wasm_shims {
       inner.inlining = inlining->inner;
     }
     
+    void setIgnoreImplicitTraps(bool ignoreTraps) {
+      inner.ignoreImplicitTraps = ignoreTraps;
+    }
+
     void setTrapsNeverHappen(bool ignoreTraps) {
       inner.trapsNeverHappen = ignoreTraps;
     }
@@ -230,6 +238,10 @@ namespace wasm_shims {
 
     void setDebugInfo(bool debugInfo) {
       inner.debugInfo = debugInfo;
+    }
+
+    void setPassToSkip(std::string& pass) {
+      inner.passesToSkip.insert(std::move(pass));
     }
 
     void setArguments(std::string& key, std::string& value) {
@@ -393,6 +405,7 @@ namespace wasm_shims {
       && (passOptions->inner.worldMode == passOptionsDefaults.worldMode)
       && (passOptions->inner.optimizeLevel == passOptionsDefaults.optimizeLevel) 
       && (passOptions->inner.shrinkLevel == passOptionsDefaults.shrinkLevel)
+      && (passOptions->inner.ignoreImplicitTraps == passOptionsDefaults.ignoreImplicitTraps)
       && (passOptions->inner.trapsNeverHappen == passOptionsDefaults.trapsNeverHappen)
       && (passOptions->inner.lowMemoryUnused == passOptionsDefaults.lowMemoryUnused)
       && (passOptions->inner.fastMath == passOptionsDefaults.fastMath)
@@ -404,7 +417,8 @@ namespace wasm_shims {
       && (passOptions->inner.inlining.flexibleInlineMaxSize == passOptionsDefaults.inlining.flexibleInlineMaxSize)
       && (passOptions->inner.inlining.maxCombinedBinarySize == passOptionsDefaults.inlining.maxCombinedBinarySize)
       && (passOptions->inner.inlining.allowFunctionsWithLoops == passOptionsDefaults.inlining.allowFunctionsWithLoops)
-      && (passOptions->inner.inlining.partialInliningIfs == passOptionsDefaults.inlining.partialInliningIfs);
+      && (passOptions->inner.inlining.partialInliningIfs == passOptionsDefaults.inlining.partialInliningIfs)
+      && (passOptions->inner.passesToSkip == passOptionsDefaults.passesToSkip);
    
     return isEqual;
   }

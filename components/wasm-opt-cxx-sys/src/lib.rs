@@ -83,6 +83,8 @@ pub mod wasm {
 
         fn setDebugInfo(self: Pin<&mut Self>, debug: bool);
 
+        fn setEmitModuleName(self: Pin<&mut Self>, emit: bool);
+
         fn setStackIROptions(
             self: Pin<&mut Self>,
             generate: bool,
@@ -153,6 +155,8 @@ pub mod wasm {
 
         fn setInliningOptions(self: Pin<&mut Self>, inlining: UniquePtr<InliningOptions>);
 
+        fn setIgnoreImplicitTraps(self: Pin<&mut Self>, ignoreTraps: bool);
+
         fn setTrapsNeverHappen(self: Pin<&mut Self>, ignoreTraps: bool);
 
         fn setLowMemoryUnused(self: Pin<&mut Self>, memoryUnused: bool);
@@ -162,6 +166,8 @@ pub mod wasm {
         fn setZeroFilledMemory(self: Pin<&mut Self>, zeroFilledMemory: bool);
 
         fn setDebugInfo(self: Pin<&mut Self>, debugInfo: bool);
+
+        fn setPassToSkip(self: Pin<&mut Self>, pass: Pin<&mut CxxString>);
 
         fn setArguments(self: Pin<&mut Self>, key: Pin<&mut CxxString>, value: Pin<&mut CxxString>);
     }

@@ -96,6 +96,11 @@ impl ModuleWriter {
         this.setDebugInfo(debug);
     }
 
+    pub fn set_emit_module_name(&mut self, emit: bool) {
+        let this = self.0.pin_mut();
+        this.setEmitModuleName(emit);
+    }
+
     pub fn set_stack_ir_options(
         &mut self,
         generate: bool,
@@ -255,6 +260,11 @@ impl PassOptions {
         this.setInliningOptions(inlining.0);
     }
 
+    pub fn set_ignore_implicit_traps(&mut self, ignore_traps: bool) {
+        let this = self.0.pin_mut();
+        this.setIgnoreImplicitTraps(ignore_traps);
+    }
+
     pub fn set_traps_never_happen(&mut self, ignore_traps: bool) {
         let this = self.0.pin_mut();
         this.setTrapsNeverHappen(ignore_traps);
@@ -278,6 +288,13 @@ impl PassOptions {
     pub fn set_debug_info(&mut self, debug_info: bool) {
         let this = self.0.pin_mut();
         this.setDebugInfo(debug_info);
+    }
+
+    pub fn set_pass_to_skip(&mut self, pass: &str) {
+        let_cxx_string!(pass = pass);
+
+        let this = self.0.pin_mut();
+        this.setPassToSkip(pass);
     }
 
     pub fn set_arguments(&mut self, key: &str, value: &str) {

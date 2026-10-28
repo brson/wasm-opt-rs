@@ -143,6 +143,13 @@ impl OptimizationOptions {
                     })?;
             }
 
+            if self.emit_exnref {
+                let passopts = self.translate_pass_options();
+                let mut pass_runner = PassRunner::new_with_options(&mut m, passopts);
+                pass_runner.add(Pass::TranslateToExnref.name());
+                pass_runner.run();
+            }
+
             if self.passopts.validate && !validate_wasm_with_options(&mut m, &passopts) {
                 return Err(OptimizationError::ValidateWasmOutput);
             }
@@ -224,7 +231,7 @@ impl OptimizationOptions {
         let tempdir = tempfile::tempdir()?;
         let temp_outfile = tempdir.path().join("wasm_opt_temp_outfile.wasm");
 
-        let mut writer = self.create_writer();
+        let mut writer = self.create_writer_without_module_names();
         writer.write_binary(m, &temp_outfile)?;
 
         let file_size = fs::read(&temp_outfile)?.len();
@@ -233,6 +240,12 @@ impl OptimizationOptions {
     }
 
     fn create_writer(&self) -> ModuleWriter {
+        let mut writer = self.create_writer_without_module_names();
+        writer.set_emit_module_name(self.writer.emit_module_names);
+        writer
+    }
+
+    fn create_writer_without_module_names(&self) -> ModuleWriter {
         let mut writer = ModuleWriter::new();
         writer.set_debug_info(self.passopts.debug_info);
 
@@ -272,11 +285,17 @@ impl OptimizationOptions {
         opts.set_world_mode(self.passopts.world_mode == WorldMode::Closed);
         opts.set_optimize_level(self.passopts.optimize_level as i32);
         opts.set_shrink_level(self.passopts.shrink_level as i32);
+        opts.set_ignore_implicit_traps(self.passopts.ignore_implicit_traps);
         opts.set_traps_never_happen(self.passopts.traps_never_happen);
         opts.set_low_memory_unused(self.passopts.low_memory_unused);
         opts.set_fast_math(self.passopts.fast_math);
         opts.set_zero_filled_memory(self.passopts.zero_filled_memory);
         opts.set_debug_info(self.passopts.debug_info);
+
+        self.passopts
+            .passes_to_skip
+            .iter()
+            .for_each(|pass| opts.set_pass_to_skip(pass));
 
         self.passopts
             .arguments
@@ -434,6 +453,27 @@ mod test {
 
         assert!(!has(&enabled, BaseFeature::Atomics));
         assert!(has(&disabled, BaseFeature::Atomics));
+    }
+
+    #[test]
+    fn test_features_bulk_memory_implications() {
+        let mut opts = OptimizationOptions::new_opt_level_0();
+
+        opts.enable_feature(Feature::BulkMemory);
+        assert!(opts.features.enabled.contains(&Feature::BulkMemory));
+        assert!(opts.features.enabled.contains(&Feature::BulkMemoryOpt));
+
+        // Disabling bulk-memory does not disable bulk-memory-opt.
+        opts.disable_feature(Feature::BulkMemory);
+        assert!(opts.features.disabled.contains(&Feature::BulkMemory));
+        assert!(opts.features.enabled.contains(&Feature::BulkMemoryOpt));
+
+        // Disabling bulk-memory-opt disables both.
+        opts.disable_feature(Feature::BulkMemoryOpt);
+        assert!(opts.features.disabled.contains(&Feature::BulkMemory));
+        assert!(opts.features.disabled.contains(&Feature::BulkMemoryOpt));
+        assert!(!opts.features.enabled.contains(&Feature::BulkMemory));
+        assert!(!opts.features.enabled.contains(&Feature::BulkMemoryOpt));
     }
 
     #[test]

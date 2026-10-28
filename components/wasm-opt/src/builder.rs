@@ -16,9 +16,21 @@ impl OptimizationOptions {
         self
     }
 
+    /// Sets [`WriterOptions::emit_module_names`].
+    pub fn emit_module_names(&mut self, value: bool) -> &mut Self {
+        self.writer.emit_module_names = value;
+        self
+    }
+
     /// Sets [`OptimizationOptions::converge`].
     pub fn set_converge(&mut self) -> &mut Self {
         self.converge = true;
+        self
+    }
+
+    /// Sets [`OptimizationOptions::emit_exnref`].
+    pub fn emit_exnref(&mut self) -> &mut Self {
+        self.emit_exnref = true;
         self
     }
 
@@ -120,6 +132,12 @@ impl OptimizationOptions {
         self
     }
 
+    /// Sets [`PassOptions::ignore_implicit_traps`].
+    pub fn ignore_implicit_traps(&mut self, value: bool) -> &mut Self {
+        self.passopts.ignore_implicit_traps = value;
+        self
+    }
+
     /// Sets [`PassOptions::traps_never_happen`].
     pub fn traps_never_happen(&mut self, value: bool) -> &mut Self {
         self.passopts.traps_never_happen = value;
@@ -147,6 +165,12 @@ impl OptimizationOptions {
     /// Sets [`PassOptions::debug_info`].
     pub fn debug_info(&mut self, value: bool) -> &mut Self {
         self.passopts.debug_info = value;
+        self
+    }
+
+    /// Adds a pass to [`PassOptions::passes_to_skip`].
+    pub fn skip_pass(&mut self, pass: &str) -> &mut Self {
+        self.passopts.passes_to_skip.insert(pass.to_string());
         self
     }
 
@@ -188,6 +212,13 @@ impl OptimizationOptions {
     /// `--enable-{feature}` command line arguments.
     pub fn enable_feature(&mut self, feature: Feature) -> &mut Self {
         self.features.enabled.insert(feature);
+        self.features.disabled.remove(&feature);
+
+        for implied in implied_features(feature) {
+            self.features.enabled.insert(*implied);
+            self.features.disabled.remove(implied);
+        }
+
         self
     }
 
@@ -197,6 +228,27 @@ impl OptimizationOptions {
     /// the `--disable-{feature}` command line arguments.
     pub fn disable_feature(&mut self, feature: Feature) -> &mut Self {
         self.features.disabled.insert(feature);
+        self.features.enabled.remove(&feature);
+
+        for implied in inverse_implied_features(feature) {
+            self.features.disabled.insert(*implied);
+            self.features.enabled.remove(implied);
+        }
+
         self
+    }
+}
+
+fn implied_features(feature: Feature) -> &'static [Feature] {
+    match feature {
+        Feature::BulkMemory => &[Feature::BulkMemoryOpt],
+        _ => &[],
+    }
+}
+
+fn inverse_implied_features(feature: Feature) -> &'static [Feature] {
+    match feature {
+        Feature::BulkMemoryOpt => &[Feature::BulkMemory],
+        _ => &[],
     }
 }

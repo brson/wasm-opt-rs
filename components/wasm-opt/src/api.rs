@@ -27,6 +27,9 @@ pub struct OptimizationOptions {
     pub features: Features,
     /// Run passes to convergence, continuing while binary size decreases.
     pub converge: bool,
+    /// Translate old exception handling instructions to the new exnref form
+    /// after running all other passes.
+    pub emit_exnref: bool,
     /// Preserve the input order of types.
     pub preserve_type_order: bool,
     /// Allow StackIR generation/optimization during writing.
@@ -63,6 +66,9 @@ pub struct WriterOptions {
     /// If [`ReaderOptions::file_type`] is [`FileType::Wat`],
     /// write a wat file, otherwise write a wasm file.
     pub file_type: FileType,
+    /// Emit the module name even when the rest of the names section is not
+    /// emitted.
+    pub emit_module_names: bool,
 }
 
 /// Module format used by [`ReaderOptions`] and [`WriterOptions`].
@@ -146,6 +152,10 @@ pub struct PassOptions {
     ///
     /// The default depends on how [`OptimizationOptions`] is constructed.
     pub shrink_level: ShrinkLevel,
+    /// Assume implicit traps (from loads, division, etc.) never happen.
+    ///
+    /// Default: `false`.
+    pub ignore_implicit_traps: bool,
     /// Assume traps never happen at runtime.
     ///
     /// Default: `false`.
@@ -166,6 +176,8 @@ pub struct PassOptions {
     ///
     /// Default: `false`.
     pub debug_info: bool,
+    /// Passes to skip, by name.
+    pub passes_to_skip: HashSet<String>,
     /// Additional pass-specific arguments.
     pub arguments: HashMap<String, String>,
 }
@@ -249,6 +261,7 @@ impl OptimizationOptions {
             passes: Passes::default(),
             features: Features::default(),
             converge: false,
+            emit_exnref: false,
             preserve_type_order: false,
             allow_stack_ir: true,
             generate_stack_ir: false,
@@ -367,6 +380,7 @@ impl Default for WriterOptions {
     fn default() -> WriterOptions {
         WriterOptions {
             file_type: FileType::Wasm,
+            emit_module_names: false,
         }
     }
 }
@@ -392,11 +406,13 @@ impl Default for PassOptions {
             world_mode: WorldMode::default(),
             optimize_level: OptimizeLevel::default(),
             shrink_level: ShrinkLevel::default(),
+            ignore_implicit_traps: false,
             traps_never_happen: false,
             low_memory_unused: false,
             fast_math: false,
             zero_filled_memory: false,
             debug_info: false,
+            passes_to_skip: HashSet::<String>::new(),
             arguments: HashMap::<String, String>::new(),
         }
     }

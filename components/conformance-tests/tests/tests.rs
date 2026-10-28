@@ -843,6 +843,139 @@ fn wasm_to_wasm_preserve_type_order() -> Result<()> {
 }
 
 #[test]
+fn wasm_to_wasm_enable_bulk_memory_opt() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--enable-bulk-memory-opt"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_disable_bulk_memory_opt() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--disable-bulk-memory-opt"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_skip_pass() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--skip-pass", "dce"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_ignore_implicit_traps() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--ignore-implicit-traps"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_emit_module_names() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--emit-module-names"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_emit_exnref() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["-Os", "--emit-exnref"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
+fn wasm_to_wasm_pass_arg_equals() -> Result<()> {
+    let infile = get_test_infile_wasm()?;
+    let outfile = PathBuf::from("outfile.wasm");
+
+    let infile_sourcemap = None::<PathBuf>;
+    let outfile_sourcemap = None::<PathBuf>;
+
+    let args = vec!["--extract-function=rust_begin_unwind"];
+
+    run_test(TestArgs {
+        infile,
+        infile_sourcemap,
+        outfile,
+        outfile_sourcemap,
+        args,
+    })
+}
+
+#[test]
 fn wasm_to_wasm_pass_arg() -> Result<()> {
     let infile = get_test_infile_wasm()?;
     let outfile = PathBuf::from("outfile.wasm");
