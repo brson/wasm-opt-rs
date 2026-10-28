@@ -313,7 +313,7 @@ fn parse_command_args(command: Command) -> Result<ParsedCliArgs, Error> {
                     // Passes may be followed by an optional argument, e.g.
                     // `--extract-function=foo`, which is equivalent to
                     // `--extract-function --pass-arg=extract-function@foo`.
-                    let (pass_name, pass_arg) = match arg.split_once('=') {
+                    let (pass_name, pass_arg) = match split_once(arg, '=') {
                         Some((name, value)) if name.starts_with("--") => (name, Some(value)),
                         _ => (arg, None),
                     };
@@ -427,4 +427,12 @@ fn parse_u32<'item>(args: &mut impl Iterator<Item = &'item OsStr>) -> Result<u32
         source: e,
     })?;
     Ok(number)
+}
+
+/// Can be replaced with `split_once` from std on Rust 1.52.0
+fn split_once<'a>(s: &'a str, delimiter: char) -> Option<(&'a str, &'a str)> {
+    let mut iter = s.splitn(2, delimiter);
+    let pt1 = iter.next()?;
+    let pt2 = iter.next()?;
+    Some((pt1, pt2))
 }
