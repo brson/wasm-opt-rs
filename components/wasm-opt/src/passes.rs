@@ -36,7 +36,7 @@ pub enum Pass {
     /// Propagate constant struct field values.
     Cfp,
     /// Propagate constant struct field values, using ref.test.
-    CfpRetest,
+    CfpReftest,
     /// Finds and uses mathematical constraints on locals.
     ConstraintAnalysis,
     /// Removes unreachable code.
@@ -378,7 +378,7 @@ impl Pass {
             ConstHoisting => "const-hoisting",
             ConstraintAnalysis => "constraint-analysis",
             Cfp => "cfp",
-            CfpRetest => "cfp-reftest",
+            CfpReftest => "cfp-reftest",
             Dce => "dce",
             Dealign => "dealign",
             DeNan => "denan",
