@@ -105,7 +105,7 @@ mod llvm {
     }
 
     fn link_llvm() -> Result<()> {
-        let tag = resolve_llvm_tag()?;
+        let tag = resolve_llvm_tag();
         let tag_dir = PathBuf::from(env::var("OUT_DIR")?)
             .join("llvm-cache")
             .join(&tag);
@@ -123,31 +123,27 @@ mod llvm {
         emit_llvm_link_flags(&root)
     }
 
-    fn resolve_llvm_tag() -> Result<String> {
+    /// The LLVM release linked by default.
+    ///
+    /// Pinned so that a new LLVM release cannot change the build. Override
+    /// with the `CONFORMANCE_LLVM_VERSION` environment variable.
+    const DEFAULT_LLVM_VERSION: &str = "23.1.4";
+
+    fn resolve_llvm_tag() -> String {
         const VERSION_ENV: &str = "CONFORMANCE_LLVM_VERSION";
         println!("cargo:rerun-if-env-changed={}", VERSION_ENV);
 
-        if let Ok(version) = env::var(VERSION_ENV) {
-            let version = version.trim();
-            if !version.is_empty() {
-                return Ok(if version.starts_with("llvmorg-") {
-                    version.to_string()
-                } else {
-                    format!("llvmorg-{}", version)
-                });
-            }
-        }
+        let version = env::var(VERSION_ENV).unwrap_or_default();
+        let version = match version.trim() {
+            "" => DEFAULT_LLVM_VERSION,
+            version => version,
+        };
 
-        let response = Client::new()
-            .head("https://github.com/llvm/llvm-project/releases/latest")
-            .send()
-            .context("failed to query the latest LLVM release")?;
-        let url = response.url().as_str();
-        url.rsplit("/tag/")
-            .next()
-            .filter(|tag| tag.starts_with("llvmorg-"))
-            .map(str::to_string)
-            .with_context(|| format!("unexpected LLVM release URL `{}`", url))
+        if version.starts_with("llvmorg-") {
+            version.to_string()
+        } else {
+            format!("llvmorg-{}", version)
+        }
     }
 
     fn download_llvm_release(tag_dir: &Path, tag: &str, archive: &Path) -> Result<()> {
