@@ -12,9 +12,9 @@ set -x -e
 # The rust min version we (and cxx) "support" can no longer resolve the crate
 # graph correctly (it picks a once_cell that requires rust 2021), and various
 # other crates' latest versions no longer work with 1.48.
-# We publish with the first version of Rust that can publish and verify the crates.
+# We publish with the latest stable Rust.
 RUST_MIN_VERSION=1.48.0
-RUST_DEPLOY_VERSION=1.66.0
+RUST_DEPLOY_VERSION=stable
 
 # This is just to make sure we've got the compiler.
 rustc +$RUST_DEPLOY_VERSION --version
@@ -27,12 +27,14 @@ cp -r ./binaryen ./components/wasm-opt-sys/
 # Not needed by our build.
 rm -rf ./components/wasm-opt-sys/binaryen/third_party/googletest
 
+# Not needed by our build, and they make the crate much larger.
+rm -rf ./components/wasm-opt-sys/binaryen/third_party/fuzztest
+rm -rf ./components/wasm-opt-sys/binaryen/third_party/mimalloc
+
 # Don't publish the large Binaryen test suite.
 rm -r ./components/wasm-opt-sys/binaryen/test
 
-# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-sys/Cargo.toml --dry-run
-# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt-cxx-sys/Cargo.toml --dry-run
-# cargo +$RUST_DEPLOY_VERSION publish --manifest-path ./components/wasm-opt/Cargo.toml --dry-run
+# cargo +$RUST_DEPLOY_VERSION publish -p wasm-opt-sys -p wasm-opt-cxx-sys -p wasm-opt --allow-dirty --dry-run
 
 
 # --allow-dirty lets the binaryen source be shipped in its copied location
