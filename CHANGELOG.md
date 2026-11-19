@@ -13,14 +13,7 @@
   so it no longer conflicts with a real LLVM in the same program.
   The DWARF passes are always built.
 - Removed the "dwarf" cargo feature.
-- Removed passes that Binaryen removed:
-  `GenerateStackIr`, `OptimizeStackIr`, `PrintStackIr`,
-  `Jspi`, `LegalizeJsInterfaceMinimally`,
-  `ModAsyncifyAlwaysAndOnlyUnwind`, `ModAsyncifyNeverUnwind`,
-  `TrapModeClamp`, `TrapModeJs`.
-  StackIR is now controlled with the `generate_stack_ir` and `optimize_stack_ir`
-  fields of `OptimizationOptions`.
-- Added many new passes and features.
+- Added new passes and features.
 - Added new options fields, including
   `world_mode`, `ignore_implicit_traps`, `passes_to_skip`,
   `preserve_type_order`, `emit_exnref`, and `emit_module_names`.
